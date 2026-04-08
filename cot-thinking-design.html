@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Extended Thinking（CoT）设计详解</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="claude-code-extended-thinkingcot">Claude Code Extended Thinking（CoT）设计详解</h1>
+<p>本文档基于 free-code45（Claude Code v2.1.87）源码，详细分析 Chain of Thought（CoT）/ Extended Thinking 系统的完整设计。</p>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#1-系统总览">系统总览</a></li>
+<li><a href="#2-三层架构">三层架构</a></li>
+<li><a href="#3-第一层thinkingconfig--思考模式控制">第一层：ThinkingConfig — 思考模式控制</a></li>
+<li><a href="#4-第二层effort--思考深度控制">第二层：Effort — 思考深度控制</a></li>
+<li><a href="#5-第三层ultrathink--关键词触发的深度思考">第三层：Ultrathink — 关键词触发的深度思考</a></li>
+<li><a href="#6-api-请求构建">API 请求构建</a></li>
+<li><a href="#7-流式响应处理">流式响应处理</a></li>
+<li><a href="#8-thinking-块的存储与消息规范化">Thinking 块的存储与消息规范化</a></li>
+<li><a href="#9-密码学签名机制">密码学签名机制</a></li>
+<li><a href="#10-redacted-thinking--思考内容隐藏">Redacted Thinking — 思考内容隐藏</a></li>
+<li><a href="#11-thinking-clear--长时间闲置后的思考清理">Thinking Clear — 长时间闲置后的思考清理</a></li>
+<li><a href="#12-子-agent-的思考继承策略">子 Agent 的思考继承策略</a></li>
+<li><a href="#13-压缩系统中的思考处理">压缩系统中的思考处理</a></li>
+<li><a href="#14-ui-展示">UI 展示</a></li>
+<li><a href="#15-完整生命周期示例">完整生命周期示例</a></li>
+<li><a href="#16-模型参数速查表">模型参数速查表</a></li>
+<li><a href="#17-关键设计决策总结">关键设计决策总结</a></li>
+</ol>
+<hr />
+<h2 id="1">1. 系统总览</h2>
+<p>Extended Thinking 让 Claude 在输出最终回答之前，先进行一段内部推理（类似人类的"先想再说"）。这段推理内容以 <code>thinking</code> 块的形式返回给客户端，用户可以选择查看或隐藏。</p>
+<p>在 Claude Code 中，这套系统由三层组成：</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────┐
+│  第三层：Ultrathink（关键词触发器）                │
+│  用户输入 &quot;ultrathink&quot; → 本轮 effort 提升到 high  │
+├─────────────────────────────────────────────────┤
+│  第二层：Effort（思考深度）                       │
+│  low / medium / high / max → API output_config   │
+├─────────────────────────────────────────────────┤
+│  第一层：ThinkingConfig（思考模式）               │
+│  adaptive / enabled+budget / disabled → API thinking │
+└─────────────────────────────────────────────────┘
+</code></pre></div>
+
+<ul>
+<li><strong>ThinkingConfig</strong> 决定"是否思考"以及"思考模式"</li>
+<li><strong>Effort</strong> 决定"思考多深"</li>
+<li><strong>Ultrathink</strong> 是用户手动触发深度思考的快捷方式</li>
+</ul>
+<p>三者是独立的 API 参数，互不干扰。</p>
+<hr />
+<h2 id="2">2. 三层架构</h2>
+<h3 id="_2">核心文件清单</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/utils/thinking.ts</code></td>
+<td>ThinkingConfig 类型定义、模型能力检测、ultrathink 关键词检测</td>
+</tr>
+<tr>
+<td><code>src/utils/effort.ts</code></td>
+<td>Effort 等级管理、优先级链、模型默认 effort</td>
+</tr>
+<tr>
+<td><code>src/services/api/claude.ts</code></td>
+<td>API 请求构建、流式响应处理、thinking 参数组装</td>
+</tr>
+<tr>
+<td><code>src/utils/context.ts</code></td>
+<td>模型输出 token 上限、thinking 预算计算</td>
+</tr>
+<tr>
+<td><code>src/utils/messages.ts</code></td>
+<td>thinking 块的过滤、规范化、签名清理</td>
+</tr>
+<tr>
+<td><code>src/utils/attachments.ts</code></td>
+<td>ultrathink attachment 创建</td>
+</tr>
+<tr>
+<td><code>src/utils/betas.ts</code></td>
+<td>redacted_thinking beta header 管理</td>
+</tr>
+<tr>
+<td><code>src/components/messages/AssistantThinkingMessage.tsx</code></td>
+<td>thinking 块 UI 渲染</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/runAgent.ts</code></td>
+<td>子 agent thinking 继承策略</td>
+</tr>
+<tr>
+<td><code>src/services/compact/microCompact.ts</code></td>
+<td>压缩时 thinking 块 token 计数</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-thinkingconfig">3. 第一层：ThinkingConfig — 思考模式控制</h2>
+<p><strong>文件</strong>: <code>src/utils/thinking.ts</code></p>
+<h3 id="_3">类型定义</h3>
+<div class="highlight"><pre><span></span><code><span class="kr">type</span><span class="w"> </span><span class="nx">ThinkingConfig</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;adaptive&#39;</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// 自适应：模型自己决定思考多少</span>
+<span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;enabled&#39;</span><span class="p">;</span><span class="w"> </span><span class="nx">budgetTokens</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// 固定预算：限制思考 token 数</span>
+<span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// 关闭：不思考</span>
+</code></pre></div>
+
+<h3 id="_4">初始化流程</h3>
+<p><strong>文件</strong>: <code>src/main.tsx:2456-2488</code></p>
+<p>ThinkingConfig 在会话启动时构建，优先级从高到低：</p>
+<div class="highlight"><pre><span></span><code>1. CLI 参数 options.thinking（&#39;adaptive&#39; | &#39;enabled&#39; | &#39;disabled&#39;）
+2. 环境变量 MAX_THINKING_TOKENS（&gt; 0 则 enabled，= 0 则 disabled）
+3. CLI 参数 options.maxThinkingTokens
+4. 用户设置 settings.alwaysThinkingEnabled
+5. 默认值：shouldEnableThinkingByDefault() → true（启用 adaptive）
+</code></pre></div>
+
+<h3 id="shouldenablethinkingbydefault">shouldEnableThinkingByDefault()</h3>
+<p><strong>文件</strong>: <code>src/utils/thinking.ts:146-162</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">shouldEnableThinkingByDefault</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// 环境变量优先</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">MAX_THINKING_TOKENS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">MAX_THINKING_TOKENS</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// 用户设置其次</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">settings</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getSettingsWithErrors</span><span class="p">()</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">alwaysThinkingEnabled</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// 默认启用</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_5">模型能力检测</h3>
+<p><strong>文件</strong>: <code>src/utils/thinking.ts:90-144</code></p>
+<p>两个关键函数：</p>
+<h4 id="modelsupportsthinkingmodel">modelSupportsThinking(model)</h4>
+<p>判断模型是否支持 thinking：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>1P / Foundry</th>
+<th>3P (Bedrock/Vertex)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude 4.6 (Opus/Sonnet)</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>Claude 4 (Opus/Sonnet)</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>Haiku 4.5</td>
+<td>支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>Claude 3.x</td>
+<td>不支持</td>
+<td>不支持</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="c1">// 1P/Foundry: 所有 Claude 4+ 模型</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">provider</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;foundry&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">provider</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;firstParty&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="o">!</span><span class="nx">canonical</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;claude-3-&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="c1">// 3P: 仅 Opus 4+ 和 Sonnet 4+</span>
+<span class="k">return</span><span class="w"> </span><span class="nx">canonical</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;sonnet-4&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">canonical</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;opus-4&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h4 id="modelsupportsadaptivethinkingmodel">modelSupportsAdaptiveThinking(model)</h4>
+<p>判断模型是否支持自适应思考（无预算限制）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// 仅 4.6+ 模型支持 adaptive</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">canonical</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;opus-4-6&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">canonical</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;sonnet-4-6&#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+<span class="c1">// 其他已知模型（opus/sonnet/haiku 旧版）不支持</span>
+<span class="c1">// 未知模型在 1P/Foundry 上默认支持（为了新模型测试不受影响）</span>
+</code></pre></div>
+
+<hr />
+<h2 id="4-effort">4. 第二层：Effort — 思考深度控制</h2>
+<p><strong>文件</strong>: <code>src/utils/effort.ts</code></p>
+<h3 id="effort">Effort 等级</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">EFFORT_LEVELS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;low&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;high&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;max&#39;</span><span class="p">]</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>等级</th>
+<th>描述</th>
+<th>适用模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>low</code></td>
+<td>快速直接，最少开销</td>
+<td>所有 4.6+</td>
+</tr>
+<tr>
+<td><code>medium</code></td>
+<td>平衡速度和质量</td>
+<td>所有 4.6+（Opus 4.6 默认）</td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td>全面实现 + 充分测试</td>
+<td>所有 4.6+（API 默认）</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td>最深度推理</td>
+<td>仅 Opus 4.6</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">优先级链</h3>
+<p><strong>文件</strong>: <code>src/utils/effort.ts:152-167</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">resolveAppliedEffort</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="w"> </span><span class="nx">appStateEffortValue</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// 1. 环境变量最高优先</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">envOverride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getEffortEnvOverride</span><span class="p">()</span><span class="w">  </span><span class="c1">// CLAUDE_CODE_EFFORT_LEVEL</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">envOverride</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="kc">undefined</span><span class="w">   </span><span class="c1">// &#39;unset&#39; 显式禁用</span>
+
+<span class="w">  </span><span class="c1">// 2. 应用状态（用户在 UI 中的选择）</span>
+<span class="w">  </span><span class="c1">// 3. 模型默认值</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">resolved</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">envOverride</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">appStateEffortValue</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">getDefaultEffortForModel</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span>
+
+<span class="w">  </span><span class="c1">// API 不允许非 Opus 4.6 使用 &#39;max&#39;，自动降级为 &#39;high&#39;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">resolved</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;max&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">modelSupportsMaxEffort</span><span class="p">(</span><span class="nx">model</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s1">&#39;high&#39;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">resolved</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="effort_1">模型默认 Effort</h3>
+<p><strong>文件</strong>: <code>src/utils/effort.ts:279-329</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">getDefaultEffortForModel</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Opus 4.6: Pro 用户默认 medium</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;opus-4-6&#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isProSubscriber</span><span class="p">())</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">getOpusDefaultEffortConfig</span><span class="p">().</span><span class="nx">enabled</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">        </span><span class="p">(</span><span class="nx">isMaxSubscriber</span><span class="p">()</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">isTeamSubscriber</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Ultrathink 开启时，默认 medium（ultrathink 会临时提升到 high）</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isUltrathinkEnabled</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">modelSupportsEffort</span><span class="p">(</span><span class="nx">model</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 兜底：undefined（API 默认行为等效 high）</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="kc">undefined</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>设计意图</strong>: Opus 4.6 默认 medium 而非 high，是为了平衡速度和 rate limit。用户需要深度思考时，通过 ultrathink 关键词临时提升。</p>
+<h3 id="effort-api">Effort 如何传给 API</h3>
+<p><strong>文件</strong>: <code>src/services/api/claude.ts:440-466</code></p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">configureEffortParams</span><span class="p">(</span><span class="nx">effortValue</span><span class="p">,</span><span class="w"> </span><span class="nx">outputConfig</span><span class="p">,</span><span class="w"> </span><span class="nx">extraBodyParams</span><span class="p">,</span><span class="w"> </span><span class="nx">betas</span><span class="p">,</span><span class="w"> </span><span class="nx">model</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">modelSupportsEffort</span><span class="p">(</span><span class="nx">model</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">effortValue</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">betas</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">EFFORT_BETA_HEADER</span><span class="p">)</span><span class="w">          </span><span class="c1">// 让 API 使用默认 effort</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="ow">typeof</span><span class="w"> </span><span class="nx">effortValue</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">outputConfig</span><span class="p">.</span><span class="nx">effort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">effortValue</span><span class="w">        </span><span class="c1">// &#39;low&#39; | &#39;medium&#39; | &#39;high&#39; | &#39;max&#39;</span>
+<span class="w">    </span><span class="nx">betas</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">EFFORT_BETA_HEADER</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// 数值型 effort（仅内部用户），通过 anthropic_internal 传递</span>
+<span class="w">    </span><span class="nx">extraBodyParams</span><span class="p">.</span><span class="nx">anthropic_internal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">effort_override</span><span class="o">:</span><span class="w"> </span><span class="kt">effortValue</span><span class="w">           </span><span class="c1">// 0-200 的数值</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>数值型 effort 到等级的映射：</p>
+<div class="highlight"><pre><span></span><code>0-50   → low
+51-85  → medium
+86-100 → high
+101+   → max
+</code></pre></div>
+
+<hr />
+<h2 id="5-ultrathink">5. 第三层：Ultrathink — 关键词触发的深度思考</h2>
+<h3 id="_7">触发条件</h3>
+<p><strong>文件</strong>: <code>src/utils/thinking.ts:19-31</code></p>
+<div class="highlight"><pre><span></span><code><span class="c1">// 构建时 + 运行时双重门控</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">isUltrathinkEnabled</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;ULTRATHINK&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="w">     </span><span class="c1">// 构建时开关（死代码消除）</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">getFeatureValue_CACHED_MAY_BE_STALE</span><span class="p">(</span><span class="s1">&#39;tengu_turtle_carbon&#39;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w">  </span><span class="c1">// 运行时 A/B 测试</span>
+<span class="p">}</span>
+
+<span class="c1">// 关键词匹配：不区分大小写的 &quot;ultrathink&quot;</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">hasUltrathinkKeyword</span><span class="p">(</span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sr">/\bultrathink\b/i</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_8">工作流程</h3>
+<div class="highlight"><pre><span></span><code>用户输入: &quot;ultrathink 帮我设计一个缓存系统&quot;
+    │
+    ├── Step 1: 关键词检测
+    │   attachments.ts:1446 → hasUltrathinkKeyword() → true
+    │   创建 attachment: { type: &#39;ultrathink_effort&#39;, level: &#39;high&#39; }
+    │   记录遥测: logEvent(&#39;tengu_ultrathink&#39;)
+    │
+    ├── Step 2: Attachment → System Reminder
+    │   messages.ts:4170 → 转换为:
+    │   &quot;The user has requested reasoning effort level: high.
+    │    Apply this to the current turn.&quot;
+    │
+    ├── Step 3: UI 反馈
+    │   PromptInput.tsx:685 → &quot;ultrathink&quot; 文字显示彩虹色
+    │   通知: &quot;Effort set to high for this turn&quot;（5 秒后消失）
+    │
+    └── Step 4: 本轮 API 请求
+        effort 从 medium → high（仅本轮，下一轮恢复 medium）
+</code></pre></div>
+
+<h3 id="_9">彩虹色渲染</h3>
+<p><strong>文件</strong>: <code>src/utils/thinking.ts:60-86</code></p>
+<p>Ultrathink 关键词在输入框中逐字符循环 7 种彩虹色：</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">RAINBOW_COLORS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_red&#39;</span><span class="p">,</span><span class="w">      </span><span class="c1">// 红</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_orange&#39;</span><span class="p">,</span><span class="w">   </span><span class="c1">// 橙</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_yellow&#39;</span><span class="p">,</span><span class="w">   </span><span class="c1">// 黄</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_green&#39;</span><span class="p">,</span><span class="w">    </span><span class="c1">// 绿</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_blue&#39;</span><span class="p">,</span><span class="w">     </span><span class="c1">// 蓝</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_indigo&#39;</span><span class="p">,</span><span class="w">   </span><span class="c1">// 靛</span>
+<span class="w">  </span><span class="s1">&#39;rainbow_violet&#39;</span><span class="p">,</span><span class="w">   </span><span class="c1">// 紫</span>
+<span class="p">]</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">getRainbowColor</span><span class="p">(</span><span class="nx">charIndex</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">keyof</span><span class="w"> </span><span class="nx">Theme</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">RAINBOW_COLORS</span><span class="p">[</span><span class="nx">charIndex</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="nx">RAINBOW_COLORS</span><span class="p">.</span><span class="nx">length</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="6-api">6. API 请求构建</h2>
+<p><strong>文件</strong>: <code>src/services/api/claude.ts:1596-1630</code></p>
+<p>这是整个系统最核心的代码——将 ThinkingConfig 和 Effort 转化为 API 参数。</p>
+<h3 id="thinking">Thinking 参数构建</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">hasThinking</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="nx">thinkingConfig</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">  </span><span class="o">!</span><span class="nx">isEnvTruthy</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CLAUDE_CODE_DISABLE_THINKING</span><span class="p">)</span>
+
+<span class="kd">let</span><span class="w"> </span><span class="nx">thinking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">undefined</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">hasThinking</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">modelSupportsThinking</span><span class="p">(</span><span class="nx">model</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">isEnvTruthy</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">      </span><span class="nx">modelSupportsAdaptiveThinking</span><span class="p">(</span><span class="nx">model</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ★ 4.6+ 模型：自适应思考，无 token 预算限制</span>
+<span class="w">    </span><span class="nx">thinking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;adaptive&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ★ 旧模型：固定预算思考</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">thinkingBudget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getMaxThinkingTokensForModel</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">thinkingConfig</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;enabled&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">thinkingConfig</span><span class="p">.</span><span class="nx">budgetTokens</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">undefined</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">thinkingBudget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">thinkingConfig</span><span class="p">.</span><span class="nx">budgetTokens</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// 预算不能超过 maxOutputTokens - 1</span>
+<span class="w">    </span><span class="nx">thinkingBudget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">maxOutputTokens</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">thinkingBudget</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">thinking</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;enabled&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">budget_tokens</span><span class="o">:</span><span class="w"> </span><span class="kt">thinkingBudget</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="temperature">Temperature 约束</h3>
+<p><strong>文件</strong>: <code>src/services/api/claude.ts:1691-1695</code></p>
+<div class="highlight"><pre><span></span><code><span class="c1">// thinking 启用时不能设置 temperature（API 要求 temperature=1，即默认值）</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">temperature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="nx">hasThinking</span>
+<span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">temperatureOverride</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kc">undefined</span><span class="w">   </span><span class="c1">// 不发送 temperature 字段</span>
+</code></pre></div>
+
+<h3 id="api">最终 API 请求示例</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;claude-opus-4-6-20250414&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;thinking&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;adaptive&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;output_config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;effort&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;system&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;max_tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64000</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="7">7. 流式响应处理</h2>
+<p><strong>文件</strong>: <code>src/services/api/claude.ts:2020-2170</code></p>
+<p>Claude API 以 Server-Sent Events 形式流式返回 thinking 块。</p>
+<h3 id="1content_block_start">阶段 1：块初始化（content_block_start）</h3>
+<div class="highlight"><pre><span></span><code><span class="k">case</span><span class="w"> </span><span class="s1">&#39;thinking&#39;</span><span class="o">:</span>
+<span class="w">  </span><span class="nx">contentBlocks</span><span class="p">[</span><span class="nx">part</span><span class="p">.</span><span class="nx">index</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">...</span><span class="nx">part</span><span class="p">.</span><span class="nx">content_block</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">thinking</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="w">      </span><span class="c1">// 初始化为空字符串</span>
+<span class="w">    </span><span class="nx">signature</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="w">     </span><span class="c1">// 预初始化签名字段，防止 undefined</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">break</span>
+</code></pre></div>
+
+<h3 id="2content_block_delta">阶段 2：内容累积（content_block_delta）</h3>
+<div class="highlight"><pre><span></span><code><span class="k">case</span><span class="w"> </span><span class="s1">&#39;thinking_delta&#39;</span><span class="o">:</span>
+<span class="w">  </span><span class="c1">// 类型检查：确保 delta 发给了正确的 thinking 块</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">contentBlock</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s1">&#39;thinking&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;Content block is not a thinking block&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// 追加思考内容</span>
+<span class="w">  </span><span class="nx">contentBlock</span><span class="p">.</span><span class="nx">thinking</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">delta</span><span class="p">.</span><span class="nx">thinking</span>
+<span class="w">  </span><span class="k">break</span>
+
+<span class="k">case</span><span class="w"> </span><span class="s1">&#39;signature_delta&#39;</span><span class="o">:</span>
+<span class="w">  </span><span class="c1">// 签名可以出现在 thinking 块或 connector_text 块上</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">contentBlock</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;connector_text&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">contentBlock</span><span class="p">.</span><span class="nx">signature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">delta</span><span class="p">.</span><span class="nx">signature</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">contentBlock</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;thinking&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">contentBlock</span><span class="p">.</span><span class="nx">signature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">delta</span><span class="p">.</span><span class="nx">signature</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">break</span>
+</code></pre></div>
+
+<h3 id="3content_block_stop">阶段 3：块结束（content_block_stop）</h3>
+<p>块完成时，整个 thinking 块已经累积完毕，等待后续处理。</p>
+<h3 id="_10">流式事件序列示例</h3>
+<div class="highlight"><pre><span></span><code>content_block_start  → { index: 0, type: &#39;thinking&#39;, thinking: &#39;&#39;, signature: &#39;&#39; }
+thinking_delta       → { index: 0, thinking: &#39;让我分析一下这个&#39; }
+thinking_delta       → { index: 0, thinking: &#39;问题的几个方面...&#39; }
+signature_delta      → { index: 0, signature: &#39;abc123...&#39; }
+content_block_stop   → { index: 0 }
+content_block_start  → { index: 1, type: &#39;text&#39; }
+text_delta           → { index: 1, text: &#39;根据分析，建议...&#39; }
+content_block_stop   → { index: 1 }
+message_stop
+</code></pre></div>
+
+<p><strong>注意</strong>: signature_delta 不计入 token 计数（排除在 <code>onUpdateLength</code> 之外），避免状态栏 token 计数器跳动。</p>
+<hr />
+<h2 id="8-thinking">8. Thinking 块的存储与消息规范化</h2>
+<p><strong>文件</strong>: <code>src/utils/messages.ts</code></p>
+<h3 id="_11">类型守卫</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// line 4774</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">isThinkingBlock</span><span class="p">(</span><span class="nx">block</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">block</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;thinking&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">block</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;redacted_thinking&#39;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="thinking_1">尾部 Thinking 块过滤</h3>
+<p><strong>文件</strong>: <code>src/utils/messages.ts:4781-4824</code></p>
+<p>Claude API 拒绝以 thinking 块结尾的 assistant 消息。代码在发送前自动剥离：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// 如果 assistant 消息的 content 数组末尾是 thinking 块，移除它</span>
+<span class="c1">// 如果移除后 content 为空，插入占位文本</span>
+<span class="p">[{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;text&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;[No message content]&#39;</span><span class="w"> </span><span class="p">}]</span>
+</code></pre></div>
+
+<h3 id="_12">孤立消息过滤</h3>
+<p>如果流式传输中断导致某条 assistant 消息只包含 thinking 块（没有 text），这条消息会被完全移除。处理顺序很重要：</p>
+<div class="highlight"><pre><span></span><code>1. 先剥离尾部 thinking 块
+2. 再过滤空白内容的消息
+（顺序反过来会遗漏只有 thinking 块的消息）
+</code></pre></div>
+
+<hr />
+<h2 id="9">9. 密码学签名机制</h2>
+<p><strong>文件</strong>: <code>src/utils/messages.ts:5061-5099</code></p>
+<h3 id="_13">签名是什么</h3>
+<p>每个 thinking 块和 redacted_thinking 块都携带一个 <code>signature</code> 字段，这是 API 端生成的密码学签名。</p>
+<h3 id="_14">签名的作用</h3>
+<p>签名与<strong>生成时使用的 API 密钥</strong>绑定。当客户端在后续请求中回传 thinking 块时，API 通过签名验证这些块确实是自己生成的，没有被篡改。这允许 API 执行有状态转换（如从压缩摘要恢复原始内容）。</p>
+<h3 id="_15">签名失效场景</h3>
+<p>当用户切换 API 密钥（如 <code>/login</code> 重新登录）后，旧签名变得无效。API 会返回 400 错误。</p>
+<h3 id="_16">签名清理</h3>
+<p><strong>文件</strong>: <code>src/utils/messages.ts:5061-5099</code></p>
+<div class="highlight"><pre><span></span><code><span class="kd">function</span><span class="w"> </span><span class="nx">stripSignatureBlocks</span><span class="p">(</span><span class="nx">messages</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">Message</span><span class="p">[]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// 登录/凭证刷新时调用</span>
+<span class="w">  </span><span class="c1">// 移除所有带 signature 的块（thinking、redacted_thinking、connector_text）</span>
+<span class="w">  </span><span class="c1">// 如果移除后某条 assistant 消息变空，返回空数组让消息合并机制吸收</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="10-redacted-thinking">10. Redacted Thinking — 思考内容隐藏</h2>
+<p><strong>文件</strong>: <code>src/utils/betas.ts:264-277</code></p>
+<h3 id="redacted-thinking">什么是 Redacted Thinking</h3>
+<p>正常情况下，API 返回 <code>thinking</code> 块（包含实际思考文本）。当启用 Redact Thinking Beta 时，API 返回 <code>redacted_thinking</code> 块——只有类型标记，没有实际内容。</p>
+<h3 id="_17">触发条件</h3>
+<div class="highlight"><pre><span></span><code>REDACT_THINKING_BETA_HEADER = &#39;redact-thinking-2026-02-12&#39;
+
+启用条件（全部满足）:
+  1. 模型支持 ISP（Interleaved Structured Prompting）
+  2. 非 SDK/非 print 模式（交互式会话）
+  3. 用户设置 showThinkingSummaries !== true
+</code></pre></div>
+
+<h3 id="redact">为什么要 Redact</h3>
+<p>正常模式下，API 会用 Haiku 对 thinking 内容做摘要（summarization），这增加了 TTFT（Time To First Token）。Redact 模式跳过摘要，直接返回不可见的占位块，加快首字节响应时间。</p>
+<h3 id="ui">UI 展示区别</h3>
+<div class="highlight"><pre><span></span><code>thinking 块     → 显示 &quot;∴ Thinking&quot;，用户可展开查看完整内容
+redacted_thinking → 显示 &quot;✻ Thinking…&quot;，无法查看内容
+</code></pre></div>
+
+<hr />
+<h2 id="11-thinking-clear">11. Thinking Clear — 长时间闲置后的思考清理</h2>
+<p><strong>文件</strong>: <code>src/services/api/claude.ts:1444-1456</code></p>
+<h3 id="_18">问题背景</h3>
+<p>用户暂离超过 1 小时后回来继续对话，之前的 prompt cache 已过期。历史消息中的 thinking 块会增加请求体积，但没有 cache 命中收益。</p>
+<h3 id="_19">清理机制</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="nx">thinkingClearLatched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getThinkingClearLatched</span><span class="p">()</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">thinkingClearLatched</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">isAgenticQuery</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">lastCompletion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getLastApiCompletionTimestamp</span><span class="p">()</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">lastCompletion</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">      </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">lastCompletion</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nx">CACHE_TTL_1HOUR_MS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">thinkingClearLatched</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="nx">setThinkingClearLatched</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">   </span><span class="c1">// 锁存：一旦触发，整个会话持续生效</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_20">清理策略</h3>
+<p>通过 API 的 context management 功能，在请求中指定清理策略：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// 清理所有 thinking 块，只保留最近 1 轮</span>
+<span class="nx">clearAllThinking</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;thinking_turns&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="kt">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;all&#39;</span>
+</code></pre></div>
+
+<h3 id="_21">重置</h3>
+<p><code>/clear</code> 或 <code>/compact</code> 命令会重置 thinkingClearLatched 状态。</p>
+<hr />
+<h2 id="12-agent">12. 子 Agent 的思考继承策略</h2>
+<p><strong>文件</strong>: <code>src/tools/AgentTool/runAgent.ts:679-684</code></p>
+<h3 id="_22">两种策略</h3>
+<div class="highlight"><pre><span></span><code><span class="nx">thinkingConfig</span><span class="o">:</span><span class="w"> </span><span class="kt">useExactTools</span>
+<span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="nx">toolUseContext</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">thinkingConfig</span><span class="w">   </span><span class="c1">// Fork 子 agent：继承父级配置</span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="p">},</span><span class="w">         </span><span class="c1">// 普通子 agent：关闭思考</span>
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>子 agent 类型</th>
+<th>Thinking 配置</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fork 子 agent（<code>useExactTools=true</code>）</td>
+<td>继承父级</td>
+<td>需要匹配父级 API 请求前缀以命中 prompt cache</td>
+</tr>
+<tr>
+<td>普通子 agent</td>
+<td>禁用</td>
+<td>控制输出 token 成本（子 agent 通常做简单任务）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fork-agent">Fork 子 agent 的特殊性</h3>
+<p>Fork 子 agent 携带父级的完整对话历史（<code>forkContextMessages</code>），使用相同的工具集和系统提示。为了命中 prompt cache，它必须让 API 请求前缀（包括 thinking 参数）与父级完全一致。</p>
+<hr />
+<h2 id="13">13. 压缩系统中的思考处理</h2>
+<h3 id="token">Token 计数</h3>
+<p><strong>文件</strong>: <code>src/services/compact/microCompact.ts:183-188</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">block</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;thinking&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">totalTokens</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">roughTokenCountEstimation</span><span class="p">(</span><span class="nx">block</span><span class="p">.</span><span class="nx">thinking</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">block</span><span class="p">.</span><span class="kr">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;redacted_thinking&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// redacted_thinking 没有实际内容，计为 0 token</span>
+<span class="w">  </span><span class="nx">totalTokens</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">0</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="thinking_2">压缩时的 Thinking 块处理</h3>
+<p>压缩对话时，thinking 块随 assistant 消息一起发送给压缩 agent。压缩 agent 只输出文本摘要，不保留原始 thinking 块。压缩后，旧的 thinking 块被摘要替换，签名也随之失效。</p>
+<hr />
+<h2 id="14-ui">14. UI 展示</h2>
+<h3 id="thinking_3">Thinking 块渲染</h3>
+<p><strong>文件</strong>: <code>src/components/messages/AssistantThinkingMessage.tsx</code></p>
+<div class="highlight"><pre><span></span><code>非 verbose 模式（默认）:
+  ∴ Thinking
+  [按 Ctrl+O 展开查看]
+
+verbose 模式 / transcript 模式:
+  ∴ Thinking
+  让我分析一下这个问题的几个方面...
+  首先，空指针错误通常发生在...
+  （完整思考内容，暗色斜体渲染）
+</code></pre></div>
+
+<h3 id="redacted-thinking_1">Redacted Thinking 渲染</h3>
+<p><strong>文件</strong>: <code>src/components/messages/AssistantRedactedThinkingMessage.tsx</code></p>
+<div class="highlight"><pre><span></span><code>✻ Thinking…
+（无法展开，内容不可见）
+</code></pre></div>
+
+<h3 id="ultrathink-ui">Ultrathink UI 反馈</h3>
+<p><strong>文件</strong>: <code>src/components/PromptInput/PromptInput.tsx:685-758</code></p>
+<div class="highlight"><pre><span></span><code>输入框中 &quot;ultrathink&quot; 文字 → 逐字符彩虹色渲染
+通知栏 → &quot;Effort set to high for this turn&quot;（5 秒超时）
+</code></pre></div>
+
+<hr />
+<h2 id="15">15. 完整生命周期示例</h2>
+<h3 id="opus-46-ultrathink">场景：用户在 Opus 4.6 上使用 ultrathink</h3>
+<div class="highlight"><pre><span></span><code>步骤 1: 会话初始化
+  main.tsx → shouldEnableThinkingByDefault() → true
+  → ThinkingConfig = { type: &#39;adaptive&#39; }
+  → 默认 effort = &#39;medium&#39;（Opus 4.6 Pro 用户）
+
+步骤 2: 用户输入
+  &quot;ultrathink 请帮我设计一个分布式缓存的淘汰策略&quot;
+
+步骤 3: 输入处理
+  attachments.ts → hasUltrathinkKeyword(&quot;ultrathink ...&quot;) → true
+  → 创建 attachment: { type: &#39;ultrathink_effort&#39;, level: &#39;high&#39; }
+  → UI: &quot;ultrathink&quot; 显示彩虹色
+  → 通知: &quot;Effort set to high for this turn&quot;
+
+步骤 4: 消息构建
+  messages.ts → ultrathink_effort attachment 转为 system reminder:
+  &quot;The user has requested reasoning effort level: high. Apply this to the current turn.&quot;
+
+步骤 5: API 请求构建
+  claude.ts:1604 → modelSupportsAdaptiveThinking(&#39;opus-4-6&#39;) → true
+  → thinking = { type: &#39;adaptive&#39; }
+  claude.ts:1458 → resolveAppliedEffort() → &#39;high&#39;（ultrathink 提升）
+  → output_config.effort = &#39;high&#39;
+
+  最终请求:
+  {
+    model: &quot;claude-opus-4-6-20250414&quot;,
+    thinking: { type: &quot;adaptive&quot; },
+    output_config: { effort: &quot;high&quot; },
+    temperature: undefined,  // thinking 启用时不发送
+    messages: [
+      { role: &quot;user&quot;, content: [
+        { type: &quot;text&quot;, text: &quot;请帮我设计一个分布式缓存的淘汰策略&quot; }
+      ]},
+      { role: &quot;user&quot;, content: [
+        { type: &quot;text&quot;, text: &quot;&lt;system-reminder&gt;...reasoning effort level: high...&lt;/system-reminder&gt;&quot; }
+      ]}
+    ]
+  }
+
+步骤 6: 流式响应
+  ← content_block_start { index: 0, type: &#39;thinking&#39; }
+  ← thinking_delta { thinking: &#39;分布式缓存淘汰策略需要考虑几个维度：\n&#39; }
+  ← thinking_delta { thinking: &#39;1. 一致性 vs 可用性的权衡...\n&#39; }
+  ← thinking_delta { thinking: &#39;2. 热点数据识别...\n&#39; }
+  ← ... (可能很长，adaptive 模式无 token 限制)
+  ← signature_delta { signature: &#39;sig_abc123...&#39; }
+  ← content_block_stop { index: 0 }
+  ← content_block_start { index: 1, type: &#39;text&#39; }
+  ← text_delta { text: &#39;# 分布式缓存淘汰策略设计\n\n&#39; }
+  ← text_delta { text: &#39;## 核心思路\n\n基于...&#39; }
+  ← content_block_stop { index: 1 }
+  ← message_stop
+
+步骤 7: 消息存储
+  assistant message = {
+    content: [
+      { type: &#39;thinking&#39;, thinking: &#39;分布式缓存淘汰...&#39;, signature: &#39;sig_abc123...&#39; },
+      { type: &#39;text&#39;, text: &#39;# 分布式缓存淘汰策略设计\n\n...&#39; }
+    ]
+  }
+
+步骤 8: UI 渲染
+  ∴ Thinking                          ← 折叠状态，按 Ctrl+O 展开
+  # 分布式缓存淘汰策略设计             ← 正常渲染
+  ## 核心思路
+  基于...
+
+步骤 9: 下一轮
+  effort 恢复为 &#39;medium&#39;（ultrathink 仅影响当前轮）
+  thinking 仍然是 adaptive（会话级别不变）
+</code></pre></div>
+
+<hr />
+<h2 id="16">16. 模型参数速查表</h2>
+<h3 id="thinking_4">Thinking 预算</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>默认输出</th>
+<th>上限输出</th>
+<th>Thinking 预算（固定模式）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Opus 4.6</td>
+<td>64,000</td>
+<td>128,000</td>
+<td>127,999</td>
+</tr>
+<tr>
+<td>Sonnet 4.6</td>
+<td>32,000</td>
+<td>128,000</td>
+<td>127,999</td>
+</tr>
+<tr>
+<td>Opus 4.5 / Sonnet 4 / Haiku 4</td>
+<td>32,000</td>
+<td>64,000</td>
+<td>63,999</td>
+</tr>
+<tr>
+<td>Opus 4.1 / Opus 4</td>
+<td>32,000</td>
+<td>32,000</td>
+<td>31,999</td>
+</tr>
+<tr>
+<td>Claude 3.7 Sonnet</td>
+<td>32,000</td>
+<td>64,000</td>
+<td>63,999</td>
+</tr>
+<tr>
+<td>Claude 3.5 Sonnet / Haiku</td>
+<td>8,192</td>
+<td>8,192</td>
+<td>8,191</td>
+</tr>
+<tr>
+<td>Claude 3 Opus</td>
+<td>4,096</td>
+<td>4,096</td>
+<td>4,095</td>
+</tr>
+</tbody>
+</table>
+<p>计算公式：<code>getMaxThinkingTokensForModel(model) = upperLimit - 1</code></p>
+<h3 id="_23">上下文窗口</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>上下文窗口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Opus 4.6 [1m]</td>
+<td>1,000,000</td>
+</tr>
+<tr>
+<td>Sonnet 4.6 [1m]</td>
+<td>1,000,000</td>
+</tr>
+<tr>
+<td>其他 4.x 模型</td>
+<td>200,000</td>
+</tr>
+</tbody>
+</table>
+<h3 id="effort_2">Effort 默认值</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>用户类型</th>
+<th>默认 Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Opus 4.6</td>
+<td>Pro</td>
+<td>medium</td>
+</tr>
+<tr>
+<td>Opus 4.6</td>
+<td>Max/Team（config enabled）</td>
+<td>medium</td>
+</tr>
+<tr>
+<td>其他支持 effort 的模型（ultrathink 开启时）</td>
+<td>所有</td>
+<td>medium</td>
+</tr>
+<tr>
+<td>其他</td>
+<td>所有</td>
+<td>undefined（等效 API 默认 high）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="growthbook">GrowthBook 特性标志</h3>
+<table>
+<thead>
+<tr>
+<th>标志名</th>
+<th>控制内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tengu_turtle_carbon</code></td>
+<td>Ultrathink 功能开关（默认 true）</td>
+</tr>
+<tr>
+<td><code>tengu_grey_step2</code></td>
+<td>Opus 4.6 Max/Team 用户默认 effort 配置</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_24">环境变量</h3>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MAX_THINKING_TOKENS</code></td>
+<td>设置固定 thinking 预算（&gt;0 启用，=0 禁用）</td>
+</tr>
+<tr>
+<td><code>CLAUDE_CODE_DISABLE_THINKING</code></td>
+<td>强制禁用所有 thinking</td>
+</tr>
+<tr>
+<td><code>CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING</code></td>
+<td>强制使用固定预算模式（即使模型支持 adaptive）</td>
+</tr>
+<tr>
+<td><code>CLAUDE_CODE_EFFORT_LEVEL</code></td>
+<td>覆盖 effort 等级（'low'/'medium'/'high'/'max'/'unset'）</td>
+</tr>
+<tr>
+<td><code>CLAUDE_CODE_ALWAYS_ENABLE_EFFORT</code></td>
+<td>为所有模型启用 effort 参数</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="17">17. 关键设计决策总结</h2>
+<h3 id="1-adaptive">1. Adaptive 优于固定预算</h3>
+<p>4.6+ 模型全部使用 adaptive thinking，让模型自己决定思考多少。固定预算只为旧模型保留。代码注释反复强调"不要在没通知模型团队的情况下修改 adaptive 支持"。</p>
+<h3 id="2-effort-thinking">2. Effort 与 Thinking 解耦</h3>
+<p>两者是独立的 API 参数。Thinking 控制"是否有内部推理过程"，Effort 控制"推理的深度"。这允许：
+- 开启 thinking + low effort（快速浅层思考）
+- 开启 thinking + max effort（深度长时间思考）
+- 关闭 thinking + high effort（不展示内部推理但仍然认真处理）</p>
+<h3 id="3-ultrathink-effort">3. Ultrathink 是 Effort 的语法糖</h3>
+<p>Ultrathink 不修改 ThinkingConfig，只临时提升当前轮的 effort。这意味着它通过 attachment → system reminder 的间接路径生效，而非直接修改 API 参数。设计优雅之处：不需要为"临时提升"引入新的状态管理。</p>
+<h3 id="4-agent-thinking">4. 子 Agent 默认关闭 Thinking</h3>
+<p>普通子 agent 禁用 thinking 以控制成本。只有 fork 子 agent（需要 cache 命中）才继承父级配置。这是成本和性能的权衡。</p>
+<h3 id="5">5. 签名实现信任链</h3>
+<p>密码学签名让 API 能验证 thinking 块的来源，支持跨请求的有状态操作。凭证变更时自动清理，防止 400 错误。</p>
+<h3 id="6-1">6. 1 小时闲置触发清理</h3>
+<p>超过 1 小时未活动 → cache 过期 → thinking 块变成纯负担 → 自动清理。这是一个典型的"缓存友好"优化，减少无效 token 传输。</p>
+</div>
+</body>
+</html>
