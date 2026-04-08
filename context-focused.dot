@@ -1,0 +1,52 @@
+digraph context_deps {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=10];
+  
+  // context.ts direct deps
+  "context.ts" [fillcolor="#ff9999"];
+  "context.ts" -> "bootstrap/state.ts";
+  "context.ts" -> "constants/common.ts";
+  "context.ts" -> "utils/claudemd.ts";
+  "context.ts" -> "utils/diagLogs.ts";
+  "context.ts" -> "utils/envUtils.ts";
+  "context.ts" -> "utils/execFileNoThrow.ts";
+  "context.ts" -> "utils/git.ts";
+  "context.ts" -> "utils/gitSettings.ts";
+  "context.ts" -> "utils/log.ts";
+  
+  // Who depends on context.ts (reverse deps)
+  "commands/btw/btw.tsx" [fillcolor="#99ccff"];
+  "commands/clear/caches.ts" [fillcolor="#99ccff"];
+  "commands/compact/compact.ts" [fillcolor="#99ccff"];
+  "screens/REPL.tsx" [fillcolor="#99ccff"];
+  "services/compact/postCompactCleanup.ts" [fillcolor="#99ccff"];
+  "tools/AgentTool/runAgent.ts" [fillcolor="#99ccff"];
+  "utils/analyzeContext.ts" [fillcolor="#99ccff"];
+  "utils/api.ts" [fillcolor="#99ccff"];
+  "utils/queryContext.ts" [fillcolor="#99ccff"];
+  
+  "commands/btw/btw.tsx" -> "context.ts";
+  "commands/clear/caches.ts" -> "context.ts";
+  "commands/compact/compact.ts" -> "context.ts";
+  "screens/REPL.tsx" -> "context.ts";
+  "services/compact/postCompactCleanup.ts" -> "context.ts";
+  "tools/AgentTool/runAgent.ts" -> "context.ts";
+  "utils/analyzeContext.ts" -> "context.ts";
+  "utils/api.ts" -> "context.ts";
+  "utils/queryContext.ts" -> "context.ts";
+
+  // queryContext -> compact chain
+  "utils/queryContext.ts" [fillcolor="#99ff99"];
+  "utils/queryContext.ts" -> "context.ts";
+  "utils/queryContext.ts" -> "constants/prompts.ts";
+  
+  // utils/context.ts (window sizing)
+  "utils/context.ts" [fillcolor="#ffcc99"];
+  "services/compact/autoCompact.ts" [fillcolor="#ffcc99"];
+  "services/compact/autoCompact.ts" -> "utils/context.ts";
+  "services/compact/autoCompact.ts" -> "services/compact/compact.ts";
+  "services/compact/compact.ts" [fillcolor="#ffcc99"];
+  "services/compact/compact.ts" -> "utils/context.ts";
+  "services/compact/microCompact.ts" [fillcolor="#ffcc99"];
+}
+
