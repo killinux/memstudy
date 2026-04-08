@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用 Madge 生成 TypeScript/JavaScript 依赖图指南</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="madge-typescriptjavascript">使用 Madge 生成 TypeScript/JavaScript 依赖图指南</h1>
+<h2 id="madge">什么是 Madge</h2>
+<p>Madge 是一个 Node.js 工具，通过静态分析 <code>import</code>/<code>require</code> 语句，解析模块间的依赖关系。它可以：</p>
+<ul>
+<li>列出每个文件的直接依赖</li>
+<li>检测循环依赖</li>
+<li>找出孤立文件（没人引用的文件）</li>
+<li>查看谁依赖了某个文件（反向依赖）</li>
+<li>生成 DOT/SVG/PNG 可视化依赖图</li>
+</ul>
+<p>底层原理：Madge 使用 <code>precinct</code> 库提取 import 语句，用 <code>dependency-tree</code> 构建依赖树，用 Graphviz 的 <code>dot</code> 命令渲染图形。</p>
+<hr />
+<h2 id="_1">第一步：安装依赖</h2>
+<h3 id="madge_1">安装 Madge</h3>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>madge
+</code></pre></div>
+
+<h3 id="graphviz">安装 Graphviz（生成图片必需）</h3>
+<p>Graphviz 提供 <code>dot</code> 命令，负责将依赖关系渲染为 SVG/PNG 图片。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># RHEL / CentOS / Fedora</span>
+dnf<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>graphviz
+
+<span class="c1"># Debian / Ubuntu</span>
+apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>graphviz
+
+<span class="c1"># macOS</span>
+brew<span class="w"> </span>install<span class="w"> </span>graphviz
+
+<span class="c1"># Windows (Chocolatey)</span>
+choco<span class="w"> </span>install<span class="w"> </span>graphviz
+</code></pre></div>
+
+<p>验证安装：</p>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>--version
+dot<span class="w"> </span>-V
+</code></pre></div>
+
+<hr />
+<h2 id="_2">第二步：基本用法</h2>
+<p>以下示例假设项目根目录有 <code>tsconfig.json</code>，源码在 <code>src/</code> 下。</p>
+<h3 id="21">2.1 列出依赖关系（文本）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 从入口文件出发，列出所有可达模块的依赖</span>
+madge<span class="w"> </span>src/entrypoints/cli.tsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx
+</code></pre></div>
+
+<p>输出格式：</p>
+<div class="highlight"><pre><span></span><code>context.ts
+  bootstrap/state.ts
+  utils/claudemd.ts
+  utils/git.ts
+</code></pre></div>
+
+<p>表示 <code>context.ts</code> 依赖了 <code>bootstrap/state.ts</code>、<code>utils/claudemd.ts</code>、<code>utils/git.ts</code>。</p>
+<p><strong>原理</strong>：Madge 从指定入口递归解析 import 语句，<code>--ts-config</code> 让它理解 TypeScript 路径别名（如 <code>src/*</code>），<code>--extensions</code> 告诉它要扫描哪些后缀的文件。</p>
+<h3 id="22">2.2 检测循环依赖</h3>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>src/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--circular
+</code></pre></div>
+
+<p>输出示例：</p>
+<div class="highlight"><pre><span></span><code>1) utils/slowOperations.ts &gt; utils/debug.ts
+2) commands.ts &gt; commands/add-dir/index.ts
+</code></pre></div>
+
+<p>表示 A 依赖 B，B 又依赖回 A（可能经过多层中转）。</p>
+<p><strong>原理</strong>：在依赖图中做深度优先搜索（DFS），检测是否存在回边（back edge），即访问到一个尚在当前递归栈中的节点。</p>
+<h3 id="23">2.3 查看反向依赖（谁依赖了某文件）</h3>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>src/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--depends<span class="w"> </span>context.ts
+</code></pre></div>
+
+<p>输出的是所有 import 了 <code>context.ts</code> 的文件列表。适合评估修改某个文件的影响范围。</p>
+<h3 id="24">2.4 查找孤立文件</h3>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>src/<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--orphans
+</code></pre></div>
+
+<p>列出没有被任何其他文件 import 的文件。可能是废弃代码、入口文件、或测试文件。</p>
+<hr />
+<h2 id="_3">第三步：生成可视化依赖图</h2>
+<h3 id="31-svg">3.1 直接生成 SVG</h3>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>src/context.ts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span>deps.svg
+</code></pre></div>
+
+<p><strong>原理</strong>：Madge 先构建依赖树，转为 DOT 格式的图描述语言，再调用 Graphviz 的 <code>dot</code> 命令渲染为 SVG。</p>
+<blockquote>
+<p>注意：如果依赖树很大（上千个文件），渲染可能很慢甚至失败。建议对大项目只分析局部模块。</p>
+</blockquote>
+<h3 id="32-dot">3.2 导出 DOT 格式（手动控制渲染）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 导出 DOT 文件</span>
+madge<span class="w"> </span>src/context.ts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dot<span class="w"> </span>&gt;<span class="w"> </span>deps.dot
+
+<span class="c1"># 手动用 Graphviz 渲染（可以调整布局引擎）</span>
+dot<span class="w"> </span>-Tsvg<span class="w"> </span>deps.dot<span class="w"> </span>-o<span class="w"> </span>deps.svg<span class="w">      </span><span class="c1"># 层级布局（默认）</span>
+neato<span class="w"> </span>-Tsvg<span class="w"> </span>deps.dot<span class="w"> </span>-o<span class="w"> </span>deps.svg<span class="w">    </span><span class="c1"># 弹簧模型布局</span>
+fdp<span class="w"> </span>-Tsvg<span class="w"> </span>deps.dot<span class="w"> </span>-o<span class="w"> </span>deps.svg<span class="w">      </span><span class="c1"># 力导向布局</span>
+circo<span class="w"> </span>-Tsvg<span class="w"> </span>deps.dot<span class="w"> </span>-o<span class="w"> </span>deps.svg<span class="w">    </span><span class="c1"># 圆形布局</span>
+
+<span class="c1"># 也可以输出 PNG</span>
+dot<span class="w"> </span>-Tpng<span class="w"> </span>deps.dot<span class="w"> </span>-o<span class="w"> </span>deps.png
+</code></pre></div>
+
+<p><strong>DOT 语言简介</strong>：DOT 是 Graphviz 定义的图描述语言，例如：</p>
+<div class="highlight"><pre><span></span><code><span class="k">digraph</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;A.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;B.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;A.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;C.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;B.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;D.ts&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>表示 A 依赖 B 和 C，B 依赖 D。</p>
+<h3 id="33-json">3.3 导出 JSON（程序化处理）</h3>
+<div class="highlight"><pre><span></span><code>madge<span class="w"> </span>src/context.ts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--json<span class="w"> </span>&gt;<span class="w"> </span>deps.json
+</code></pre></div>
+
+<p>输出格式：</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;bootstrap/state.ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;utils/git.ts&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;bootstrap/state.ts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;utils/config.ts&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>可以用 Python/JS 脚本进一步分析、筛选、生成自定义图表。</p>
+<hr />
+<h2 id="_4">第四步：手动构建精准依赖图（大项目推荐）</h2>
+<p>大项目直接 <code>--image</code> 渲染往往因节点太多而失败或不可读。更好的方式是：先用 madge 获取数据，再手写 DOT 只包含关心的模块。</p>
+<h3 id="1">步骤 1：获取目标文件的直接依赖</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 查看 context.ts 依赖了谁</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="s2">&quot;^context.ts&quot;</span>
+</code></pre></div>
+
+<h3 id="2">步骤 2：获取反向依赖</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 查看谁依赖了 context.ts</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx,js,jsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--depends<span class="w"> </span>context.ts
+</code></pre></div>
+
+<h3 id="3-dot">步骤 3：手写 DOT 文件</h3>
+<p>根据上面两步的结果，创建一个只包含关键节点的 DOT 文件：</p>
+<div class="highlight"><pre><span></span><code><span class="k">digraph</span><span class="w"> </span><span class="nt">context_deps</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">rankdir</span><span class="p">=</span><span class="s">LR</span><span class="p">;</span>
+<span class="w">  </span><span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="p">=</span><span class="s">box</span><span class="p">,</span><span class="w"> </span><span class="na">style</span><span class="p">=</span><span class="s">filled</span><span class="p">,</span><span class="w"> </span><span class="na">fontsize</span><span class="p">=</span><span class="m">10</span><span class="p">];</span>
+
+<span class="w">  </span><span class="c1">// 核心模块（红色）</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="p">[</span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#ff9999&quot;</span><span class="p">];</span>
+
+<span class="w">  </span><span class="c1">// context.ts 的依赖（灰色，默认）</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;bootstrap/state.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;utils/claudemd.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;utils/git.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;utils/envUtils.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;context.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;utils/log.ts&quot;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// 谁依赖了 context.ts（蓝色）</span>
+<span class="w">  </span><span class="nt">&quot;screens/REPL.tsx&quot;</span><span class="w"> </span><span class="p">[</span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#99ccff&quot;</span><span class="p">];</span>
+<span class="w">  </span><span class="nt">&quot;utils/queryContext.ts&quot;</span><span class="w"> </span><span class="p">[</span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#99ccff&quot;</span><span class="p">];</span>
+<span class="w">  </span><span class="nt">&quot;screens/REPL.tsx&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;context.ts&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="nt">&quot;utils/queryContext.ts&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;context.ts&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>DOT 语法速查</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rankdir=LR</code></td>
+<td>从左到右布局（默认 TB 从上到下）</td>
+</tr>
+<tr>
+<td><code>node [shape=box]</code></td>
+<td>全局设置节点形状为方框</td>
+</tr>
+<tr>
+<td><code>[fillcolor="#ff9999"]</code></td>
+<td>设置节点填充颜色</td>
+</tr>
+<tr>
+<td><code>"A" -&gt; "B"</code></td>
+<td>A 依赖 B（有向边）</td>
+</tr>
+<tr>
+<td><code>subgraph cluster_X { ... }</code></td>
+<td>分组子图（会画边框）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4">步骤 4：渲染</h3>
+<div class="highlight"><pre><span></span><code>dot<span class="w"> </span>-Tsvg<span class="w"> </span>context-focused.dot<span class="w"> </span>-o<span class="w"> </span>context-focused.svg
+</code></pre></div>
+
+<h3 id="5">步骤 5：查看</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 浏览器打开</span>
+open<span class="w"> </span>context-focused.svg<span class="w">           </span><span class="c1"># macOS</span>
+xdg-open<span class="w"> </span>context-focused.svg<span class="w">      </span><span class="c1"># Linux</span>
+start<span class="w"> </span>context-focused.svg<span class="w">          </span><span class="c1"># Windows</span>
+
+<span class="c1"># 或转为 PNG</span>
+dot<span class="w"> </span>-Tpng<span class="w"> </span>context-focused.dot<span class="w"> </span>-o<span class="w"> </span>context-focused.png
+</code></pre></div>
+
+<hr />
+<h2 id="_5">常见问题</h2>
+<h3 id="q-madge">Q: madge 只解析了很少的文件</h3>
+<p>Bun/Deno 项目中 import 路径常带 <code>.js</code> 后缀（如 <code>import x from './foo.js'</code>），但实际文件是 <code>.ts</code>。需要加 <code>--extensions ts,tsx,js,jsx</code> 让 madge 正确解析。</p>
+<h3 id="q">Q: 渲染超时或失败</h3>
+<p>依赖图节点太多时 Graphviz 会很慢。解决方案：
+- 只分析单个入口文件而非整个 <code>src/</code>
+- 用 <code>--json</code> 导出后手动筛选
+- 手写 DOT 只画关心的部分</p>
+<h3 id="q_1">Q: 循环依赖数量巨大</h3>
+<p>Madge 列出的是所有可能的循环路径（排列组合），不是独立的环。实际需要修复的核心环路通常只有几个。关注最短的循环路径，它们是问题根源。</p>
+<h3 id="q_2">Q: 路径别名不识别</h3>
+<p>确保 <code>tsconfig.json</code> 中配置了 <code>paths</code>，并通过 <code>--ts-config</code> 传给 madge：</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;compilerOptions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;baseUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;src/*&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;src/*&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;@utils/*&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;src/utils/*&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_6">快速参考</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 依赖列表</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx
+
+<span class="c1"># 循环依赖</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--circular
+
+<span class="c1"># 反向依赖</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--depends<span class="w"> </span>foo.ts
+
+<span class="c1"># 孤立文件</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--orphans
+
+<span class="c1"># 生成图片</span>
+madge<span class="w"> </span>src/entry.ts<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--image<span class="w"> </span>graph.svg
+
+<span class="c1"># 导出 DOT</span>
+madge<span class="w"> </span>src/entry.ts<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--dot<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
+
+<span class="c1"># 导出 JSON</span>
+madge<span class="w"> </span>src/entry.ts<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--json<span class="w"> </span>&gt;<span class="w"> </span>graph.json
+
+<span class="c1"># 手动渲染 DOT</span>
+dot<span class="w"> </span>-Tsvg<span class="w"> </span>graph.dot<span class="w"> </span>-o<span class="w"> </span>graph.svg
+dot<span class="w"> </span>-Tpng<span class="w"> </span>graph.dot<span class="w"> </span>-o<span class="w"> </span>graph.png
+</code></pre></div>
+</div>
+</body>
+</html>
