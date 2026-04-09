@@ -1,0 +1,154 @@
+digraph tool_system {
+  rankdir=TB;
+  node [shape=box, style=filled, fontsize=9, fontname="Helvetica"];
+  label="Tool System Architecture (free-code45)";
+  labelloc=t; fontsize=14;
+  compound=true;
+
+  // ═══ Layer 1: Tool 接口定义 ═══
+  subgraph cluster_interface {
+    label="Layer 1: Tool Interface (Tool.ts)";
+    style=filled; color="#e0d0d0"; fillcolor="#fae8e8";
+
+    "Tool<Input,Output,P>" [fillcolor="#ff9999", label="Tool<Input,Output,P>\n[Tool.ts:362]\nname + inputSchema + call()\n+ isReadOnly + isConcurrencySafe\n+ isDestructive + checkPermissions"];
+    "ToolDef" [fillcolor="#ffb3b3", label="ToolDef\n[Tool.ts:721]\nPartial<Tool>\n(可省略默认方法)"];
+    "buildTool()" [fillcolor="#ffb3b3", label="buildTool(def)\n[Tool.ts:783]\n填充默认值\n→ 完整 Tool"];
+    "TOOL_DEFAULTS" [fillcolor="#ffcccc", label="TOOL_DEFAULTS\n[Tool.ts:757]\nisEnabled=true\nisConcurrencySafe=false\nisReadOnly=false\nisDestructive=false\ncheckPermissions=allow"];
+    "ToolUseContext" [fillcolor="#ffcccc", label="ToolUseContext\n[Tool.ts:158]\noptions, abortController,\nreadFileState, getAppState,\nsetAppState, ..."];
+  }
+
+  // ═══ Layer 2: 注册中心 ═══
+  subgraph cluster_registry {
+    label="Layer 2: Tool Registration (tools.ts)";
+    style=filled; color="#d0d0e0"; fillcolor="#e8e8fa";
+
+    "getAllBaseTools()" [fillcolor="#99ccff", label="getAllBaseTools()\n[tools.ts:193]\n返回所有可用 Tool 数组\n根据 feature flag 条件包含"];
+    "getTools(permCtx)" [fillcolor="#99ccff", label="getTools(permCtx)\n[tools.ts:271]\n按 permission context 过滤\n+ filterToolsByDenyRules"];
+    "filterToolsByDenyRules" [fillcolor="#b3d9ff", label="filterToolsByDenyRules\n[tools.ts:262]\n按 deny 规则筛选"];
+    "findToolByName" [fillcolor="#b3d9ff", label="findToolByName\n[Tool.ts:358]\n按名字 + alias 查找"];
+  }
+
+  // ═══ Layer 3: 工具类别 ═══
+  subgraph cluster_categories {
+    label="Layer 3: Tool Categories (42 tools)";
+    style=filled; color="#d0e0d0"; fillcolor="#e8fae8";
+
+    subgraph cluster_file_ops {
+      label="File Ops (5)";
+      style=filled; fillcolor="#d4edda";
+      "FileReadTool" [fillcolor="#99ff99"];
+      "FileWriteTool" [fillcolor="#99ff99"];
+      "FileEditTool" [fillcolor="#99ff99"];
+      "NotebookEditTool" [fillcolor="#99ff99"];
+      "GlobTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_exec {
+      label="Execution (2)";
+      style=filled; fillcolor="#d4edda";
+      "BashTool" [fillcolor="#99ff99"];
+      "PowerShellTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_search {
+      label="Search (3)";
+      style=filled; fillcolor="#d4edda";
+      "GrepTool" [fillcolor="#99ff99"];
+      "WebSearchTool" [fillcolor="#99ff99"];
+      "WebFetchTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_agent {
+      label="Agent (3)";
+      style=filled; fillcolor="#d4edda";
+      "AgentTool" [fillcolor="#99ff99"];
+      "TeamCreateTool" [fillcolor="#99ff99"];
+      "SendMessageTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_task {
+      label="Task & Todo (7)";
+      style=filled; fillcolor="#d4edda";
+      "TaskCreateTool" [fillcolor="#99ff99"];
+      "TaskListTool" [fillcolor="#99ff99"];
+      "TaskUpdateTool" [fillcolor="#99ff99"];
+      "TodoWriteTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_mcp {
+      label="MCP & Skill (4)";
+      style=filled; fillcolor="#d4edda";
+      "MCPTool" [fillcolor="#99ff99"];
+      "SkillTool" [fillcolor="#99ff99"];
+      "ToolSearchTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_planmode {
+      label="Plan & Worktree (5)";
+      style=filled; fillcolor="#d4edda";
+      "EnterPlanModeTool" [fillcolor="#99ff99"];
+      "ExitPlanModeV2Tool" [fillcolor="#99ff99"];
+      "EnterWorktreeTool" [fillcolor="#99ff99"];
+    }
+
+    subgraph cluster_other {
+      label="Other (~13)";
+      style=filled; fillcolor="#d4edda";
+      "AskUserQuestionTool" [fillcolor="#99ff99"];
+      "CronCreateTool" [fillcolor="#99ff99"];
+      "RemoteTriggerTool" [fillcolor="#99ff99"];
+      "..." [fillcolor="#cccccc", label="...其他"];
+    }
+  }
+
+  // ═══ Layer 4: 调度执行 ═══
+  subgraph cluster_dispatch {
+    label="Layer 4: Dispatch & Execution";
+    style=filled; color="#e0e0d0"; fillcolor="#fafae8";
+
+    "query.ts queryLoop" [fillcolor="#ffff99", label="query.ts\nqueryLoop()"];
+    "StreamingToolExecutor" [fillcolor="#ffff99", label="StreamingToolExecutor\naddTool() / executeTool()"];
+    "canUseTool()" [fillcolor="#ffffcc", label="canUseTool()\n[useCanUseTool.tsx]\nallow/deny/ask"];
+    "tool.call()" [fillcolor="#ffffcc", label="tool.call(args, ctx, ...)\n→ ToolResult<Output>"];
+  }
+
+  // ═══ External ═══
+  "Claude API" [shape=cylinder, fillcolor="#f0f0f0"];
+
+  // ═══ Edges ═══
+
+  // 接口层内部
+  "ToolDef" -> "buildTool()" [label=" 输入"];
+  "buildTool()" -> "Tool<Input,Output,P>" [label=" 输出"];
+  "buildTool()" -> "TOOL_DEFAULTS" [label=" 注入默认值", style=dashed];
+
+  // 工具创建（每个工具都通过 buildTool）
+  "buildTool()" -> "BashTool" [style=dashed, color="#666666"];
+  "buildTool()" -> "FileReadTool" [style=dashed, color="#666666"];
+  "buildTool()" -> "FileEditTool" [style=dashed, color="#666666"];
+
+  // 注册
+  "getAllBaseTools()" -> "BashTool" [style=dotted];
+  "getAllBaseTools()" -> "FileReadTool" [style=dotted];
+  "getAllBaseTools()" -> "AgentTool" [style=dotted];
+  "getAllBaseTools()" -> "..." [style=dotted];
+
+  // 过滤
+  "getTools(permCtx)" -> "getAllBaseTools()" [label=" 1. 获取全部"];
+  "getTools(permCtx)" -> "filterToolsByDenyRules" [label=" 2. 过滤"];
+
+  // 调用链
+  "query.ts queryLoop" -> "getTools(permCtx)" [label=" 启动时获取", color="#0066ff"];
+  "query.ts queryLoop" -> "Claude API" [label=" tools schema → API"];
+  "Claude API" -> "query.ts queryLoop" [label=" tool_use blocks", color="#006600"];
+  "query.ts queryLoop" -> "StreamingToolExecutor" [label=" 6. 分发"];
+  "StreamingToolExecutor" -> "findToolByName" [label=" 7. 查找", style=dashed];
+  "StreamingToolExecutor" -> "canUseTool()" [label=" 8. 权限"];
+  "StreamingToolExecutor" -> "tool.call()" [label=" 9. 执行"];
+  "tool.call()" -> "ToolUseContext" [label=" 读取", style=dashed];
+  "tool.call()" -> "BashTool" [style=dashed, color="#cccccc"];
+
+  // 接口实现关系
+  "BashTool" -> "Tool<Input,Output,P>" [label=" implements", style=dashed, dir=back, arrowtail=empty, color="#990000"];
+  "FileReadTool" -> "Tool<Input,Output,P>" [label=" implements", style=dashed, dir=back, arrowtail=empty, color="#990000"];
+}

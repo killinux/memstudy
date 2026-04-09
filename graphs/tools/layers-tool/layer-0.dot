@@ -1,0 +1,47 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "Tool.ts" [fillcolor="#ff9999"];
+  "commands.ts" [fillcolor="#ffcc99"];
+  "components/Spinner.tsx" [fillcolor="#ffcc99"];
+  "context/notifications.tsx" [fillcolor="#ffcc99"];
+  "entrypoints/agentSdkTypes.ts" [fillcolor="#ffcc99"];
+  "hooks/useCanUseTool.tsx" [fillcolor="#ffcc99"];
+  "services/mcp/types.ts" [fillcolor="#ffcc99"];
+  "state/AppState.tsx" [fillcolor="#ffcc99"];
+  "tools/AgentTool/loadAgentsDir.ts" [fillcolor="#ffcc99"];
+  "types/hooks.ts" [fillcolor="#ffcc99"];
+  "types/ids.ts" [fillcolor="#ffcc99"];
+  "types/permissions.ts" [fillcolor="#ffcc99"];
+  "utils/commitAttribution.ts" [fillcolor="#ffcc99"];
+  "utils/fileHistory.ts" [fillcolor="#ffcc99"];
+  "utils/fileStateCache.ts" [fillcolor="#ffcc99"];
+  "utils/permissions/denialTracking.ts" [fillcolor="#ffcc99"];
+  "utils/systemPromptType.ts" [fillcolor="#ffcc99"];
+  "utils/theme.ts" [fillcolor="#ffcc99"];
+  "utils/thinking.ts" [fillcolor="#ffcc99"];
+  "utils/toolResultStorage.ts" [fillcolor="#ffcc99"];
+
+  "Tool.ts" -> "commands.ts";
+  "Tool.ts" -> "components/Spinner.tsx";
+  "Tool.ts" -> "context/notifications.tsx";
+  "Tool.ts" -> "entrypoints/agentSdkTypes.ts";
+  "Tool.ts" -> "hooks/useCanUseTool.tsx";
+  "Tool.ts" -> "services/mcp/types.ts";
+  "Tool.ts" -> "state/AppState.tsx";
+  "Tool.ts" -> "tools/AgentTool/loadAgentsDir.ts";
+  "Tool.ts" -> "types/hooks.ts";
+  "Tool.ts" -> "types/ids.ts";
+  "Tool.ts" -> "types/permissions.ts";
+  "Tool.ts" -> "utils/commitAttribution.ts";
+  "Tool.ts" -> "utils/fileHistory.ts";
+  "Tool.ts" -> "utils/fileStateCache.ts";
+  "Tool.ts" -> "utils/permissions/denialTracking.ts";
+  "Tool.ts" -> "utils/systemPromptType.ts";
+  "Tool.ts" -> "utils/theme.ts";
+  "Tool.ts" -> "utils/thinking.ts";
+  "Tool.ts" -> "utils/toolResultStorage.ts";
+}

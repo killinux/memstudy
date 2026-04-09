@@ -21,9 +21,14 @@ memstudy/
 │   │   ├── layers-thinking/           #   thinking.ts 分层图（3 层，117 文件）
 │   │   └── layers-effort/             #   effort.ts 分层图（2 层，59 文件）
 │   │
-│   └── agent-loop/                    # Agent Loop 协调中枢
-│       ├── agent-loop-overview.svg    #   完整数据流图（10 步编号路径）
-│       └── layers-query/              #   query.ts 分层图（2 层，269 文件）
+│   ├── agent-loop/                    # Agent Loop 协调中枢
+│   │   ├── agent-loop-overview.svg    #   完整数据流图（10 步编号路径）
+│   │   └── layers-query/              #   query.ts 分层图（2 层，269 文件）
+│   │
+│   └── tools/                         # Tool 系统（核心抽象）
+│       ├── tool-system-overview.svg   #   4 层架构图（接口/注册/分类/执行）
+│       ├── tool-categories.svg        #   42 个工具按分类
+│       └── layers-tool/               #   Tool.ts 分层图（3 层，533 文件）
 │
 ├── tools/                             # 可复用工具脚本
 │   ├── layered-deps.py                # 分层依赖图生成器（BFS + Graphviz）

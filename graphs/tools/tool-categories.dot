@@ -1,0 +1,145 @@
+digraph tool_categories {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9, fontname="Helvetica"];
+  label="42 Tools Grouped by Category";
+  labelloc=t; fontsize=14;
+  compound=true;
+
+  "Tool.ts" [fillcolor="#ff9999", shape=ellipse, fontsize=12, label="Tool Interface\n(Tool.ts)"];
+
+  // ─── 文件操作 (5) ───
+  subgraph cluster_file {
+    label="File Operations (5)\n基础文件读写";
+    style=filled; color="#a8d5ba"; fillcolor="#d4edda"; fontsize=11;
+    "FileReadTool" [fillcolor="#99ff99"];
+    "FileWriteTool" [fillcolor="#99ff99"];
+    "FileEditTool" [fillcolor="#99ff99"];
+    "NotebookEditTool" [fillcolor="#99ff99"];
+    "GlobTool" [fillcolor="#99ff99"];
+  }
+
+  // ─── 命令执行 (2) ───
+  subgraph cluster_exec {
+    label="Execution (2)\n命令执行（最复杂）";
+    style=filled; color="#f5c6cb"; fillcolor="#f8d7da"; fontsize=11;
+    "BashTool" [fillcolor="#ff9999", label="BashTool\n(CCN 极高)"];
+    "PowerShellTool" [fillcolor="#ff9999", label="PowerShellTool\n(Windows)"];
+  }
+
+  // ─── 搜索 (3) ───
+  subgraph cluster_search {
+    label="Search (3)\n搜索能力";
+    style=filled; color="#bee5eb"; fillcolor="#d1ecf1"; fontsize=11;
+    "GrepTool" [fillcolor="#99ddee"];
+    "WebSearchTool" [fillcolor="#99ddee"];
+    "WebFetchTool" [fillcolor="#99ddee"];
+  }
+
+  // ─── Agent 系统 (4) ───
+  subgraph cluster_agent {
+    label="Agent System (4)\n子 Agent 与团队";
+    style=filled; color="#ffeaa7"; fillcolor="#fff3cd"; fontsize=11;
+    "AgentTool" [fillcolor="#ffd966", label="AgentTool\n(子 agent 入口)"];
+    "TeamCreateTool" [fillcolor="#ffd966"];
+    "TeamDeleteTool" [fillcolor="#ffd966"];
+    "SendMessageTool" [fillcolor="#ffd966"];
+  }
+
+  // ─── 任务管理 (6) ───
+  subgraph cluster_task {
+    label="Task Management (6)\nTodoV2 任务系统";
+    style=filled; color="#d6c9e8"; fillcolor="#e2d4f0"; fontsize=11;
+    "TaskCreateTool" [fillcolor="#cc99ff"];
+    "TaskGetTool" [fillcolor="#cc99ff"];
+    "TaskListTool" [fillcolor="#cc99ff"];
+    "TaskUpdateTool" [fillcolor="#cc99ff"];
+    "TaskOutputTool" [fillcolor="#cc99ff"];
+    "TaskStopTool" [fillcolor="#cc99ff"];
+  }
+
+  // ─── Todo (1) ───
+  subgraph cluster_todo {
+    label="Legacy Todo (1)";
+    style=filled; color="#d6c9e8"; fillcolor="#e2d4f0"; fontsize=11;
+    "TodoWriteTool" [fillcolor="#cc99ff", label="TodoWriteTool\n(prompt 最长: 9132)"];
+  }
+
+  // ─── 用户交互 (1) ───
+  subgraph cluster_ui {
+    label="User Interaction (1)";
+    style=filled; color="#fad2cf"; fillcolor="#fadfd9"; fontsize=11;
+    "AskUserQuestionTool" [fillcolor="#ff99cc"];
+  }
+
+  // ─── Plan 模式 (3) ───
+  subgraph cluster_plan {
+    label="Plan Mode (3)\nPlan 工作流";
+    style=filled; color="#c5e1a5"; fillcolor="#dcedc8"; fontsize=11;
+    "EnterPlanModeTool" [fillcolor="#aed581"];
+    "ExitPlanModeV2Tool" [fillcolor="#aed581"];
+    "VerifyPlanExecutionTool" [fillcolor="#aed581"];
+  }
+
+  // ─── Worktree (2) ───
+  subgraph cluster_worktree {
+    label="Worktree (2)\nGit 隔离";
+    style=filled; color="#c5e1a5"; fillcolor="#dcedc8"; fontsize=11;
+    "EnterWorktreeTool" [fillcolor="#aed581"];
+    "ExitWorktreeTool" [fillcolor="#aed581"];
+  }
+
+  // ─── 调度 (4) ───
+  subgraph cluster_cron {
+    label="Scheduling (4)\n后台任务";
+    style=filled; color="#b3e5fc"; fillcolor="#e1f5fe"; fontsize=11;
+    "CronCreateTool" [fillcolor="#81d4fa"];
+    "CronListTool" [fillcolor="#81d4fa"];
+    "CronDeleteTool" [fillcolor="#81d4fa"];
+    "RemoteTriggerTool" [fillcolor="#81d4fa"];
+  }
+
+  // ─── MCP (3) ───
+  subgraph cluster_mcp {
+    label="MCP Integration (3)\n外部协议";
+    style=filled; color="#ffccbc"; fillcolor="#ffe0b2"; fontsize=11;
+    "MCPTool" [fillcolor="#ffab91"];
+    "ListMcpResourcesTool" [fillcolor="#ffab91"];
+    "ReadMcpResourceTool" [fillcolor="#ffab91"];
+  }
+
+  // ─── Skills (1) ───
+  subgraph cluster_skill {
+    label="Skill (1)";
+    style=filled; color="#ffccbc"; fillcolor="#ffe0b2"; fontsize=11;
+    "SkillTool" [fillcolor="#ffab91"];
+  }
+
+  // ─── 其他 (8) ───
+  subgraph cluster_other {
+    label="Other (8)\n配置 / 测试 / 内部";
+    style=filled; color="#d3d3d3"; fillcolor="#e8e8e8"; fontsize=11;
+    "BriefTool" [fillcolor="#bbbbbb"];
+    "ConfigTool" [fillcolor="#bbbbbb"];
+    "LSPTool" [fillcolor="#bbbbbb"];
+    "ToolSearchTool" [fillcolor="#bbbbbb"];
+    "SyntheticOutputTool" [fillcolor="#bbbbbb"];
+    "TungstenTool" [fillcolor="#bbbbbb"];
+    "TestingPermissionTool" [fillcolor="#bbbbbb"];
+    "SleepTool" [fillcolor="#bbbbbb"];
+  }
+
+  // 所有工具都从 Tool.ts 派生
+  "Tool.ts" -> "FileReadTool" [style=invis];
+  "Tool.ts" -> "BashTool" [color="#990000", style=dashed, label=" implements"];
+  "Tool.ts" -> "GrepTool" [style=invis];
+  "Tool.ts" -> "AgentTool" [color="#990000", style=dashed];
+  "Tool.ts" -> "TaskCreateTool" [style=invis];
+  "Tool.ts" -> "TodoWriteTool" [style=invis];
+  "Tool.ts" -> "AskUserQuestionTool" [style=invis];
+  "Tool.ts" -> "EnterPlanModeTool" [style=invis];
+  "Tool.ts" -> "EnterWorktreeTool" [style=invis];
+  "Tool.ts" -> "CronCreateTool" [style=invis];
+  "Tool.ts" -> "MCPTool" [style=invis];
+  "Tool.ts" -> "SkillTool" [style=invis];
+  "Tool.ts" -> "BriefTool" [style=invis];
+}
