@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Summary — free-code45 内部研究总览</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="session-summary-free-code45">Session Summary — free-code45 内部研究总览</h1>
+<blockquote>
+<p>这份文档汇总了对 free-code45 (Claude Code v2.1.87) 的所有研究内容、使用过的方法、得出的结论，以及未完成可继续的方向。下次回来直接看这一份就能接上。</p>
+</blockquote>
+<hr />
+<h2 id="_1">📋 目录</h2>
+<ol>
+<li><a href="#项目目录速查">项目目录速查</a></li>
+<li><a href="#使用过的分析方法">使用过的分析方法</a></li>
+<li><a href="#产出的文档清单">产出的文档清单</a></li>
+<li><a href="#核心架构理解">核心架构理解</a></li>
+<li><a href="#关键数据">关键数据</a></li>
+<li><a href="#尚未验证的方向">尚未验证的方向</a></li>
+<li><a href="#复用脚本">复用脚本</a></li>
+<li><a href="#下次接续指南">下次接续指南</a></li>
+</ol>
+<hr />
+<h2 id="_2">项目目录速查</h2>
+<div class="highlight"><pre><span></span><code>memstudy/
+├── README.md                              # 项目说明
+├── SESSION-SUMMARY.md                     # 本文档（总结）
+│
+├── docs/                                  # 分析文档（MD + HTML 双格式）
+│   ├── context-management-explained.md    # Context 管理系统
+│   ├── cot-thinking-design.md             # CoT/Extended Thinking
+│   ├── agent-loop-implementation.md       # Agent Loop 实现
+│   ├── prompt-analysis.md                 # Prompt 提取与分析
+│   ├── codebase-insights.md               # 注释挖掘 + 复杂度
+│   ├── ast-analysis-report.md             # AST 静态分析
+│   ├── code-analysis-methods.md           # 10 种分析方法目录
+│   └── madge-guide.md                     # Madge 工具使用指南
+│
+├── graphs/                                # 依赖关系图
+│   ├── context/                           # context.ts 模块
+│   │   ├── README.md                      # 图解说明
+│   │   ├── context-focused.svg            # 手工精选（24 节点）
+│   │   └── layers-context/                # 分层（156 文件，4 层）
+│   ├── cot/                               # CoT/Thinking 模块
+│   │   ├── README.md
+│   │   ├── cot-overview.svg               # 三层架构图
+│   │   ├── layers-thinking/               # thinking.ts 分层（117 文件）
+│   │   └── layers-effort/                 # effort.ts 分层（59 文件）
+│   └── agent-loop/                        # Agent Loop 协调中枢
+│       ├── README.md
+│       ├── agent-loop-overview.svg        # 数据流图（10 步编号）
+│       └── layers-query/                  # query.ts 分层（269 文件）
+│
+├── tools/                                 # 可复用工具脚本
+│   ├── layered-deps.py                    # BFS 分层依赖图生成器
+│   ├── md2html.py                         # MD → HTML5 转换器
+│   └── ast-analysis/                      # AST 分析脚本
+│       ├── analyze.mjs                    # 通用 AST 分析
+│       ├── extract-prompts.mjs            # Prompt 提取
+│       └── analyze-prompts.mjs            # Prompt 关键词分析
+│
+└── reports/                               # 量化数据
+    ├── ast-analysis/                      # AST 分析输出（7 JSON）
+    ├── prompts/                           # 提取的所有 prompt 文本
+    └── report.html                        # Claude Code Insights
+</code></pre></div>
+
+<hr />
+<h2 id="_3">使用过的分析方法</h2>
+<h3 id="10-6">✅ 已用（覆盖了 10 种方法中的 6 种）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>方法</th>
+<th>工具</th>
+<th>产出</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>静态依赖分析</strong></td>
+<td>madge</td>
+<td>context/cot/agent-loop 三套依赖图</td>
+<td>看模块关系</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>分层依赖图</strong></td>
+<td>自创 layered-deps.py</td>
+<td>三个 layers-* 目录</td>
+<td>解决大项目 OOM</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>手动读源码</strong></td>
+<td>Read + Grep</td>
+<td>4 篇深度文档</td>
+<td>理解实现细节</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>架构注释挖掘</strong></td>
+<td>grep IMPORTANT</td>
+<td>codebase-insights.md 第一部分</td>
+<td>找设计决策</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>复杂度度量</strong></td>
+<td>lizard</td>
+<td>codebase-insights.md 第二部分</td>
+<td>找复杂度热点</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>AST 分析</strong></td>
+<td>ts-morph</td>
+<td>ast-analysis-report.md + prompt-analysis.md</td>
+<td>量化代码结构</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4">🔲 未用（4 种）</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>方法</th>
+<th>工具</th>
+<th>为什么没用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>调用图</td>
+<td>ts-callgraph / doxygen</td>
+<td>时间未到</td>
+</tr>
+<tr>
+<td>8</td>
+<td>运行时追踪</td>
+<td>node --prof</td>
+<td>需要运行环境</td>
+</tr>
+<tr>
+<td>9</td>
+<td>火焰图</td>
+<td>0x / py-spy</td>
+<td>需要运行环境</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Git 考古</td>
+<td>git log + code-maat</td>
+<td>free-code45 是源码快照，无真实历史</td>
+</tr>
+</tbody>
+</table>
+<p>详见 <code>docs/code-analysis-methods.md</code>。</p>
+<hr />
+<h2 id="_4">产出的文档清单</h2>
+<h3 id="7">7 篇深度分析文档</h3>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>核心内容</th>
+<th>字数</th>
+<th>关键发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>context-management-explained.md</strong></td>
+<td>Context 管理系统</td>
+<td>~5000</td>
+<td>两核心函数 + 两级压缩 + 7 阶段生命周期</td>
+</tr>
+<tr>
+<td><strong>cot-thinking-design.md</strong></td>
+<td>Extended Thinking 三层架构</td>
+<td>~6500</td>
+<td>adaptive/effort/ultrathink 解耦设计</td>
+</tr>
+<tr>
+<td><strong>agent-loop-implementation.md</strong></td>
+<td>Agent Loop 实现</td>
+<td>~6000</td>
+<td>代码 vs 模型的清晰边界</td>
+</tr>
+<tr>
+<td><strong>prompt-analysis.md</strong></td>
+<td>Prompt 工程提取</td>
+<td>~4500</td>
+<td>5 种 prompt 设计模式</td>
+</tr>
+<tr>
+<td><strong>codebase-insights.md</strong></td>
+<td>注释挖掘 + 复杂度</td>
+<td>~3500</td>
+<td>项目"心脏"和"红线"</td>
+</tr>
+<tr>
+<td><strong>ast-analysis-report.md</strong></td>
+<td>AST 量化分析</td>
+<td>~3500</td>
+<td>42 工具 + 73 命令 + 573 组件</td>
+</tr>
+<tr>
+<td><strong>agent-loop-implementation.md</strong></td>
+<td>（上面已列）</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2">2 篇方法论文档</h3>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>code-analysis-methods.md</strong></td>
+<td>10 种代码分析方法目录 + 选择指南</td>
+</tr>
+<tr>
+<td><strong>madge-guide.md</strong></td>
+<td>madge 使用手册（含分层方案）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">核心架构理解</h2>
+<h3 id="free-code45">一句话总结 free-code45 是什么</h3>
+<blockquote>
+<p>一个<strong>渲染到终端的 React 应用</strong>（react 被 import 761 次），核心是 query.ts 的 async generator 主循环，协调 42 个工具 + 73 个命令 + 573 个组件，通过约 22k token 的 prompt 工程对 Claude 模型进行行为约束。</p>
+</blockquote>
+<h3 id="_6">三层架构</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────┐
+│  Layer 1: Prompts (~22k tokens)                  │
+│  告诉模型&quot;该怎么做事&quot;                             │
+│    - getActionsSection: 风险决策框架               │
+│    - getOutputEfficiencySection: 沟通规范          │
+│    - 工具 prompts: 工具使用规则                    │
+│    - BashTool git safety: 安全协议                 │
+├─────────────────────────────────────────────────┤
+│  Layer 2: Code (~280k LOC, 1932 文件)            │
+│  提供&quot;试错环境和管道&quot;                             │
+│    - query.ts: 主循环                             │
+│    - StreamingToolExecutor: 工具执行              │
+│    - 权限系统                                     │
+│    - 上下文管理                                    │
+├─────────────────────────────────────────────────┤
+│  Layer 3: Model Weights (远端 API)               │
+│  提供&quot;知识和直觉&quot;                                 │
+│    - 视觉理解（ViT）                              │
+│    - 领域知识（编程、调试、各种语言）              │
+│    - 推理能力                                     │
+│    - Extended Thinking                            │
+└─────────────────────────────────────────────────┘
+</code></pre></div>
+
+<h3 id="_7">核心子系统及其关系</h3>
+<div class="highlight"><pre><span></span><code>                     用户输入
+                        │
+                        ▼
+                ┌──────────────┐
+                │  REPL.tsx    │  (371 个 hook 的&quot;上帝组件&quot;)
+                └──────┬───────┘
+                       │
+                       ▼
+                ┌──────────────────┐
+                │  query.ts        │ ←─── context.ts (CLAUDE.md + git)
+                │  queryLoop()     │ ←─── thinking.ts + effort.ts
+                │  while(true)     │ ←─── prompts.ts (system prompt)
+                └──┬────────┬─────┘
+                   │        │
+              发请求│        │收到工具调用
+                   ▼        ▼
+         ┌──────────┐  ┌─────────────────┐
+         │ Claude   │  │ Streaming       │
+         │ API      │  │ ToolExecutor    │
+         └──────────┘  └────┬────────────┘
+                            │
+                            ▼
+                   ┌────────────────┐
+                   │ canUseTool     │ (权限检查)
+                   └────┬───────────┘
+                        │
+                        ▼
+                   ┌────────────────┐
+                   │ tool.call()    │ (BashTool/ReadTool/...)
+                   └────┬───────────┘
+                        │
+                        ▼ tool_result 回到 messages
+                   循环继续，直到 stop_reason=&#39;end_turn&#39;
+                        │
+                        ▼
+                ┌──────────────┐
+                │  压缩系统     │ (token 接近上限时自动触发)
+                │  microCompact│
+                │  compact     │
+                └──────────────┘
+</code></pre></div>
+
+<h3 id="_8">关键设计决策</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>决策</th>
+<th>文档来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>adaptive thinking</strong> &gt; 固定预算（4.6+ 模型自主决定推理深度）</td>
+<td>cot-thinking-design.md</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>错误作为 tool_result</strong>（让模型自己纠错，不抛异常）</td>
+<td>agent-loop-implementation.md</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>两级压缩</strong>（microCompact 清工具输出 → compact 摘要替换）</td>
+<td>context-management-explained.md</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Streaming Tool Execution</strong>（不等响应完就开始执行）</td>
+<td>agent-loop-implementation.md</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Effort 与 Thinking 解耦</strong>（独立 API 参数）</td>
+<td>cot-thinking-design.md</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Ultrathink 是 Effort 的语法糖</strong>（不修改 ThinkingConfig）</td>
+<td>cot-thinking-design.md</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>getActionsSection 定义风险决策框架</strong>（reversibility × blast radius）</td>
+<td>prompt-analysis.md</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>命令式 vs 解释式分场景</strong>（安全用 NEVER，风格用解释）</td>
+<td>prompt-analysis.md</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>子 agent 的 fork vs 普通分支</strong>（fork 继承 thinking config 命中 cache）</td>
+<td>cot-thinking-design.md</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>subagent_type 不继承 leader 权限</strong>（避免意外受限）</td>
+<td>codebase-insights.md</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">关键数据</h2>
+<h3 id="_10">项目规模</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TypeScript 源文件</td>
+<td>1,932</td>
+<td>AST</td>
+</tr>
+<tr>
+<td>总代码行 (NLOC)</td>
+<td>280,594</td>
+<td>lizard</td>
+</tr>
+<tr>
+<td>总函数数</td>
+<td>20,181</td>
+<td>AST</td>
+</tr>
+<tr>
+<td>平均圈复杂度</td>
+<td><strong>3.0</strong>（业界 4-6）</td>
+<td>lizard</td>
+</tr>
+<tr>
+<td>HACK/FIXME 注释</td>
+<td><strong>4 个</strong>（极低技术债）</td>
+<td>grep</td>
+</tr>
+<tr>
+<td>IMPORTANT 注释</td>
+<td>93 处 / 64 文件</td>
+<td>grep</td>
+</tr>
+<tr>
+<td>高复杂度函数 (CCN &gt; 30)</td>
+<td>77 个</td>
+<td>lizard</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">系统组件</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>数量</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tool 定义</strong></td>
+<td>42</td>
+<td>AST 列出全部清单</td>
+</tr>
+<tr>
+<td><strong>Command 定义</strong></td>
+<td>73</td>
+<td>7 prompt + 19 local + 47 local-jsx</td>
+</tr>
+<tr>
+<td><strong>React 组件</strong></td>
+<td>573</td>
+<td>REPL 是怪物（371 hook）</td>
+</tr>
+<tr>
+<td><strong>Prompt 段</strong></td>
+<td>77</td>
+<td>~22k token 总量</td>
+</tr>
+<tr>
+<td><strong>硬约束</strong></td>
+<td>60</td>
+<td>NEVER/MUST/CRITICAL</td>
+</tr>
+<tr>
+<td><strong>软约束</strong></td>
+<td>28</td>
+<td>should/recommended</td>
+</tr>
+</tbody>
+</table>
+<h3 id="top-5">复杂度热点 Top 5</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>CCN</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>peek</code></td>
+<td><strong>229</strong></td>
+<td>utils/bash/bashParser.ts</td>
+</tr>
+<tr>
+<td><code>parseDoGroup</code></td>
+<td>176</td>
+<td>utils/bash/bashParser.ts</td>
+</tr>
+<tr>
+<td><code>ansi256FromRgb</code></td>
+<td>164</td>
+<td>native-ts/color-diff/index.ts</td>
+</tr>
+<tr>
+<td><code>parseExpansionRest</code></td>
+<td>129</td>
+<td>utils/bash/bashParser.ts</td>
+</tr>
+<tr>
+<td><code>parseTestNegatablePrimary</code></td>
+<td>120</td>
+<td>utils/bash/bashParser.ts</td>
+</tr>
+</tbody>
+</table>
+<p>复杂度集中在三类<strong>本质复杂</strong>的领域：解析器（32%）、安全验证（23%）、UI 渲染（16%）。</p>
+<h3 id="prompt-top-5">最长 Prompt Top 5</h3>
+<table>
+<thead>
+<tr>
+<th>Prompt</th>
+<th>字符数</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TodoWriteTool <code>PROMPT</code></td>
+<td>9,132</td>
+<td>5 个 few-shot 示例</td>
+</tr>
+<tr>
+<td>BashTool <code>getCommitAndPRInstructions</code></td>
+<td>6,305</td>
+<td>16 个硬规则</td>
+</tr>
+<tr>
+<td>PowerShellTool <code>getPrompt</code></td>
+<td>5,127</td>
+<td>Windows 等价 BashTool</td>
+</tr>
+<tr>
+<td><code>getProactiveSection</code></td>
+<td>3,766</td>
+<td>KAIROS 主动模式</td>
+</tr>
+<tr>
+<td>EnterPlanModeTool</td>
+<td>3,681</td>
+<td>Plan 模式</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_12">尚未验证的方向</h2>
+<p>按价值排序的待办：</p>
+<h3 id="_13">🥇 高价值</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>关键文件</th>
+<th>预期产出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>权限系统深入</strong></td>
+<td><code>utils/permissions/</code>, <code>BashTool/bashPermissions.ts</code>, <code>yoloClassifier.ts</code></td>
+<td>安全决策树 + LLM 风险分类</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>子 Agent / Fork 机制</strong></td>
+<td><code>tools/AgentTool/</code>, <code>coordinator/</code>, <code>forkedAgent.ts</code></td>
+<td>多 agent 协调架构</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>BashTool 内部实现</strong></td>
+<td><code>tools/BashTool/</code>, <code>utils/bash/bashParser.ts</code></td>
+<td>命令解析 + 安全 + 执行的完整闭环</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">🥈 中价值</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>关键文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td><strong>Skills 系统</strong></td>
+<td><code>skills/</code>, <code>services/skillSearch/</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>MCP 集成</strong></td>
+<td><code>services/mcp/</code>, MCP 工具</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Hooks 扩展机制</strong></td>
+<td><code>utils/hooks.ts</code>, <code>utils/hooks/*</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Prompt Cache 机制</strong></td>
+<td><code>services/api/promptCacheBreakDetection.ts</code>, <code>cachedMicrocompact.ts</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>多 Provider 支持</strong></td>
+<td><code>services/api/claude.ts</code>, <code>model/providers.ts</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">🥉 锦上添花</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9</td>
+<td>全景架构总结文档（把所有零散发现织成一张网）</td>
+</tr>
+<tr>
+<td>10</td>
+<td>与 Aider/Cursor/Codex CLI 的横向对比</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Memory 系统（memdir）</td>
+</tr>
+<tr>
+<td>12</td>
+<td>流式 UI 渲染（Ink）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">❌ 不推荐做</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>主题</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>运行时追踪/火焰图</td>
+<td>需要真正运行 Claude Code，环境配置成本高</td>
+</tr>
+<tr>
+<td>-</td>
+<td>Git 考古</td>
+<td>free-code45 是源码快照，无真实 git 历史</td>
+</tr>
+<tr>
+<td>-</td>
+<td>类型系统深度</td>
+<td>产出对架构理解帮助有限</td>
+</tr>
+<tr>
+<td>-</td>
+<td>测试代码分析</td>
+<td>free-code45 没发布测试</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_17">复用脚本</h2>
+<p>所有脚本都在 <code>tools/</code> 下，可直接用于其他 TypeScript 项目：</p>
+<h3 id="1">1. 分层依赖图</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 第一步：用 madge 导出 JSON</span>
+<span class="nb">cd</span><span class="w"> </span>&lt;your-project&gt;
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span>&gt;<span class="w"> </span>/tmp/deps.json
+
+<span class="c1"># 第二步：分层</span>
+python3<span class="w"> </span>tools/layered-deps.py<span class="w"> </span>/tmp/deps.json<span class="w"> </span>&lt;entry-file&gt;<span class="w"> </span>&lt;max-depth&gt;
+<span class="c1"># 例: python3 tools/layered-deps.py /tmp/deps.json query.ts 2</span>
+</code></pre></div>
+
+<h3 id="2-ast">2. AST 分析</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>tools/ast-analysis
+npm<span class="w"> </span>install<span class="w"> </span>ts-morph
+
+<span class="c1"># 通用代码统计</span>
+node<span class="w"> </span>analyze.mjs<span class="w"> </span>&lt;project-root&gt;<span class="w"> </span>&lt;output-dir&gt;
+
+<span class="c1"># Prompt 提取</span>
+node<span class="w"> </span>extract-prompts.mjs<span class="w"> </span>&lt;project-root&gt;<span class="w"> </span>&lt;output-dir&gt;
+
+<span class="c1"># Prompt 关键词分析</span>
+node<span class="w"> </span>analyze-prompts.mjs<span class="w"> </span>&lt;prompts-output-dir&gt;
+</code></pre></div>
+
+<h3 id="3-markdown-html">3. Markdown 转 HTML</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tools/md2html.py<span class="w"> </span>docs/some-doc.md
+<span class="c1"># 输出: docs/some-doc.html（带暗色模式 + 响应式布局）</span>
+</code></pre></div>
+
+<h3 id="4_1">4. 复杂度分析</h3>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>lizard
+lizard<span class="w"> </span>&lt;project&gt;/src<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--CCN<span class="w"> </span><span class="m">30</span><span class="w"> </span>-w
+</code></pre></div>
+
+<h3 id="5">5. 注释挖掘</h3>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;IMPORTANT:&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;DO NOT\|do not change\|do not modify&quot;</span><span class="w"> </span>src/<span class="w"> </span>-i
+</code></pre></div>
+
+<hr />
+<h2 id="_18">下次接续指南</h2>
+<h3 id="30">如果只有 30 分钟，看什么</h3>
+<ol>
+<li><strong>本文档</strong>（5 分钟）— 唤起记忆</li>
+<li><strong><code>docs/agent-loop-implementation.md</code></strong> 的"代码 vs 模型边界"章节（10 分钟）— 核心抽象</li>
+<li><strong><code>docs/prompt-analysis.md</code></strong> 的"5 种 prompt 设计模式"（10 分钟）— 实用启示</li>
+<li>浏览 <code>graphs/agent-loop/agent-loop-overview.svg</code>（5 分钟）— 直观架构</li>
+</ol>
+<h3 id="_19">如果有半天，做什么</h3>
+<p><strong>首选：权限系统深入</strong>（之前列为 P0）</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 起步代码点</span>
+src/hooks/useCanUseTool.tsx<span class="w">          </span><span class="c1"># 入口</span>
+src/utils/permissions/permissions.ts<span class="w">  </span><span class="c1"># 规则引擎</span>
+src/utils/permissions/yoloClassifier.ts<span class="w">  </span><span class="c1"># LLM 风险分类</span>
+src/tools/BashTool/bashPermissions.ts<span class="w">    </span><span class="c1"># Bash 命令分析（CCN 极高）</span>
+</code></pre></div>
+
+<p><strong>做什么</strong>：
+1. 画出权限决策树（allow/deny/ask 流程）
+2. 解读 yoloClassifier 的 LLM 风险判断
+3. 理解 isDangerousRemovalRawPath 87 个分支的意图
+4. 写一份 <code>docs/permission-system.md</code>
+5. 生成 <code>graphs/permissions/</code> 依赖图</p>
+<h3 id="_20">如果有一天，做什么</h3>
+<p><strong>做"Tool 内部实现深度系列"</strong>：</p>
+<p>挑 3 个代表性工具各写一篇深度文档：
+- BashTool（最复杂）
+- FileEditTool（最常用）
+- AgentTool（最有创意）</p>
+<p>每篇按"prompt → 代码实现 → 与 agent loop 的交互"三层组织。</p>
+<h3 id="_21">思维框架（写新文档时用）</h3>
+<p>每个子系统按这个模板分析：</p>
+<div class="highlight"><pre><span></span><code>1. 在 prompt 里被怎么描述？     → reports/prompts/
+2. 入口代码在哪？               → grep + Read
+3. 数据流是什么？                → 画时序图或数据流图
+4. 关键设计决策是什么？           → 注释挖掘
+5. 复杂度集中在哪里？             → lizard
+6. 依赖关系？                    → madge + layered-deps.py
+7. 跟模型 vs 代码的边界是什么？    → 仿照 agent-loop 文档
+</code></pre></div>
+
+<hr />
+<h2 id="_22">关键洞察备忘</h2>
+<h3 id="1-claude">1. "Claude 看图就知道怎么做"的真相</h3>
+<p>不是任何一份文档单独能解释，而是三层共同作用：
+- <strong>模型权重</strong>：视觉理解 + 领域知识（API 服务端，看不见）
+- <strong>Prompt</strong>：调试方法论（getActionsSection 等，在 reports/prompts/）
+- <strong>代码</strong>：试错环境（agent loop，在 query.ts）</p>
+<h3 id="2-anthropic-prompt">2. Anthropic 的 prompt 工程哲学</h3>
+<ul>
+<li>安全约束 → 命令式（NEVER/MUST）</li>
+<li>风格规范 → 解释式（应该/最好）</li>
+<li>时机判断 → few-shot 示例</li>
+<li>复杂流程 → 分步模板</li>
+<li>反例引导 → 列出"不要做 X"</li>
+</ul>
+<h3 id="3">3. 项目质量观察</h3>
+<ul>
+<li>平均 CCN <strong>3.0</strong> 极健康</li>
+<li>HACK/FIXME 仅 <strong>4 个</strong>，技术债极低</li>
+<li>IMPORTANT 注释 <strong>93 处</strong>，设计意图被充分文档化</li>
+<li>复杂度集中在"本质复杂"领域（解析器/安全/UI），业务逻辑简洁</li>
+</ul>
+<h3 id="4_2">4. 代码规模感知</h3>
+<ul>
+<li>1932 个 TS 文件，但只有 42 个 Tool + 73 个 Command 是核心抽象</li>
+<li>其余 94% 都是支撑代码（UI、工具函数、类型）</li>
+<li>React 被 import 761 次 — 终端 CLI 实质是个 React 应用</li>
+<li>query.ts 直接依赖 41 个文件，是真正的"中枢"</li>
+</ul>
+<hr />
+<h2 id="git">Git 状态</h2>
+<div class="highlight"><pre><span></span><code>仓库: git@github.com:killinux/memstudy.git
+分支: main
+最近的核心 commit:
+  09ccb5e  Add prompt extraction and analysis from free-code45
+  e11f394  Add AST-based analysis using ts-morph
+  dfe48fb  Add codebase insights from comment mining + complexity analysis
+  3152be0  Add Agent Loop dependency graphs
+  bb8b49d  Add Agent Loop implementation deep-dive with Blender debugging example
+  442b2ce  Add comprehensive code analysis methods guide
+  63d1942  Add CoT dependency graphs and README explanations
+</code></pre></div>
+
+<hr />
+<p><strong>就这些。下次回来，从本文档第一节开始扫一眼，5 分钟就能进入状态。</strong></p>
+</div>
+</body>
+</html>
