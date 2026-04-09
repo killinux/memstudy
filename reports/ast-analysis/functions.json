@@ -1,0 +1,166 @@
+{
+  "total": 20181,
+  "async": 2835,
+  "generator": 50,
+  "asyncGenerator": 45,
+  "arrow": 9649,
+  "named": 10532,
+  "paramDistribution": {
+    "0": 6249,
+    "1": 10144,
+    "2": 2518,
+    "3": 740,
+    "4": 271,
+    "5": 118,
+    "6": 58,
+    "7": 34,
+    "8": 17,
+    "9": 14,
+    "10": 10,
+    "11": 4,
+    "12": 3,
+    "17": 1
+  },
+  "topByParams": [
+    {
+      "name": "processUserInputBase",
+      "file": "src/utils/processUserInput/processUserInput.ts",
+      "line": 281,
+      "params": 17,
+      "async": true
+    },
+    {
+      "name": "runHeadlessStreaming",
+      "file": "src/cli/print.ts",
+      "line": 976,
+      "params": 12,
+      "async": false
+    },
+    {
+      "name": "execCommandHook",
+      "file": "src/utils/hooks.ts",
+      "line": 747,
+      "params": 12,
+      "async": true
+    },
+    {
+      "name": "callInner",
+      "file": "src/tools/FileReadTool/FileReadTool.ts",
+      "line": 804,
+      "params": 12,
+      "async": true
+    },
+    {
+      "name": "handleInitializeRequest",
+      "file": "src/cli/print.ts",
+      "line": 4336,
+      "params": 11,
+      "async": true
+    },
+    {
+      "name": "useHistorySearch",
+      "file": "src/hooks/useHistorySearch.ts",
+      "line": 15,
+      "params": 11,
+      "async": false
+    },
+    {
+      "name": "diffRowBoth",
+      "file": "src/ink/screen.ts",
+      "line": 1230,
+      "params": 11,
+      "async": false
+    },
+    {
+      "name": "checkPermissionsAndCallTool",
+      "file": "src/services/tools/toolExecution.ts",
+      "line": 599,
+      "params": 11,
+      "async": true
+    },
+    {
+      "name": "runBridgeLoop",
+      "file": "src/bridge/bridgeMain.ts",
+      "line": 141,
+      "params": 10,
+      "async": true
+    },
+    {
+      "name": "renderScrolledChildren",
+      "file": "src/ink/render-node-to-output.ts",
+      "line": 1377,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "executePermissionRequestHooks",
+      "file": "src/utils/hooks.ts",
+      "line": 4157,
+      "params": 10,
+      "async": true
+    },
+    {
+      "name": "createStopHookSummaryMessage",
+      "file": "src/utils/messages.ts",
+      "line": 4398,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "convertToLogOption",
+      "file": "src/utils/sessionStorage.ts",
+      "line": 2479,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "saveAgentToFile",
+      "file": "src/components/agents/agentFileUtils.ts",
+      "line": 166,
+      "params": 10,
+      "async": true
+    },
+    {
+      "name": "cacheWrite",
+      "file": "src/native-ts/yoga-layout/index.ts",
+      "line": 969,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "layoutNode",
+      "file": "src/native-ts/yoga-layout/index.ts",
+      "line": 1058,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "streamedCheckPermissionsAndCallTool",
+      "file": "src/services/tools/toolExecution.ts",
+      "line": 492,
+      "params": 10,
+      "async": false
+    },
+    {
+      "name": "runPostToolUseFailureHooks",
+      "file": "src/services/tools/toolHooks.ts",
+      "line": 193,
+      "params": 10,
+      "async": true
+    },
+    {
+      "name": "setup",
+      "file": "src/setup.ts",
+      "line": 56,
+      "params": 9,
+      "async": true
+    },
+    {
+      "name": "analyzeContextUsage",
+      "file": "src/utils/analyzeContext.ts",
+      "line": 918,
+      "params": 9,
+      "async": true
+    }
+  ]
+}

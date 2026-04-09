@@ -1,0 +1,5732 @@
+[
+  {
+    "name": "REPL",
+    "file": "src/screens/REPL.tsx",
+    "line": 575,
+    "useState": 65,
+    "useEffect": 38,
+    "useCallback": 43,
+    "useMemo": 14,
+    "hooksTotal": 371
+  },
+  {
+    "name": "PromptInput",
+    "file": "src/components/PromptInput/PromptInput.tsx",
+    "line": 194,
+    "useState": 17,
+    "useEffect": 13,
+    "useCallback": 26,
+    "useMemo": 26,
+    "hooksTotal": 160
+  },
+  {
+    "name": "Config",
+    "file": "src/components/Settings/Config.tsx",
+    "line": 85,
+    "useState": 15,
+    "useEffect": 2,
+    "useCallback": 6,
+    "useMemo": 1,
+    "hooksTotal": 67
+  },
+  {
+    "name": "ManagePlugins",
+    "file": "src/commands/plugin/ManagePlugins.tsx",
+    "line": 397,
+    "useState": 14,
+    "useEffect": 6,
+    "useCallback": 5,
+    "useMemo": 4,
+    "hooksTotal": 56
+  },
+  {
+    "name": "InstallGitHubApp",
+    "file": "src/commands/install-github-app/install-github-app.tsx",
+    "line": 46,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 5,
+    "useMemo": 0,
+    "hooksTotal": 39
+  },
+  {
+    "name": "LogSelector",
+    "file": "src/components/LogSelector.tsx",
+    "line": 143,
+    "useState": 17,
+    "useEffect": 8,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 38
+  },
+  {
+    "name": "MCPRemoteServerMenu",
+    "file": "src/components/mcp/MCPRemoteServerMenu.tsx",
+    "line": 41,
+    "useState": 13,
+    "useEffect": 1,
+    "useCallback": 6,
+    "useMemo": 0,
+    "hooksTotal": 34
+  },
+  {
+    "name": "ModeIndicator",
+    "file": "src/components/PromptInput/PromptInputFooterLeftSide.tsx",
+    "line": 237,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 34
+  },
+  {
+    "name": "MessagesImpl",
+    "file": "src/components/Messages.tsx",
+    "line": 341,
+    "useState": 1,
+    "useEffect": 2,
+    "useCallback": 5,
+    "useMemo": 14,
+    "hooksTotal": 30
+  },
+  {
+    "name": "VirtualMessageList",
+    "file": "src/components/VirtualMessageList.tsx",
+    "line": 289,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 6,
+    "useMemo": 0,
+    "hooksTotal": 30
+  },
+  {
+    "name": "DiscoverPlugins",
+    "file": "src/commands/plugin/DiscoverPlugins.tsx",
+    "line": 48,
+    "useState": 14,
+    "useEffect": 3,
+    "useCallback": 1,
+    "useMemo": 2,
+    "hooksTotal": 30
+  },
+  {
+    "name": "ExitPlanModePermissionRequest",
+    "file": "src/components/permissions/ExitPlanModePermissionRequest/ExitPlanModePermissionRequest.tsx",
+    "line": 118,
+    "useState": 6,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 1,
+    "hooksTotal": 27
+  },
+  {
+    "name": "MessageSelector",
+    "file": "src/components/MessageSelector.tsx",
+    "line": 46,
+    "useState": 10,
+    "useEffect": 3,
+    "useCallback": 6,
+    "useMemo": 2,
+    "hooksTotal": 25
+  },
+  {
+    "name": "StatusLineInner",
+    "file": "src/components/StatusLine.tsx",
+    "line": 138,
+    "useState": 0,
+    "useEffect": 4,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 25
+  },
+  {
+    "name": "BrowseMarketplace",
+    "file": "src/commands/plugin/BrowseMarketplace.tsx",
+    "line": 49,
+    "useState": 14,
+    "useEffect": 3,
+    "useCallback": 1,
+    "useMemo": 1,
+    "hooksTotal": 25
+  },
+  {
+    "name": "BashPermissionRequestInner",
+    "file": "src/components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+    "line": 136,
+    "useState": 5,
+    "useEffect": 2,
+    "useCallback": 3,
+    "useMemo": 5,
+    "hooksTotal": 23
+  },
+  {
+    "name": "ConsoleOAuthFlow",
+    "file": "src/components/ConsoleOAuthFlow.tsx",
+    "line": 55,
+    "useState": 8,
+    "useEffect": 6,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 22
+  },
+  {
+    "name": "ElicitationFormDialog",
+    "file": "src/components/mcp/ElicitationDialog.tsx",
+    "line": 143,
+    "useState": 9,
+    "useEffect": 2,
+    "useCallback": 1,
+    "useMemo": 2,
+    "hooksTotal": 22
+  },
+  {
+    "name": "SpinnerWithVerbInner",
+    "file": "src/components/Spinner.tsx",
+    "line": 82,
+    "useState": 3,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 21
+  },
+  {
+    "name": "ChooseRepoStep",
+    "file": "src/commands/install-github-app/ChooseRepoStep.tsx",
+    "line": 15,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 21
+  },
+  {
+    "name": "ManageMarketplaces",
+    "file": "src/commands/plugin/ManageMarketplaces.tsx",
+    "line": 49,
+    "useState": 10,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 20
+  },
+  {
+    "name": "BridgeDialog",
+    "file": "src/components/BridgeDialog.tsx",
+    "line": 20,
+    "useState": 3,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 19
+  },
+  {
+    "name": "CheckExistingSecretStep",
+    "file": "src/commands/install-github-app/CheckExistingSecretStep.tsx",
+    "line": 14,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 19
+  },
+  {
+    "name": "PreviewQuestionView",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/PreviewQuestionView.tsx",
+    "line": 41,
+    "useState": 5,
+    "useEffect": 0,
+    "useCallback": 6,
+    "useMemo": 1,
+    "hooksTotal": 19
+  },
+  {
+    "name": "ResumeConversation",
+    "file": "src/screens/ResumeConversation.tsx",
+    "line": 67,
+    "useState": 6,
+    "useEffect": 1,
+    "useCallback": 3,
+    "useMemo": 1,
+    "hooksTotal": 16
+  },
+  {
+    "name": "PermissionRuleList",
+    "file": "src/components/permissions/rules/PermissionRuleList.tsx",
+    "line": 473,
+    "useState": 9,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 16
+  },
+  {
+    "name": "PluginSettings",
+    "file": "src/commands/plugin/PluginSettings.tsx",
+    "line": 728,
+    "useState": 7,
+    "useEffect": 4,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 15
+  },
+  {
+    "name": "UserPromptMessage",
+    "file": "src/components/messages/UserPromptMessage.tsx",
+    "line": 31,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 2,
+    "hooksTotal": 15
+  },
+  {
+    "name": "ScrollKeybindingHandler",
+    "file": "src/components/ScrollKeybindingHandler.tsx",
+    "line": 359,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 14
+  },
+  {
+    "name": "KeybindingSetup",
+    "file": "src/keybindings/KeybindingProviderSetup.tsx",
+    "line": 119,
+    "useState": 4,
+    "useEffect": 1,
+    "useCallback": 4,
+    "useMemo": 0,
+    "hooksTotal": 14
+  },
+  {
+    "name": "OAuthFlowStep",
+    "file": "src/commands/install-github-app/OAuthFlowStep.tsx",
+    "line": 36,
+    "useState": 6,
+    "useEffect": 4,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 14
+  },
+  {
+    "name": "BackgroundTasksDialog",
+    "file": "src/components/tasks/BackgroundTasksDialog.tsx",
+    "line": 127,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 14
+  },
+  {
+    "name": "TeamsDialog",
+    "file": "src/components/teams/TeamsDialog.tsx",
+    "line": 48,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 1,
+    "useMemo": 2,
+    "hooksTotal": 14
+  },
+  {
+    "name": "Feedback",
+    "file": "src/components/Feedback.tsx",
+    "line": 154,
+    "useState": 7,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 13
+  },
+  {
+    "name": "ResumeTask",
+    "file": "src/components/ResumeTask.tsx",
+    "line": 25,
+    "useState": 7,
+    "useEffect": 0,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 13
+  },
+  {
+    "name": "TextInput",
+    "file": "src/components/TextInput.tsx",
+    "line": 37,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 13
+  },
+  {
+    "name": "MemoryFileSelector",
+    "file": "src/components/memory/MemoryFileSelector.tsx",
+    "line": 44,
+    "useState": 5,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 13
+  },
+  {
+    "name": "PowerShellPermissionRequest",
+    "file": "src/components/permissions/PowerShellPermissionRequest/PowerShellPermissionRequest.tsx",
+    "line": 22,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 2,
+    "hooksTotal": 13
+  },
+  {
+    "name": "GenerateStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/GenerateStep.tsx",
+    "line": 16,
+    "useState": 4,
+    "useEffect": 0,
+    "useCallback": 3,
+    "useMemo": 0,
+    "hooksTotal": 13
+  },
+  {
+    "name": "GlobalSearchDialog",
+    "file": "src/components/GlobalSearchDialog.tsx",
+    "line": 38,
+    "useState": 6,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 12
+  },
+  {
+    "name": "Doctor",
+    "file": "src/screens/Doctor.tsx",
+    "line": 100,
+    "useState": 4,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 12
+  },
+  {
+    "name": "CompanionSprite",
+    "file": "src/buddy/CompanionSprite.tsx",
+    "line": 176,
+    "useState": 2,
+    "useEffect": 3,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 11
+  },
+  {
+    "name": "CoordinatorTaskPanel",
+    "file": "src/components/CoordinatorAgentStatus.tsx",
+    "line": 34,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 11
+  },
+  {
+    "name": "Onboarding",
+    "file": "src/components/Onboarding.tsx",
+    "line": 30,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 1,
+    "hooksTotal": 11
+  },
+  {
+    "name": "AgentEditor",
+    "file": "src/components/agents/AgentEditor.tsx",
+    "line": 30,
+    "useState": 4,
+    "useEffect": 0,
+    "useCallback": 4,
+    "useMemo": 1,
+    "hooksTotal": 11
+  },
+  {
+    "name": "DiffDialog",
+    "file": "src/components/diff/DiffDialog.tsx",
+    "line": 55,
+    "useState": 3,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 11
+  },
+  {
+    "name": "BridgeStatusIndicator",
+    "file": "src/components/PromptInput/PromptInputFooter.tsx",
+    "line": 157,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 11
+  },
+  {
+    "name": "AlternateScreen",
+    "file": "src/ink/components/AlternateScreen.tsx",
+    "line": 33,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 11
+  },
+  {
+    "name": "Button",
+    "file": "src/ink/components/Button.tsx",
+    "line": 39,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 11
+  },
+  {
+    "name": "AutoUpdater",
+    "file": "src/components/AutoUpdater.tsx",
+    "line": 23,
+    "useState": 2,
+    "useEffect": 3,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "NativeAutoUpdater",
+    "file": "src/components/NativeAutoUpdater.tsx",
+    "line": 51,
+    "useState": 2,
+    "useEffect": 3,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "ThemePicker",
+    "file": "src/components/ThemePicker.tsx",
+    "line": 30,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "BridgeDisconnectDialog",
+    "file": "src/commands/bridge/bridge.tsx",
+    "line": 155,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "ResumeCommand",
+    "file": "src/commands/resume/resume.tsx",
+    "line": 89,
+    "useState": 5,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "Tabs",
+    "file": "src/components/design-system/Tabs.tsx",
+    "line": 66,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "HooksConfigMenu",
+    "file": "src/components/hooks/HooksConfigMenu.tsx",
+    "line": 51,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "LogoV2",
+    "file": "src/components/LogoV2/LogoV2.tsx",
+    "line": 47,
+    "useState": 1,
+    "useEffect": 3,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "ElicitationURLDialog",
+    "file": "src/components/mcp/ElicitationDialog.tsx",
+    "line": 984,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "Passes",
+    "file": "src/components/Passes/Passes.tsx",
+    "line": 25,
+    "useState": 5,
+    "useEffect": 1,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "NotificationContent",
+    "file": "src/components/PromptInput/Notifications.tsx",
+    "line": 216,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "PromptInputHelpMenu",
+    "file": "src/components/PromptInput/PromptInputHelpMenu.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "Settings",
+    "file": "src/components/Settings/Settings.tsx",
+    "line": 22,
+    "useState": 5,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 10
+  },
+  {
+    "name": "QuickOpenDialog",
+    "file": "src/components/QuickOpenDialog.tsx",
+    "line": 28,
+    "useState": 4,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "ErrorsTabContent",
+    "file": "src/commands/plugin/PluginSettings.tsx",
+    "line": 357,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "SelectInputOption",
+    "file": "src/components/CustomSelect/select-input-option.tsx",
+    "line": 78,
+    "useState": 1,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "FuzzyPicker",
+    "file": "src/components/design-system/FuzzyPicker.tsx",
+    "line": 68,
+    "useState": 1,
+    "useEffect": 3,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "MCPAgentServerMenu",
+    "file": "src/components/mcp/MCPAgentServerMenu.tsx",
+    "line": 28,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "PermissionPrompt",
+    "file": "src/components/permissions/PermissionPrompt.tsx",
+    "line": 45,
+    "useState": 7,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 9
+  },
+  {
+    "name": "PromptInputQueuedCommandsImpl",
+    "file": "src/components/PromptInput/PromptInputQueuedCommands.tsx",
+    "line": 71,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 9
+  },
+  {
+    "name": "ExportDialog",
+    "file": "src/components/ExportDialog.tsx",
+    "line": 25,
+    "useState": 4,
+    "useEffect": 0,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "ModelPicker",
+    "file": "src/components/ModelPicker.tsx",
+    "line": 39,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "StatsContent",
+    "file": "src/components/Stats.tsx",
+    "line": 121,
+    "useState": 5,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "StickyTracker",
+    "file": "src/components/VirtualMessageList.tsx",
+    "line": 892,
+    "useState": 0,
+    "useEffect": 2,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "BtwSideQuestion",
+    "file": "src/commands/btw/btw.tsx",
+    "line": 36,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "AgentsMenu",
+    "file": "src/components/agents/AgentsMenu.tsx",
+    "line": 31,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "AnimatedAsterisk",
+    "file": "src/components/LogoV2/AnimatedAsterisk.tsx",
+    "line": 15,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "CondensedLogo",
+    "file": "src/components/LogoV2/CondensedLogo.tsx",
+    "line": 19,
+    "useState": 0,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "CollapsedReadSearchContent",
+    "file": "src/components/messages/CollapsedReadSearchContent.tsx",
+    "line": 142,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "PromptInputFooter",
+    "file": "src/components/PromptInput/PromptInputFooter.tsx",
+    "line": 63,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 2,
+    "hooksTotal": 8
+  },
+  {
+    "name": "SpinnerAnimationRow",
+    "file": "src/components/Spinner/SpinnerAnimationRow.tsx",
+    "line": 81,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 8
+  },
+  {
+    "name": "FilePermissionDialog",
+    "file": "src/components/permissions/FilePermissionDialog/FilePermissionDialog.tsx",
+    "line": 48,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 5,
+    "hooksTotal": 8
+  },
+  {
+    "name": "RecentDenialsTab",
+    "file": "src/components/permissions/rules/RecentDenialsTab.tsx",
+    "line": 19,
+    "useState": 4,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 8
+  },
+  {
+    "name": "SessionBackgroundHint",
+    "file": "src/components/SessionBackgroundHint.tsx",
+    "line": 27,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "BriefSpinner",
+    "file": "src/components/Spinner.tsx",
+    "line": 316,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "TaskListV2",
+    "file": "src/components/TaskListV2.tsx",
+    "line": 30,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "WorktreeExitDialog",
+    "file": "src/components/WorktreeExitDialog.tsx",
+    "line": 29,
+    "useState": 4,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "IDECommandFlow",
+    "file": "src/commands/ide/ide.tsx",
+    "line": 518,
+    "useState": 1,
+    "useEffect": 2,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "SuccessStep",
+    "file": "src/commands/install-github-app/SuccessStep.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "Select",
+    "file": "src/components/CustomSelect/select.tsx",
+    "line": 192,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "MCPStdioServerMenu",
+    "file": "src/components/mcp/MCPStdioServerMenu.tsx",
+    "line": 30,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "AssistantToolUseMessage",
+    "file": "src/components/messages/AssistantToolUseMessage.tsx",
+    "line": 35,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "Notifications",
+    "file": "src/components/PromptInput/Notifications.tsx",
+    "line": 55,
+    "useState": 0,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "Usage",
+    "file": "src/components/Settings/Usage.tsx",
+    "line": 174,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "ScrollBox",
+    "file": "src/ink/components/ScrollBox.tsx",
+    "line": 82,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "It2SetupPrompt",
+    "file": "src/utils/swarm/It2SetupPrompt.tsx",
+    "line": 16,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "UserToolSuccessMessage",
+    "file": "src/components/messages/UserToolResultMessage/UserToolSuccessMessage.tsx",
+    "line": 25,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "AskUserQuestionPermissionRequestBody",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/AskUserQuestionPermissionRequest.tsx",
+    "line": 75,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "AddWorkspaceDirectory",
+    "file": "src/components/permissions/rules/AddWorkspaceDirectory.tsx",
+    "line": 137,
+    "useState": 4,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 7
+  },
+  {
+    "name": "AutoUpdaterWrapper",
+    "file": "src/components/AutoUpdaterWrapper.tsx",
+    "line": 19,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "HistorySearchDialog",
+    "file": "src/components/HistorySearchDialog.tsx",
+    "line": 27,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 6
+  },
+  {
+    "name": "RemoteEnvironmentDialog",
+    "file": "src/components/RemoteEnvironmentDialog.tsx",
+    "line": 26,
+    "useState": 5,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "BridgeToggle",
+    "file": "src/commands/bridge/bridge.tsx",
+    "line": 38,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "PluginOptionsDialog",
+    "file": "src/commands/plugin/PluginOptionsDialog.tsx",
+    "line": 55,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "ThinkbackFlow",
+    "file": "src/commands/thinkback/thinkback.tsx",
+    "line": 387,
+    "useState": 4,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "Ratchet",
+    "file": "src/components/design-system/Ratchet.tsx",
+    "line": 10,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "ThemeProvider",
+    "file": "src/components/design-system/ThemeProvider.tsx",
+    "line": 43,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 6
+  },
+  {
+    "name": "MCPReconnect",
+    "file": "src/components/mcp/MCPReconnect.tsx",
+    "line": 15,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "MCPSettings",
+    "file": "src/components/mcp/MCPSettings.tsx",
+    "line": 21,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "TeammateSpinnerLine",
+    "file": "src/components/Spinner/TeammateSpinnerLine.tsx",
+    "line": 72,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "WizardProvider",
+    "file": "src/components/wizard/WizardProvider.tsx",
+    "line": 9,
+    "useState": 4,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "ConfirmStepWrapper",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/ConfirmStepWrapper.tsx",
+    "line": 18,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 3,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "DescriptionStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/DescriptionStep.tsx",
+    "line": 13,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "PromptStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/PromptStep.tsx",
+    "line": 13,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 6
+  },
+  {
+    "name": "DesktopHandoff",
+    "file": "src/components/DesktopHandoff.tsx",
+    "line": 27,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "TeleportStash",
+    "file": "src/components/TeleportStash.tsx",
+    "line": 14,
+    "useState": 4,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "VimTextInput",
+    "file": "src/components/VimTextInput.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "AppStateProvider",
+    "file": "src/state/AppState.tsx",
+    "line": 37,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "PreflightStep",
+    "file": "src/utils/preflightChecks.tsx",
+    "line": 78,
+    "useState": 2,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "ClaudeInChromeMenu",
+    "file": "src/commands/chrome/chrome.tsx",
+    "line": 25,
+    "useState": 4,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "FastModePicker",
+    "file": "src/commands/fast/fast.tsx",
+    "line": 41,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "ApiKeyStep",
+    "file": "src/commands/install-github-app/ApiKeyStep.tsx",
+    "line": 18,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "CreatingStep",
+    "file": "src/commands/install-github-app/CreatingStep.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "AddMarketplace",
+    "file": "src/commands/plugin/AddMarketplace.tsx",
+    "line": 29,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "PluginOptionsFlow",
+    "file": "src/commands/plugin/PluginOptionsFlow.tsx",
+    "line": 59,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "HelpV2",
+    "file": "src/components/HelpV2/HelpV2.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "BackgroundTaskStatus",
+    "file": "src/components/tasks/BackgroundTaskStatus.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "ReviewRainbowLine",
+    "file": "src/components/tasks/RemoteSessionProgress.tsx",
+    "line": 87,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "ShellDetailDialog",
+    "file": "src/components/tasks/ShellDetailDialog.tsx",
+    "line": 49,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "TeammateDetailView",
+    "file": "src/components/teams/TeamsDialog.tsx",
+    "line": 377,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "PermissionRuleInput",
+    "file": "src/components/permissions/rules/PermissionRuleInput.tsx",
+    "line": 19,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "TypeStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/TypeStep.tsx",
+    "line": 17,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 5
+  },
+  {
+    "name": "BaseTextInput",
+    "file": "src/components/BaseTextInput.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "AgentLine",
+    "file": "src/components/CoordinatorAgentStatus.tsx",
+    "line": 143,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "EffortCallout",
+    "file": "src/components/EffortCallout.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 3,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "FullscreenLayout",
+    "file": "src/components/FullscreenLayout.tsx",
+    "line": 270,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "MarkdownTable",
+    "file": "src/components/MarkdownTable.tsx",
+    "line": 72,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "OffscreenFreeze",
+    "file": "src/components/OffscreenFreeze.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "PackageManagerAutoUpdater",
+    "file": "src/components/PackageManagerAutoUpdater.tsx",
+    "line": 20,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "RemoteCallout",
+    "file": "src/components/RemoteCallout.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 2,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "SessionPreview",
+    "file": "src/components/SessionPreview.tsx",
+    "line": 20,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "SpinnerWithVerb",
+    "file": "src/components/Spinner.tsx",
+    "line": 62,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 4
+  },
+  {
+    "name": "ModelsTab",
+    "file": "src/components/Stats.tsx",
+    "line": 716,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "ThinkingToggle",
+    "file": "src/components/ThinkingToggle.tsx",
+    "line": 18,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "TranscriptSearchBar",
+    "file": "src/screens/REPL.tsx",
+    "line": 371,
+    "useState": 1,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "MobileQRCode",
+    "file": "src/commands/mobile/mobile.tsx",
+    "line": 24,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "ModelPickerWrapper",
+    "file": "src/commands/model/model.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "PluginComponentsDisplay",
+    "file": "src/commands/plugin/ManagePlugins.tsx",
+    "line": 194,
+    "useState": 3,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "SessionInfo",
+    "file": "src/commands/session/session.tsx",
+    "line": 14,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "ToolSelector",
+    "file": "src/components/agents/ToolSelector.tsx",
+    "line": 97,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "HighlightedThinkingText",
+    "file": "src/components/messages/HighlightedThinkingText.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "TurnDurationMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 494,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "SandboxPromptFooterHint",
+    "file": "src/components/PromptInput/SandboxPromptFooterHint.tsx",
+    "line": 7,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "Status",
+    "file": "src/components/Settings/Status.tsx",
+    "line": 102,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "Item",
+    "file": "src/components/tasks/BackgroundTasksDialog.tsx",
+    "line": 552,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "BackgroundHint",
+    "file": "src/tools/BashTool/UI.tsx",
+    "line": 31,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "QuestionView",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/QuestionView.tsx",
+    "line": 43,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "RulesTabContent",
+    "file": "src/components/permissions/rules/PermissionRuleList.tsx",
+    "line": 268,
+    "useState": 0,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 4
+  },
+  {
+    "name": "CompanionFloatingBubble",
+    "file": "src/buddy/CompanionSprite.tsx",
+    "line": 296,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "Install",
+    "file": "src/commands/install.tsx",
+    "line": 89,
+    "useState": 1,
+    "useEffect": 2,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "ClaudeInChromeOnboarding",
+    "file": "src/components/ClaudeInChromeOnboarding.tsx",
+    "line": 14,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "MainLine",
+    "file": "src/components/CoordinatorAgentStatus.tsx",
+    "line": 92,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "CtrlOToExpand",
+    "file": "src/components/CtrlOToExpand.tsx",
+    "line": 29,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "NewMessagesPill",
+    "file": "src/components/FullscreenLayout.tsx",
+    "line": 491,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "StickyPromptHeader",
+    "file": "src/components/FullscreenLayout.tsx",
+    "line": 551,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "LanguagePicker",
+    "file": "src/components/LanguagePicker.tsx",
+    "line": 12,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "MCPServerDesktopImportDialog",
+    "file": "src/components/MCPServerDesktopImportDialog.tsx",
+    "line": 19,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "OutputStylePicker",
+    "file": "src/components/OutputStylePicker.tsx",
+    "line": 28,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "SandboxViolationExpandedView",
+    "file": "src/components/SandboxViolationExpandedView.tsx",
+    "line": 20,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "BriefIdleStatus",
+    "file": "src/components/Spinner.tsx",
+    "line": 451,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TeleportError",
+    "file": "src/components/TeleportError.tsx",
+    "line": 21,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TeleportRepoMismatchDialog",
+    "file": "src/components/TeleportRepoMismatchDialog.tsx",
+    "line": 15,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TeleportResumeWrapper",
+    "file": "src/components/TeleportResumeWrapper.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AutoRunIssueNotification",
+    "file": "src/utils/autoRunIssue.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "StaticKeybindingProvider",
+    "file": "src/utils/exportRenderer.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "IDEScreen",
+    "file": "src/commands/ide/ide.tsx",
+    "line": 25,
+    "useState": 3,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "ToggleTagAndClose",
+    "file": "src/commands/tag/tag.tsx",
+    "line": 72,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "ThinkbackInstaller",
+    "file": "src/commands/thinkback/thinkback.tsx",
+    "line": 152,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AgentsList",
+    "file": "src/components/agents/AgentsList.tsx",
+    "line": 22,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "GroveDialog",
+    "file": "src/components/grove/Grove.tsx",
+    "line": 144,
+    "useState": 2,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "PrivacySettingsDialog",
+    "file": "src/components/grove/Grove.tsx",
+    "line": 357,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "EmergencyTip",
+    "file": "src/components/LogoV2/EmergencyTip.tsx",
+    "line": 7,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 2,
+    "hooksTotal": 3
+  },
+  {
+    "name": "MCPListPanel",
+    "file": "src/components/mcp/MCPListPanel.tsx",
+    "line": 92,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AttachmentMessage",
+    "file": "src/components/messages/AttachmentMessage.tsx",
+    "line": 36,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 3
+  },
+  {
+    "name": "RateLimitMessage",
+    "file": "src/components/messages/RateLimitMessage.tsx",
+    "line": 52,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "MemoryFileRow",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 669,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "ProactiveCountdown",
+    "file": "src/components/PromptInput/PromptInputFooterLeftSide.tsx",
+    "line": 74,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "OutputLine",
+    "file": "src/components/shell/OutputLine.tsx",
+    "line": 47,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TeammateSpinnerTree",
+    "file": "src/components/Spinner/TeammateSpinnerTree.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AsyncAgentDetailDialog",
+    "file": "src/components/tasks/AsyncAgentDetailDialog.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AgentPill",
+    "file": "src/components/tasks/BackgroundTaskStatus.tsx",
+    "line": 288,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "SummaryPill",
+    "file": "src/components/tasks/BackgroundTaskStatus.tsx",
+    "line": 378,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "InProcessTeammateDetailDialog",
+    "file": "src/components/tasks/InProcessTeammateDetailDialog.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "RemoteSessionDetailDialog",
+    "file": "src/components/tasks/RemoteSessionDetailDialog.tsx",
+    "line": 778,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TrustDialog",
+    "file": "src/components/TrustDialog/TrustDialog.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "TreeSelect",
+    "file": "src/components/ui/TreeSelect.tsx",
+    "line": 110,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "ClockProvider",
+    "file": "src/ink/components/ClockContext.tsx",
+    "line": 75,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 3
+  },
+  {
+    "name": "AwsAuthStatusBox",
+    "file": "src/components/AwsAuthStatusBox.tsx",
+    "line": 6,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "DevBar",
+    "file": "src/components/DevBar.tsx",
+    "line": 11,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "StreamingMarkdown",
+    "file": "src/components/Markdown.tsx",
+    "line": 186,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 2
+  },
+  {
+    "name": "MemoryUsageIndicator",
+    "file": "src/components/MemoryUsageIndicator.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "SkillImprovementSurveyView",
+    "file": "src/components/SkillImprovementSurvey.tsx",
+    "line": 60,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "Spinner",
+    "file": "src/components/Spinner.tsx",
+    "line": 507,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "OverviewTab",
+    "file": "src/components/Stats.tsx",
+    "line": 356,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 1,
+    "hooksTotal": 2
+  },
+  {
+    "name": "UltraplanChoiceDialog",
+    "file": "src/components/UltraplanChoiceDialog.tsx",
+    "line": 31,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 1,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "VirtualItem",
+    "file": "src/components/VirtualMessageList.tsx",
+    "line": 197,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "PromptOverlayProvider",
+    "file": "src/context/promptOverlayContext.tsx",
+    "line": 34,
+    "useState": 2,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "QueuedMessageProvider",
+    "file": "src/context/QueuedMessageContext.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "TranscriptModeFooter",
+    "file": "src/screens/REPL.tsx",
+    "line": 324,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "RateLimitOptionsMenu",
+    "file": "src/commands/rate-limit-options/rate-limit-options.tsx",
+    "line": 24,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "Web",
+    "file": "src/commands/remote-setup/remote-setup.tsx",
+    "line": 82,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "UltrareviewOverageDialog",
+    "file": "src/commands/review/UltrareviewOverageDialog.tsx",
+    "line": 10,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "PluginHintMenu",
+    "file": "src/components/ClaudeCodeHint/PluginHintMenu.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "Dialog",
+    "file": "src/components/design-system/Dialog.tsx",
+    "line": 30,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "Tab",
+    "file": "src/components/design-system/Tabs.tsx",
+    "line": 261,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ThemedText",
+    "file": "src/components/design-system/ThemedText.tsx",
+    "line": 80,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "DesktopUpsellStartup",
+    "file": "src/components/DesktopUpsell/DesktopUpsellStartup.tsx",
+    "line": 37,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "Opus1mMergeNotice",
+    "file": "src/components/LogoV2/Opus1mMergeNotice.tsx",
+    "line": 13,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "VoiceModeNoticeInner",
+    "file": "src/components/LogoV2/VoiceModeNotice.tsx",
+    "line": 23,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "LspRecommendationMenu",
+    "file": "src/components/LspRecommendation/LspRecommendationMenu.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ManagedSettingsSecurityDialog",
+    "file": "src/components/ManagedSettingsSecurityDialog/ManagedSettingsSecurityDialog.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ResolvingSpinner",
+    "file": "src/components/mcp/ElicitationDialog.tsx",
+    "line": 49,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "MCPToolDetailView",
+    "file": "src/components/mcp/MCPToolDetailView.tsx",
+    "line": 14,
+    "useState": 1,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "TeammateTaskStatus",
+    "file": "src/components/messages/AttachmentMessage.tsx",
+    "line": 432,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "SystemAPIErrorMessage",
+    "file": "src/components/messages/SystemAPIErrorMessage.tsx",
+    "line": 15,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "StopHookSummaryMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 251,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "SystemTextMessageInner",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 429,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "FallbackPermissionRequest",
+    "file": "src/components/permissions/FallbackPermissionRequest.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "PermissionRequest",
+    "file": "src/components/permissions/PermissionRequest.tsx",
+    "line": 146,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ProcessingShimmer",
+    "file": "src/components/PromptInput/VoiceIndicator.tsx",
+    "line": 92,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "OverridesSelect",
+    "file": "src/components/sandbox/SandboxOverridesTab.tsx",
+    "line": 63,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "SandboxSettings",
+    "file": "src/components/sandbox/SandboxSettings.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "DreamDetailDialog",
+    "file": "src/components/tasks/DreamDetailDialog.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "UltraplanSessionDetail",
+    "file": "src/components/tasks/RemoteSessionDetailDialog.tsx",
+    "line": 81,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ReviewSessionDetail",
+    "file": "src/components/tasks/RemoteSessionDetailDialog.tsx",
+    "line": 508,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "TerminalFocusProvider",
+    "file": "src/ink/components/TerminalFocusContext.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "UserToolRejectMessage",
+    "file": "src/components/messages/UserToolResultMessage/UserToolRejectMessage.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "PreviewBoxBody",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/PreviewBox.tsx",
+    "line": 84,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ComputerUseTccPanel",
+    "file": "src/components/permissions/ComputerUseApproval/ComputerUseApproval.tsx",
+    "line": 51,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "RuleDetails",
+    "file": "src/components/permissions/rules/PermissionRuleList.tsx",
+    "line": 75,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "WorkspaceTab",
+    "file": "src/components/permissions/rules/WorkspaceTab.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "WebFetchPermissionRequest",
+    "file": "src/components/permissions/WebFetchPermissionRequest/WebFetchPermissionRequest.tsx",
+    "line": 29,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ColorStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/ColorStep.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "ConfirmStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/ConfirmStep.tsx",
+    "line": 27,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "MemoryStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/MemoryStep.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 2
+  },
+  {
+    "name": "AutoModeOptInDialog",
+    "file": "src/components/AutoModeOptInDialog.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "BypassPermissionsModeDialog",
+    "file": "src/components/BypassPermissionsModeDialog.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ClaudeMdExternalIncludesDialog",
+    "file": "src/components/ClaudeMdExternalIncludesDialog.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ConfigurableShortcutHint",
+    "file": "src/components/ConfigurableShortcutHint.tsx",
+    "line": 33,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FallbackToolUseErrorMessage",
+    "file": "src/components/FallbackToolUseErrorMessage.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FileEditToolDiff",
+    "file": "src/components/FileEditToolDiff.tsx",
+    "line": 23,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "DiffBody",
+    "file": "src/components/FileEditToolDiff.tsx",
+    "line": 53,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FileEditToolUpdatedMessage",
+    "file": "src/components/FileEditToolUpdatedMessage.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FileEditToolUseRejectedMessage",
+    "file": "src/components/FileEditToolUseRejectedMessage.tsx",
+    "line": 24,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SuggestionsOverlay",
+    "file": "src/components/FullscreenLayout.tsx",
+    "line": 599,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "DialogOverlay",
+    "file": "src/components/FullscreenLayout.tsx",
+    "line": 621,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "IdeOnboardingDialog",
+    "file": "src/components/IdeOnboardingDialog.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "IdeStatusIndicator",
+    "file": "src/components/IdeStatusIndicator.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Markdown",
+    "file": "src/components/Markdown.tsx",
+    "line": 78,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MarkdownBody",
+    "file": "src/components/Markdown.tsx",
+    "line": 123,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "UserMessage",
+    "file": "src/components/Message.tsx",
+    "line": 356,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MessageResponse",
+    "file": "src/components/MessageResponse.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "UserMessageOption",
+    "file": "src/components/MessageSelector.tsx",
+    "line": 579,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SingleEnvironmentContent",
+    "file": "src/components/RemoteEnvironmentDialog.tsx",
+    "line": 225,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TeammateViewHeader",
+    "file": "src/components/TeammateViewHeader.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TeleportProgress",
+    "file": "src/components/TeleportProgress.tsx",
+    "line": 30,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "CollapseLabel",
+    "file": "src/components/TokenWarning.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TokenWarning",
+    "file": "src/components/TokenWarning.tsx",
+    "line": 87,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ToolUseLoader",
+    "file": "src/components/ToolUseLoader.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ValidationErrorsList",
+    "file": "src/components/ValidationErrorsList.tsx",
+    "line": 62,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WorkflowMultiselectDialog",
+    "file": "src/components/WorkflowMultiselectDialog.tsx",
+    "line": 37,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "StatsProvider",
+    "file": "src/context/stats.tsx",
+    "line": 104,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "VoiceProvider",
+    "file": "src/context/voice.tsx",
+    "line": 23,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "NoConversationsMessage",
+    "file": "src/screens/ResumeConversation.tsx",
+    "line": 316,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "CrossProjectMessage",
+    "file": "src/screens/ResumeConversation.tsx",
+    "line": 340,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "DoctorWithPlugins",
+    "file": "src/cli/handlers/util.tsx",
+    "line": 56,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AddDirError",
+    "file": "src/commands/add-dir/add-dir.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "CopyPicker",
+    "file": "src/commands/copy/copy.tsx",
+    "line": 120,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "IDEOpenSelection",
+    "file": "src/commands/ide/ide.tsx",
+    "line": 227,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "RunningIDESelector",
+    "file": "src/commands/ide/ide.tsx",
+    "line": 316,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "InstallAppStep",
+    "file": "src/commands/install-github-app/InstallAppStep.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WarningsStep",
+    "file": "src/commands/install-github-app/WarningsStep.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Login",
+    "file": "src/commands/login/login.tsx",
+    "line": 60,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MarketplaceList",
+    "file": "src/commands/plugin/PluginSettings.tsx",
+    "line": 31,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "UnifiedInstalledCell",
+    "file": "src/commands/plugin/UnifiedInstalledCell.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ValidatePlugin",
+    "file": "src/commands/plugin/ValidatePlugin.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ResumeError",
+    "file": "src/commands/resume/resume.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 1,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ThemePickerCommand",
+    "file": "src/commands/theme/theme.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ThinkbackMenu",
+    "file": "src/commands/thinkback/thinkback.tsx",
+    "line": 271,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AgentDetail",
+    "file": "src/components/agents/AgentDetail.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AgentNavigationFooter",
+    "file": "src/components/agents/AgentNavigationFooter.tsx",
+    "line": 8,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ColorPicker",
+    "file": "src/components/agents/ColorPicker.tsx",
+    "line": 15,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TwoColumnRow",
+    "file": "src/components/CustomSelect/select.tsx",
+    "line": 660,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SelectMulti",
+    "file": "src/components/CustomSelect/SelectMulti.tsx",
+    "line": 58,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Divider",
+    "file": "src/components/design-system/Divider.tsx",
+    "line": 66,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ListItem",
+    "file": "src/components/design-system/ListItem.tsx",
+    "line": 104,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Pane",
+    "file": "src/components/design-system/Pane.tsx",
+    "line": 33,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ThemedBox",
+    "file": "src/components/design-system/ThemedBox.tsx",
+    "line": 56,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "DiffDetailView",
+    "file": "src/components/diff/DiffDetailView.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "DiffFileList",
+    "file": "src/components/diff/DiffFileList.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FeedbackSurveyThanks",
+    "file": "src/components/FeedbackSurvey/FeedbackSurvey.tsx",
+    "line": 111,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FeedbackSurveyView",
+    "file": "src/components/FeedbackSurvey/FeedbackSurveyView.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TranscriptSharePrompt",
+    "file": "src/components/FeedbackSurvey/TranscriptSharePrompt.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Commands",
+    "file": "src/components/HelpV2/Commands.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PromptDialog",
+    "file": "src/components/hooks/PromptDialog.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AnimatedClawd",
+    "file": "src/components/LogoV2/AnimatedClawd.tsx",
+    "line": 57,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ChannelsNotice",
+    "file": "src/components/LogoV2/ChannelsNotice.tsx",
+    "line": 18,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WelcomeV2",
+    "file": "src/components/LogoV2/WelcomeV2.tsx",
+    "line": 6,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MCPToolListView",
+    "file": "src/components/mcp/MCPToolListView.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AssistantTextMessage",
+    "file": "src/components/messages/AssistantTextMessage.tsx",
+    "line": 47,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "GenericTaskStatus",
+    "file": "src/components/messages/AttachmentMessage.tsx",
+    "line": 390,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "Line",
+    "file": "src/components/messages/AttachmentMessage.tsx",
+    "line": 506,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "VerboseToolUse",
+    "file": "src/components/messages/CollapsedReadSearchContent.tsx",
+    "line": 42,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "CompactBoundaryMessage",
+    "file": "src/components/messages/CompactBoundaryMessage.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SystemTextMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 36,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MemorySavedMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 594,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ThinkingMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 733,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "BridgeStatusMessage",
+    "file": "src/components/messages/SystemTextMessage.tsx",
+    "line": 768,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PermissionDecisionInfoItem",
+    "file": "src/components/permissions/PermissionDecisionDebugInfo.tsx",
+    "line": 49,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PermissionDecisionDebugInfo",
+    "file": "src/components/permissions/PermissionDecisionDebugInfo.tsx",
+    "line": 342,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ShimmerLoadingText",
+    "file": "src/components/permissions/PermissionExplanation.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PermissionRuleExplanation",
+    "file": "src/components/permissions/PermissionRuleExplanation.tsx",
+    "line": 68,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PromptInputFooterSuggestions",
+    "file": "src/components/PromptInput/PromptInputFooterSuggestions.tsx",
+    "line": 213,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "HighlightedInput",
+    "file": "src/components/PromptInput/ShimmeredInput.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SandboxModeTab",
+    "file": "src/components/sandbox/SandboxSettings.tsx",
+    "line": 222,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FlashingChar",
+    "file": "src/components/Spinner/FlashingChar.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "GlimmerMessage",
+    "file": "src/components/Spinner/GlimmerMessage.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SpinnerGlyph",
+    "file": "src/components/Spinner/SpinnerGlyph.tsx",
+    "line": 22,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "StructuredDiffFallback",
+    "file": "src/components/StructuredDiff/Fallback.tsx",
+    "line": 81,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TeamDetailView",
+    "file": "src/components/teams/TeamsDialog.tsx",
+    "line": 243,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TeamStatus",
+    "file": "src/components/teams/TeamStatus.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "OrderedListComponent",
+    "file": "src/components/ui/OrderedList.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "OrderedListItem",
+    "file": "src/components/ui/OrderedListItem.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WizardDialogLayout",
+    "file": "src/components/wizard/WizardDialogLayout.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WizardNavigationFooter",
+    "file": "src/components/wizard/WizardNavigationFooter.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MCPConnectionManager",
+    "file": "src/services/mcp/MCPConnectionManager.tsx",
+    "line": 38,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "EditRejectionDiff",
+    "file": "src/tools/FileEditTool/UI.tsx",
+    "line": 160,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FileWriteToolCreatedMessage",
+    "file": "src/tools/FileWriteTool/UI.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "WriteRejectionDiff",
+    "file": "src/tools/FileWriteTool/UI.tsx",
+    "line": 208,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "TaskOutputResultDisplay",
+    "file": "src/tools/TaskOutputTool/TaskOutputTool.tsx",
+    "line": 353,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "UserToolResultMessage",
+    "file": "src/components/messages/UserToolResultMessage/UserToolResultMessage.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "AskUserQuestionPermissionRequest",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/AskUserQuestionPermissionRequest.tsx",
+    "line": 30,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "PreviewBox",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/PreviewBox.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "QuestionNavigationBar",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/QuestionNavigationBar.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ClassifierCheckingSubtitle",
+    "file": "src/components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+    "line": 42,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ComputerUseAppListPanel",
+    "file": "src/components/permissions/ComputerUseApproval/ComputerUseApproval.tsx",
+    "line": 208,
+    "useState": 1,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "EnterPlanModePermissionRequest",
+    "file": "src/components/permissions/EnterPlanModePermissionRequest/EnterPlanModePermissionRequest.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FilesystemPermissionRequest",
+    "file": "src/components/permissions/FilesystemPermissionRequest/FilesystemPermissionRequest.tsx",
+    "line": 19,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "FileWriteToolDiff",
+    "file": "src/components/permissions/FileWritePermissionRequest/FileWriteToolDiff.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SkillPermissionRequest",
+    "file": "src/components/permissions/SkillPermissionRequest/SkillPermissionRequest.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "LocationStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/LocationStep.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "MethodStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/MethodStep.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ModelStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/ModelStep.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "ToolsStep",
+    "file": "src/components/agents/new-agent-creation/wizard-steps/ToolsStep.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 1
+  },
+  {
+    "name": "SpeechBubble",
+    "file": "src/buddy/CompanionSprite.tsx",
+    "line": 43,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SetupNotes",
+    "file": "src/commands/install.tsx",
+    "line": 53,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AgentProgressLine",
+    "file": "src/components/AgentProgressLine.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "App",
+    "file": "src/components/App.tsx",
+    "line": 19,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ApproveApiKey",
+    "file": "src/components/ApproveApiKey.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "BashModeProgress",
+    "file": "src/components/BashModeProgress.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ChannelDowngradeDialog",
+    "file": "src/components/ChannelDowngradeDialog.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ClickableImageRef",
+    "file": "src/components/ClickableImageRef.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CompactSummary",
+    "file": "src/components/CompactSummary.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "OAuthStatusMessage",
+    "file": "src/components/ConsoleOAuthFlow.tsx",
+    "line": 380,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ContextSuggestions",
+    "file": "src/components/ContextSuggestions.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CollapseStatus",
+    "file": "src/components/ContextVisualization.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ContextVisualization",
+    "file": "src/components/ContextVisualization.tsx",
+    "line": 105,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CostThresholdDialog",
+    "file": "src/components/CostThresholdDialog.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SubAgentProvider",
+    "file": "src/components/CtrlOToExpand.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DevChannelsDialog",
+    "file": "src/components/DevChannelsDialog.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DiagnosticsDisplay",
+    "file": "src/components/DiagnosticsDisplay.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EffortIndicatorSymbol",
+    "file": "src/components/EffortCallout.tsx",
+    "line": 162,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EffortOptionLabel",
+    "file": "src/components/EffortCallout.tsx",
+    "line": 185,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ExitFlow",
+    "file": "src/components/ExitFlow.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FallbackToolUseRejectedMessage",
+    "file": "src/components/FallbackToolUseRejectedMessage.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FastIcon",
+    "file": "src/components/FastIcon.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DiffFrame",
+    "file": "src/components/FileEditToolDiff.tsx",
+    "line": 81,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FilePathLink",
+    "file": "src/components/FilePathLink.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CodeLine",
+    "file": "src/components/HighlightedCode.tsx",
+    "line": 137,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "IdeAutoConnectDialog",
+    "file": "src/components/IdeAutoConnectDialog.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "IdeDisableAutoConnectDialog",
+    "file": "src/components/IdeAutoConnectDialog.tsx",
+    "line": 80,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "IdleReturnDialog",
+    "file": "src/components/IdleReturnDialog.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "InterruptedByUser",
+    "file": "src/components/InterruptedByUser.tsx",
+    "line": 4,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "InvalidConfigDialog",
+    "file": "src/components/InvalidConfigDialog.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "InvalidSettingsDialog",
+    "file": "src/components/InvalidSettingsDialog.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "KeybindingWarnings",
+    "file": "src/components/KeybindingWarnings.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MarkdownWithHighlight",
+    "file": "src/components/Markdown.tsx",
+    "line": 102,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MCPServerApprovalDialog",
+    "file": "src/components/MCPServerApprovalDialog.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MCPServerDialogCopy",
+    "file": "src/components/MCPServerDialogCopy.tsx",
+    "line": 4,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MCPServerMultiselectDialog",
+    "file": "src/components/MCPServerMultiselectDialog.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageImpl",
+    "file": "src/components/Message.tsx",
+    "line": 58,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AssistantMessageBlock",
+    "file": "src/components/Message.tsx",
+    "line": 433,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageActionsBar",
+    "file": "src/components/messageActions.tsx",
+    "line": 296,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageModel",
+    "file": "src/components/MessageModel.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageResponseProvider",
+    "file": "src/components/MessageResponse.tsx",
+    "line": 63,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageRowImpl",
+    "file": "src/components/MessageRow.tsx",
+    "line": 93,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RestoreOptionDescription",
+    "file": "src/components/MessageSelector.tsx",
+    "line": 416,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RestoreCodeConfirmation",
+    "file": "src/components/MessageSelector.tsx",
+    "line": 461,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DiffStatsText",
+    "file": "src/components/MessageSelector.tsx",
+    "line": 544,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MessageTimestamp",
+    "file": "src/components/MessageTimestamp.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EffortLevelIndicator",
+    "file": "src/components/ModelPicker.tsx",
+    "line": 405,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NotebookEditToolUseRejectedMessage",
+    "file": "src/components/NotebookEditToolUseRejectedMessage.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PrBadge",
+    "file": "src/components/PrBadge.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PressEnterToContinue",
+    "file": "src/components/PressEnterToContinue.tsx",
+    "line": 4,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EnvironmentLabel",
+    "file": "src/components/RemoteEnvironmentDialog.tsx",
+    "line": 193,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MultipleEnvironmentsContent",
+    "file": "src/components/RemoteEnvironmentDialog.tsx",
+    "line": 260,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SearchBox",
+    "file": "src/components/SearchBox.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShowInIDEPrompt",
+    "file": "src/components/ShowInIDEPrompt.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SkillImprovementSurvey",
+    "file": "src/components/SkillImprovementSurvey.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Stats",
+    "file": "src/components/Stats.tsx",
+    "line": 82,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DateRangeSelector",
+    "file": "src/components/Stats.tsx",
+    "line": 315,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ModelEntry",
+    "file": "src/components/Stats.tsx",
+    "line": 844,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "StatusNotices",
+    "file": "src/components/StatusNotices.tsx",
+    "line": 18,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "StructuredDiffList",
+    "file": "src/components/StructuredDiffList.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TagTabs",
+    "file": "src/components/TagTabs.tsx",
+    "line": 54,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TaskItem",
+    "file": "src/components/TaskListV2.tsx",
+    "line": 242,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UltraplanLaunchDialog",
+    "file": "src/components/UltraplanLaunchDialog.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FpsMetricsProvider",
+    "file": "src/context/fpsMetrics.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MailboxProvider",
+    "file": "src/context/mailbox.tsx",
+    "line": 8,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "StyledText",
+    "file": "src/ink/Ansi.tsx",
+    "line": 233,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "KeybindingProvider",
+    "file": "src/keybindings/KeybindingContext.tsx",
+    "line": 59,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DistTagsDisplay",
+    "file": "src/screens/Doctor.tsx",
+    "line": 57,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CheckGitHubStep",
+    "file": "src/commands/install-github-app/CheckGitHubStep.tsx",
+    "line": 4,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ErrorStep",
+    "file": "src/commands/install-github-app/ErrorStep.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ExistingWorkflowStep",
+    "file": "src/commands/install-github-app/ExistingWorkflowStep.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MemoryCommand",
+    "file": "src/commands/memory/memory.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PlanDisplay",
+    "file": "src/commands/plan/plan.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DiscoverPluginsKeyHint",
+    "file": "src/commands/plugin/DiscoverPlugins.tsx",
+    "line": 651,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EmptyStateMessage",
+    "file": "src/commands/plugin/DiscoverPlugins.tsx",
+    "line": 706,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ManageMarketplacesKeyHints",
+    "file": "src/commands/plugin/ManageMarketplaces.tsx",
+    "line": 766,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PluginSelectionKeyHint",
+    "file": "src/commands/plugin/pluginDetailsHelpers.tsx",
+    "line": 79,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PluginTrustWarning",
+    "file": "src/commands/plugin/PluginTrustWarning.tsx",
+    "line": 6,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ConfirmRemoveTag",
+    "file": "src/commands/tag/tag.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ModelSelector",
+    "file": "src/components/agents/ModelSelector.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SelectOption",
+    "file": "src/components/CustomSelect/select-option.tsx",
+    "line": 41,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "List",
+    "file": "src/components/design-system/FuzzyPicker.tsx",
+    "line": 225,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "KeyboardShortcutHint",
+    "file": "src/components/design-system/KeyboardShortcutHint.tsx",
+    "line": 38,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "LoadingState",
+    "file": "src/components/design-system/LoadingState.tsx",
+    "line": 48,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ProgressBar",
+    "file": "src/components/design-system/ProgressBar.tsx",
+    "line": 27,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "StatusIcon",
+    "file": "src/components/design-system/StatusIcon.tsx",
+    "line": 72,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FileItem",
+    "file": "src/components/diff/DiffFileList.tsx",
+    "line": 152,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FileStats",
+    "file": "src/components/diff/DiffFileList.tsx",
+    "line": 209,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FeedbackSurvey",
+    "file": "src/components/FeedbackSurvey/FeedbackSurvey.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "GracePeriodContentBody",
+    "file": "src/components/grove/Grove.tsx",
+    "line": 27,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PostGracePeriodContentBody",
+    "file": "src/components/grove/Grove.tsx",
+    "line": 91,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "General",
+    "file": "src/components/HelpV2/General.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "HighlightedCodeFallback",
+    "file": "src/components/HighlightedCode/Fallback.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Highlighted",
+    "file": "src/components/HighlightedCode/Fallback.tsx",
+    "line": 124,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SelectEventMode",
+    "file": "src/components/hooks/SelectEventMode.tsx",
+    "line": 27,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SelectHookMode",
+    "file": "src/components/hooks/SelectHookMode.tsx",
+    "line": 24,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SelectMatcherMode",
+    "file": "src/components/hooks/SelectMatcherMode.tsx",
+    "line": 28,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ViewHookMode",
+    "file": "src/components/hooks/ViewHookMode.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Clawd",
+    "file": "src/components/LogoV2/Clawd.tsx",
+    "line": 73,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AppleTerminalClawd",
+    "file": "src/components/LogoV2/Clawd.tsx",
+    "line": 183,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Feed",
+    "file": "src/components/LogoV2/Feed.tsx",
+    "line": 51,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FeedColumn",
+    "file": "src/components/LogoV2/FeedColumn.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "GuestPassesUpsell",
+    "file": "src/components/LogoV2/GuestPassesUpsell.tsx",
+    "line": 58,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "OverageCreditUpsell",
+    "file": "src/components/LogoV2/OverageCreditUpsell.tsx",
+    "line": 85,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "VoiceModeNotice",
+    "file": "src/components/LogoV2/VoiceModeNotice.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AppleTerminalWelcomeV2",
+    "file": "src/components/LogoV2/WelcomeV2.tsx",
+    "line": 203,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CapabilitiesSection",
+    "file": "src/components/mcp/CapabilitiesSection.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ElicitationDialog",
+    "file": "src/components/mcp/ElicitationDialog.tsx",
+    "line": 112,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "McpConfigErrorSection",
+    "file": "src/components/mcp/McpParsingWarnings.tsx",
+    "line": 8,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "McpParsingWarnings",
+    "file": "src/components/mcp/McpParsingWarnings.tsx",
+    "line": 122,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MemoryUpdateNotification",
+    "file": "src/components/memory/MemoryUpdateNotification.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AdvisorMessage",
+    "file": "src/components/messages/AdvisorMessage.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AssistantRedactedThinkingMessage",
+    "file": "src/components/messages/AssistantRedactedThinkingMessage.tsx",
+    "line": 7,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "InvalidApiKeyMessage",
+    "file": "src/components/messages/AssistantTextMessage.tsx",
+    "line": 28,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AssistantThinkingMessage",
+    "file": "src/components/messages/AssistantThinkingMessage.tsx",
+    "line": 19,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TaskStatusMessage",
+    "file": "src/components/messages/AttachmentMessage.tsx",
+    "line": 361,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "HookProgressMessage",
+    "file": "src/components/messages/HookProgressMessage.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PlanApprovalRequestDisplay",
+    "file": "src/components/messages/PlanApprovalMessage.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PlanApprovalResponseDisplay",
+    "file": "src/components/messages/PlanApprovalMessage.tsx",
+    "line": 66,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShutdownRequestDisplay",
+    "file": "src/components/messages/ShutdownMessage.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShutdownRejectedDisplay",
+    "file": "src/components/messages/ShutdownMessage.tsx",
+    "line": 51,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TaskAssignmentDisplay",
+    "file": "src/components/messages/TaskAssignmentMessage.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TeamMemCountParts",
+    "file": "src/components/messages/teamMemCollapsed.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserAgentNotificationMessage",
+    "file": "src/components/messages/UserAgentNotificationMessage.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserBashInputMessage",
+    "file": "src/components/messages/UserBashInputMessage.tsx",
+    "line": 10,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserBashOutputMessage",
+    "file": "src/components/messages/UserBashOutputMessage.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserChannelMessage",
+    "file": "src/components/messages/UserChannelMessage.tsx",
+    "line": 26,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserCommandMessage",
+    "file": "src/components/messages/UserCommandMessage.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserImageMessage",
+    "file": "src/components/messages/UserImageMessage.tsx",
+    "line": 20,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserLocalCommandOutputMessage",
+    "file": "src/components/messages/UserLocalCommandOutputMessage.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "IndentedContent",
+    "file": "src/components/messages/UserLocalCommandOutputMessage.tsx",
+    "line": 55,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CloudLaunchContent",
+    "file": "src/components/messages/UserLocalCommandOutputMessage.tsx",
+    "line": 88,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserMemoryInputMessage",
+    "file": "src/components/messages/UserMemoryInputMessage.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserPlanMessage",
+    "file": "src/components/messages/UserPlanMessage.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserResourceUpdateMessage",
+    "file": "src/components/messages/UserResourceUpdateMessage.tsx",
+    "line": 61,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserTeammateMessage",
+    "file": "src/components/messages/UserTeammateMessage.tsx",
+    "line": 55,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TeammateMessageContent",
+    "file": "src/components/messages/UserTeammateMessage.tsx",
+    "line": 150,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserTextMessage",
+    "file": "src/components/messages/UserTextMessage.tsx",
+    "line": 29,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SuggestedRules",
+    "file": "src/components/permissions/PermissionDecisionDebugInfo.tsx",
+    "line": 108,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SuggestionDisplay",
+    "file": "src/components/permissions/PermissionDecisionDebugInfo.tsx",
+    "line": 210,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionDialog",
+    "file": "src/components/permissions/PermissionDialog.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ExplanationResult",
+    "file": "src/components/permissions/PermissionExplanation.tsx",
+    "line": 156,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionExplainerContent",
+    "file": "src/components/permissions/PermissionExplanation.tsx",
+    "line": 246,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionRequestTitle",
+    "file": "src/components/permissions/PermissionRequestTitle.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SandboxPermissionRequest",
+    "file": "src/components/permissions/SandboxPermissionRequest.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "WorkerBadge",
+    "file": "src/components/permissions/WorkerBadge.tsx",
+    "line": 15,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "WorkerPendingPermission",
+    "file": "src/components/permissions/WorkerPendingPermission.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "HistorySearchInput",
+    "file": "src/components/PromptInput/HistorySearchInput.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PromptInputFooterLeftSide",
+    "file": "src/components/PromptInput/PromptInputFooterLeftSide.tsx",
+    "line": 127,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PromptChar",
+    "file": "src/components/PromptInput/PromptInputModeIndicator.tsx",
+    "line": 44,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PromptInputModeIndicator",
+    "file": "src/components/PromptInput/PromptInputModeIndicator.tsx",
+    "line": 63,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PromptInputStashNotice",
+    "file": "src/components/PromptInput/PromptInputStashNotice.tsx",
+    "line": 8,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "VoiceIndicator",
+    "file": "src/components/PromptInput/VoiceIndicator.tsx",
+    "line": 24,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "VoiceIndicatorImpl",
+    "file": "src/components/PromptInput/VoiceIndicator.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "VoiceWarmupHint",
+    "file": "src/components/PromptInput/VoiceIndicator.tsx",
+    "line": 78,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SandboxConfigTab",
+    "file": "src/components/sandbox/SandboxConfigTab.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SandboxDependenciesTab",
+    "file": "src/components/sandbox/SandboxDependenciesTab.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SandboxDoctorSection",
+    "file": "src/components/sandbox/SandboxDoctorSection.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SandboxOverridesTab",
+    "file": "src/components/sandbox/SandboxOverridesTab.tsx",
+    "line": 14,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NotifChannelLabel",
+    "file": "src/components/Settings/Config.tsx",
+    "line": 1754,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PropertyValue",
+    "file": "src/components/Settings/Status.tsx",
+    "line": 57,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Diagnostics",
+    "file": "src/components/Settings/Status.tsx",
+    "line": 204,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "LimitBar",
+    "file": "src/components/Settings/Usage.tsx",
+    "line": 25,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ExtraUsageSection",
+    "file": "src/components/Settings/Usage.tsx",
+    "line": 271,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ExpandShellOutputProvider",
+    "file": "src/components/shell/ExpandShellOutputContext.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShellProgressMessage",
+    "file": "src/components/shell/ShellProgressMessage.tsx",
+    "line": 19,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShellTimeDisplay",
+    "file": "src/components/shell/ShellTimeDisplay.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SkillsMenu",
+    "file": "src/components/skills/SkillsMenu.tsx",
+    "line": 47,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShimmerChar",
+    "file": "src/components/Spinner/ShimmerChar.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SpinnerModeGlyph",
+    "file": "src/components/Spinner/SpinnerAnimationRow.tsx",
+    "line": 232,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "HideRow",
+    "file": "src/components/Spinner/TeammateSpinnerTree.tsx",
+    "line": 212,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "BackgroundTask",
+    "file": "src/components/tasks/BackgroundTask.tsx",
+    "line": 17,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TeammateTaskGroups",
+    "file": "src/components/tasks/BackgroundTasksDialog.tsx",
+    "line": 612,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "StagePipeline",
+    "file": "src/components/tasks/RemoteSessionDetailDialog.tsx",
+    "line": 424,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RainbowText",
+    "file": "src/components/tasks/RemoteSessionProgress.tsx",
+    "line": 43,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RemoteSessionProgress",
+    "file": "src/components/tasks/RemoteSessionProgress.tsx",
+    "line": 172,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShellOutputContent",
+    "file": "src/components/tasks/ShellDetailDialog.tsx",
+    "line": 304,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TaskStatusText",
+    "file": "src/components/tasks/ShellProgress.tsx",
+    "line": 13,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ShellProgress",
+    "file": "src/components/tasks/ShellProgress.tsx",
+    "line": 34,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "TeammateListItem",
+    "file": "src/components/teams/TeamsDialog.tsx",
+    "line": 298,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ErrorOverview",
+    "file": "src/ink/components/ErrorOverview.tsx",
+    "line": 28,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Link",
+    "file": "src/ink/components/Link.tsx",
+    "line": 11,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NoSelect",
+    "file": "src/ink/components/NoSelect.tsx",
+    "line": 35,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "Spacer",
+    "file": "src/ink/components/Spacer.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AgentPromptDisplay",
+    "file": "src/tools/AgentTool/UI.tsx",
+    "line": 184,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AgentResponseDisplay",
+    "file": "src/tools/AgentTool/UI.tsx",
+    "line": 208,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "VerboseAgentTranscript",
+    "file": "src/tools/AgentTool/UI.tsx",
+    "line": 246,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AskUserQuestionResultMessage",
+    "file": "src/tools/AskUserQuestionTool/AskUserQuestionTool.tsx",
+    "line": 83,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "BashToolResultMessage",
+    "file": "src/tools/BashTool/BashToolResultMessage.tsx",
+    "line": 66,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AttachmentList",
+    "file": "src/tools/BriefTool/UI.tsx",
+    "line": 72,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "EditRejectionBody",
+    "file": "src/tools/FileEditTool/UI.tsx",
+    "line": 213,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "WriteRejectionBody",
+    "file": "src/tools/FileWriteTool/UI.tsx",
+    "line": 271,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SearchResultSummary",
+    "file": "src/tools/GrepTool/UI.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "LSPResultSummary",
+    "file": "src/tools/LSPTool/UI.tsx",
+    "line": 61,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "MCPTextOutput",
+    "file": "src/tools/MCPTool/UI.tsx",
+    "line": 159,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "CreateAgentWizard",
+    "file": "src/components/agents/new-agent-creation/CreateAgentWizard.tsx",
+    "line": 26,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RejectedPlanMessage",
+    "file": "src/components/messages/UserToolResultMessage/RejectedPlanMessage.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RejectedToolUseMessage",
+    "file": "src/components/messages/UserToolResultMessage/RejectedToolUseMessage.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserToolCanceledMessage",
+    "file": "src/components/messages/UserToolResultMessage/UserToolCanceledMessage.tsx",
+    "line": 5,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "UserToolErrorMessage",
+    "file": "src/components/messages/UserToolResultMessage/UserToolErrorMessage.tsx",
+    "line": 23,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AskUserQuestionWithHighlight",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/AskUserQuestionPermissionRequest.tsx",
+    "line": 54,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PreviewBoxWithHighlight",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/PreviewBox.tsx",
+    "line": 63,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SubmitQuestionsView",
+    "file": "src/components/permissions/AskUserQuestionPermissionRequest/SubmitQuestionsView.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "BashPermissionRequest",
+    "file": "src/components/permissions/BashPermissionRequest/BashPermissionRequest.tsx",
+    "line": 71,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "ComputerUseApproval",
+    "file": "src/components/permissions/ComputerUseApproval/ComputerUseApproval.tsx",
+    "line": 30,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FileEditPermissionRequest",
+    "file": "src/components/permissions/FileEditPermissionRequest/FileEditPermissionRequest.tsx",
+    "line": 28,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "FileWritePermissionRequest",
+    "file": "src/components/permissions/FileWritePermissionRequest/FileWritePermissionRequest.tsx",
+    "line": 38,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NotebookEditPermissionRequest",
+    "file": "src/components/permissions/NotebookEditPermissionRequest/NotebookEditPermissionRequest.tsx",
+    "line": 12,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NotebookEditToolDiff",
+    "file": "src/components/permissions/NotebookEditPermissionRequest/NotebookEditToolDiff.tsx",
+    "line": 34,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "NotebookEditToolDiffInner",
+    "file": "src/components/permissions/NotebookEditPermissionRequest/NotebookEditToolDiff.tsx",
+    "line": 64,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "AddPermissionRules",
+    "file": "src/components/permissions/rules/AddPermissionRules.tsx",
+    "line": 48,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionDescription",
+    "file": "src/components/permissions/rules/AddWorkspaceDirectory.tsx",
+    "line": 39,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DirectoryDisplay",
+    "file": "src/components/permissions/rules/AddWorkspaceDirectory.tsx",
+    "line": 50,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "DirectoryInput",
+    "file": "src/components/permissions/rules/AddWorkspaceDirectory.tsx",
+    "line": 80,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionRuleDescription",
+    "file": "src/components/permissions/rules/PermissionRuleDescription.tsx",
+    "line": 9,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RuleSourceText",
+    "file": "src/components/permissions/rules/PermissionRuleList.tsx",
+    "line": 37,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "PermissionRulesTab",
+    "file": "src/components/permissions/rules/PermissionRuleList.tsx",
+    "line": 364,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "RemoveWorkspaceDirectory",
+    "file": "src/components/permissions/rules/RemoveWorkspaceDirectory.tsx",
+    "line": 16,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SedEditPermissionRequest",
+    "file": "src/components/permissions/SedEditPermissionRequest/SedEditPermissionRequest.tsx",
+    "line": 21,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  },
+  {
+    "name": "SedEditPermissionRequestInner",
+    "file": "src/components/permissions/SedEditPermissionRequest/SedEditPermissionRequest.tsx",
+    "line": 79,
+    "useState": 0,
+    "useEffect": 0,
+    "useCallback": 0,
+    "useMemo": 0,
+    "hooksTotal": 0
+  }
+]

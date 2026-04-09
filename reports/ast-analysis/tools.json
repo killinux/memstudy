@@ -1,0 +1,296 @@
+[
+  {
+    "varName": "AgentTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/AgentTool/AgentTool.tsx",
+    "line": 196
+  },
+  {
+    "varName": "AskUserQuestionTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/AskUserQuestionTool/AskUserQuestionTool.tsx",
+    "line": 109
+  },
+  {
+    "varName": "BashTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/BashTool/BashTool.tsx",
+    "line": 420
+  },
+  {
+    "varName": "BriefTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/BriefTool/BriefTool.ts",
+    "line": 136
+  },
+  {
+    "varName": "ConfigTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ConfigTool/ConfigTool.ts",
+    "line": 67
+  },
+  {
+    "varName": "EnterPlanModeTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/EnterPlanModeTool/EnterPlanModeTool.ts",
+    "line": 36
+  },
+  {
+    "varName": "EnterWorktreeTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/EnterWorktreeTool/EnterWorktreeTool.ts",
+    "line": 52
+  },
+  {
+    "varName": "ExitPlanModeV2Tool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.ts",
+    "line": 147
+  },
+  {
+    "varName": "ExitWorktreeTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/ExitWorktreeTool/ExitWorktreeTool.ts",
+    "line": 148
+  },
+  {
+    "varName": "FileEditTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/FileEditTool/FileEditTool.ts",
+    "line": 86
+  },
+  {
+    "varName": "FileReadTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/FileReadTool/FileReadTool.ts",
+    "line": 337
+  },
+  {
+    "varName": "FileWriteTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/FileWriteTool/FileWriteTool.ts",
+    "line": 94
+  },
+  {
+    "varName": "GlobTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/GlobTool/GlobTool.ts",
+    "line": 57
+  },
+  {
+    "varName": "GrepTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/GrepTool/GrepTool.ts",
+    "line": 160
+  },
+  {
+    "varName": "ListMcpResourcesTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ListMcpResourcesTool/ListMcpResourcesTool.ts",
+    "line": 40
+  },
+  {
+    "varName": "LSPTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/LSPTool/LSPTool.ts",
+    "line": 127
+  },
+  {
+    "varName": "MCPTool",
+    "toolName": "mcp",
+    "wrapper": "buildTool",
+    "file": "src/tools/MCPTool/MCPTool.ts",
+    "line": 27
+  },
+  {
+    "varName": "NotebookEditTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/NotebookEditTool/NotebookEditTool.ts",
+    "line": 90
+  },
+  {
+    "varName": "PowerShellTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/PowerShellTool/PowerShellTool.tsx",
+    "line": 272
+  },
+  {
+    "varName": "ReadMcpResourceTool",
+    "toolName": "ReadMcpResourceTool",
+    "wrapper": "buildTool",
+    "file": "src/tools/ReadMcpResourceTool/ReadMcpResourceTool.ts",
+    "line": 49
+  },
+  {
+    "varName": "RemoteTriggerTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/RemoteTriggerTool/RemoteTriggerTool.ts",
+    "line": 46
+  },
+  {
+    "varName": "CronCreateTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ScheduleCronTool/CronCreateTool.ts",
+    "line": 56
+  },
+  {
+    "varName": "CronDeleteTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ScheduleCronTool/CronDeleteTool.ts",
+    "line": 35
+  },
+  {
+    "varName": "CronListTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ScheduleCronTool/CronListTool.ts",
+    "line": 37
+  },
+  {
+    "varName": "SendMessageTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/SendMessageTool/SendMessageTool.ts",
+    "line": 520
+  },
+  {
+    "varName": "SkillTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/SkillTool/SkillTool.ts",
+    "line": 331
+  },
+  {
+    "varName": "SyntheticOutputTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/SyntheticOutputTool/SyntheticOutputTool.ts",
+    "line": 28
+  },
+  {
+    "varName": "TaskCreateTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TaskCreateTool/TaskCreateTool.ts",
+    "line": 48
+  },
+  {
+    "varName": "TaskGetTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TaskGetTool/TaskGetTool.ts",
+    "line": 38
+  },
+  {
+    "varName": "TaskListTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TaskListTool/TaskListTool.ts",
+    "line": 33
+  },
+  {
+    "varName": "TaskOutputTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/TaskOutputTool/TaskOutputTool.tsx",
+    "line": 144
+  },
+  {
+    "varName": "TaskStopTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TaskStopTool/TaskStopTool.ts",
+    "line": 39
+  },
+  {
+    "varName": "TaskUpdateTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TaskUpdateTool/TaskUpdateTool.ts",
+    "line": 88
+  },
+  {
+    "varName": "TeamCreateTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/TeamCreateTool/TeamCreateTool.ts",
+    "line": 74
+  },
+  {
+    "varName": "TeamDeleteTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/TeamDeleteTool/TeamDeleteTool.ts",
+    "line": 32
+  },
+  {
+    "varName": "TestingPermissionTool",
+    "toolName": null,
+    "wrapper": null,
+    "file": "src/tools/testing/TestingPermissionTool.tsx",
+    "line": 12
+  },
+  {
+    "varName": "TodoWriteTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TodoWriteTool/TodoWriteTool.ts",
+    "line": 31
+  },
+  {
+    "varName": "ToolSearchTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/ToolSearchTool/ToolSearchTool.ts",
+    "line": 304
+  },
+  {
+    "varName": "TungstenTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/TungstenTool/TungstenTool.ts",
+    "line": 27
+  },
+  {
+    "varName": "VerifyPlanExecutionTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/VerifyPlanExecutionTool/VerifyPlanExecutionTool.ts",
+    "line": 22
+  },
+  {
+    "varName": "WebFetchTool",
+    "toolName": null,
+    "wrapper": "buildTool",
+    "file": "src/tools/WebFetchTool/WebFetchTool.ts",
+    "line": 66
+  },
+  {
+    "varName": "WebSearchTool",
+    "toolName": "web_search",
+    "wrapper": "buildTool",
+    "file": "src/tools/WebSearchTool/WebSearchTool.ts",
+    "line": 152
+  }
+]

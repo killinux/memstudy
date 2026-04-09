@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AST 分析报告：free-code45</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="ast-free-code45">AST 分析报告：free-code45</h1>
+<p>通过 ts-morph 对 free-code45 (Claude Code v2.1.87) 做编程式 AST 分析，量化项目的内部结构。</p>
+<hr />
+<h2 id="_1">方法</h2>
+<h3 id="_2">工具选型</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>适用</th>
+<th>优劣</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ts-morph</strong></td>
+<td>TypeScript</td>
+<td>理解 tsconfig + 类型信息，API 友好</td>
+</tr>
+<tr>
+<td>tree-sitter</td>
+<td>多语言</td>
+<td>速度快，但只看语法不看类型</td>
+</tr>
+<tr>
+<td>TS Compiler API</td>
+<td>TypeScript</td>
+<td>最底层，最强大但繁琐</td>
+</tr>
+<tr>
+<td>Python ast</td>
+<td>Python</td>
+<td>内置无依赖</td>
+</tr>
+<tr>
+<td>jscodeshift</td>
+<td>JS/TS</td>
+<td>适合自动重构</td>
+</tr>
+</tbody>
+</table>
+<p>free-code45 是 TypeScript 项目，且依赖 tsconfig 路径别名，所以 ts-morph 是最佳选择。</p>
+<h3 id="_3">安装与运行</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>ast-analysis<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ast-analysis
+npm<span class="w"> </span>init<span class="w"> </span>-y
+npm<span class="w"> </span>install<span class="w"> </span>ts-morph
+node<span class="w"> </span>analyze.mjs<span class="w"> </span>/path/to/free-code45<span class="w"> </span>/tmp/ast-output
+</code></pre></div>
+
+<h3 id="_4">分析维度</h3>
+<ol>
+<li><strong>每个文件的 export 数</strong> — 找出"上帝模块"</li>
+<li><strong>所有 Tool 定义</strong> — 列出全部工具</li>
+<li><strong>所有 Command 定义</strong> — 列出全部斜杠命令</li>
+<li><strong>函数统计</strong> — async 比例、generator、参数数分布</li>
+<li><strong>React 组件统计</strong> — Hook 使用模式</li>
+<li><strong>Import 引用排行</strong> — 哪些模块被引用最多</li>
+</ol>
+<p>完整脚本见 <code>tools/ast-analysis/analyze.mjs</code>。</p>
+<hr />
+<h2 id="_5">总览数据</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>源文件数（src/ 下）</td>
+<td><strong>1,932</strong></td>
+</tr>
+<tr>
+<td>总函数数</td>
+<td><strong>20,181</strong></td>
+</tr>
+<tr>
+<td>总 export 数</td>
+<td><strong>8,611</strong></td>
+</tr>
+<tr>
+<td>Tool 定义数</td>
+<td><strong>42</strong></td>
+</tr>
+<tr>
+<td>Command 定义数</td>
+<td><strong>73</strong></td>
+</tr>
+<tr>
+<td>React 组件数</td>
+<td><strong>573</strong></td>
+</tr>
+<tr>
+<td>总 import 语句</td>
+<td><strong>15,989</strong></td>
+</tr>
+<tr>
+<td>唯一被引模块数</td>
+<td><strong>3,794</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-42-tool">1. 全部 42 个 Tool</h2>
+<p>通过 AST 分析直接列出 free-code45 注册的<strong>所有</strong>工具：</p>
+<h3 id="5">文件操作（5）</h3>
+<ul>
+<li><code>FileReadTool</code> — 读文件</li>
+<li><code>FileWriteTool</code> — 写文件</li>
+<li><code>FileEditTool</code> — 字符串替换式编辑</li>
+<li><code>NotebookEditTool</code> — Jupyter notebook 编辑</li>
+<li><code>GlobTool</code> — 文件名匹配</li>
+</ul>
+<h3 id="2">命令执行（2）</h3>
+<ul>
+<li><code>BashTool</code> — Bash 命令执行</li>
+<li><code>PowerShellTool</code> — PowerShell 命令执行（Windows）</li>
+</ul>
+<h3 id="3">搜索（3）</h3>
+<ul>
+<li><code>GrepTool</code> — 文本搜索（基于 ripgrep）</li>
+<li><code>WebSearchTool</code> — 网络搜索</li>
+<li><code>WebFetchTool</code> — 网页抓取</li>
+</ul>
+<h3 id="agent-3">Agent 系统（3）</h3>
+<ul>
+<li><code>AgentTool</code> — 子 agent 启动</li>
+<li><code>TeamCreateTool</code> — 创建 agent 团队</li>
+<li><code>TeamDeleteTool</code> — 删除 agent 团队</li>
+</ul>
+<h3 id="6">任务管理（6）</h3>
+<ul>
+<li><code>TaskCreateTool</code> — 创建任务</li>
+<li><code>TaskGetTool</code> — 查询任务</li>
+<li><code>TaskListTool</code> — 列出任务</li>
+<li><code>TaskOutputTool</code> — 获取任务输出</li>
+<li><code>TaskStopTool</code> — 停止任务</li>
+<li><code>TaskUpdateTool</code> — 更新任务状态</li>
+</ul>
+<h3 id="todo-1">Todo 管理（1）</h3>
+<ul>
+<li><code>TodoWriteTool</code> — Todo 列表</li>
+</ul>
+<h3 id="1">用户交互（1）</h3>
+<ul>
+<li><code>AskUserQuestionTool</code> — 向用户提问</li>
+</ul>
+<h3 id="plan-3">Plan 模式（3）</h3>
+<ul>
+<li><code>EnterPlanModeTool</code> — 进入 Plan 模式</li>
+<li><code>ExitPlanModeV2Tool</code> — 退出 Plan 模式</li>
+<li><code>VerifyPlanExecutionTool</code> — 验证 Plan 执行</li>
+</ul>
+<h3 id="worktree2">Worktree（2）</h3>
+<ul>
+<li><code>EnterWorktreeTool</code> — 进入 git worktree</li>
+<li><code>ExitWorktreeTool</code> — 退出 worktree</li>
+</ul>
+<h3 id="4">调度（4）</h3>
+<ul>
+<li><code>CronCreateTool</code> — 创建 cron 任务</li>
+<li><code>CronDeleteTool</code> — 删除 cron 任务</li>
+<li><code>CronListTool</code> — 列出 cron 任务</li>
+<li><code>RemoteTriggerTool</code> — 远程触发</li>
+</ul>
+<h3 id="mcp-3">MCP 集成（3）</h3>
+<ul>
+<li><code>MCPTool</code> — MCP 工具调用</li>
+<li><code>ListMcpResourcesTool</code> — 列出 MCP 资源</li>
+<li><code>ReadMcpResourceTool</code> — 读取 MCP 资源</li>
+</ul>
+<h3 id="skill-1">Skill 系统（1）</h3>
+<ul>
+<li><code>SkillTool</code> — Skill 调用</li>
+</ul>
+<h3 id="1_1">团队协作（1）</h3>
+<ul>
+<li><code>SendMessageTool</code> — 给 teammate 发消息</li>
+</ul>
+<h3 id="7">其他（7）</h3>
+<ul>
+<li><code>BriefTool</code> — 简报生成</li>
+<li><code>ConfigTool</code> — 配置管理</li>
+<li><code>LSPTool</code> — LSP 集成</li>
+<li><code>ToolSearchTool</code> — 工具搜索（按需加载）</li>
+<li><code>SyntheticOutputTool</code> — 合成输出（测试用）</li>
+<li><code>TungstenTool</code> — 内部工具</li>
+<li><code>TestingPermissionTool</code> — 权限测试</li>
+</ul>
+<p><strong>洞察</strong>：
+- 文件 + 命令是核心（7 个），其余都是扩展功能
+- 任务管理工具有 6 个，说明 Claude Code 是为长任务设计的
+- 4 个调度工具说明支持后台/定时任务
+- 3 个 MCP 工具说明 MCP 是一等公民</p>
+<hr />
+<h2 id="2-73-command">2. 全部 73 个 Command</h2>
+<p>按类型分组：</p>
+<h3 id="prompt-7-prompt"><code>prompt</code> 类型（7）— 静态 prompt 模板</h3>
+<div class="highlight"><pre><span></span><code>commit, commit-push-pr, init, init-verifiers, insights, review, statusline
+</code></pre></div>
+
+<p>最简单的命令：把 prompt 文本喂给 Claude。</p>
+<h3 id="local-19"><code>local</code> 类型（19）— 同步本地命令</h3>
+<div class="highlight"><pre><span></span><code>advisor, bridge-kick, clear, compact, context, cost, extra-usage, version, ...
+</code></pre></div>
+
+<p>直接执行本地逻辑，不调用 Claude。如 <code>/clear</code> 清除会话、<code>/cost</code> 显示成本。</p>
+<h3 id="local-jsx-47-jsx"><code>local-jsx</code> 类型（47）— 交互式 JSX 命令</h3>
+<div class="highlight"><pre><span></span><code>add-dir, agents, branch, brief, btw, install, ultrareview, remote-control, ...
+</code></pre></div>
+
+<p>返回 React 组件渲染交互式界面。这是最常用的命令类型，绝大多数 Claude Code 命令都属于此类。</p>
+<p><strong>洞察</strong>：73 个命令分布说明 Claude Code 把 CLI 当成 GUI 来用——47 个 local-jsx 命令意味着大部分交互都是富 UI 而非纯文本。</p>
+<hr />
+<h2 id="3_1">3. 函数特征</h2>
+<h3 id="_6">整体统计</h3>
+<table>
+<thead>
+<tr>
+<th>特征</th>
+<th>数量</th>
+<th>比例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总函数</td>
+<td>20,181</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>async</td>
+<td>2,835</td>
+<td><strong>14.0%</strong></td>
+</tr>
+<tr>
+<td>generator</td>
+<td>50</td>
+<td>0.2%</td>
+</tr>
+<tr>
+<td>async generator</td>
+<td>45</td>
+<td>0.2%</td>
+</tr>
+<tr>
+<td>arrow function</td>
+<td>9,649</td>
+<td>47.8%</td>
+</tr>
+<tr>
+<td>命名函数</td>
+<td>10,532</td>
+<td>52.2%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- 14% async 比例对一个 IO 密集项目来说<strong>偏低</strong>——很多同步辅助函数
+- async generator 仅 45 个但都是关键函数（包括 <code>queryLoop</code>）
+- arrow / named 几乎对半，说明代码风格统一</p>
+<h3 id="_7">参数数分布</h3>
+<table>
+<thead>
+<tr>
+<th>参数数</th>
+<th>函数数</th>
+<th>占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>6,249</td>
+<td>31.0%</td>
+</tr>
+<tr>
+<td>1</td>
+<td>10,144</td>
+<td><strong>50.3%</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>2,518</td>
+<td>12.5%</td>
+</tr>
+<tr>
+<td>3</td>
+<td>740</td>
+<td>3.7%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>271</td>
+<td>1.3%</td>
+</tr>
+<tr>
+<td>5</td>
+<td>118</td>
+<td>0.6%</td>
+</tr>
+<tr>
+<td>6+</td>
+<td>141</td>
+<td>0.7%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- <strong>81% 的函数参数 ≤ 1</strong>，符合"小函数 + 单一职责"原则
+- 多参数函数极少，但有 1 个 17 参的"上帝函数"</p>
+<h3 id="_8">参数最多的函数</h3>
+<div class="highlight"><pre><span></span><code>processUserInputBase   — 17 参数
+</code></pre></div>
+
+<p>这是处理用户输入的中枢函数，要承接命令解析、附件处理、权限上下文、agent 状态等多种信息。17 参可能是个重构信号，但放在中枢位置也合理。</p>
+<hr />
+<h2 id="4-export-top-10">4. Export 最多的文件 Top 10</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Count</th>
+<th>File</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>215</td>
+<td><code>bootstrap/state.ts</code></td>
+<td>全局状态枢纽</td>
+</tr>
+<tr>
+<td>2</td>
+<td>135</td>
+<td><code>entrypoints/sdk/coreSchemas.ts</code></td>
+<td>SDK 类型定义</td>
+</tr>
+<tr>
+<td>3</td>
+<td>114</td>
+<td><code>utils/messages.ts</code></td>
+<td>消息处理工具集</td>
+</tr>
+<tr>
+<td>4</td>
+<td>94</td>
+<td><code>utils/sessionStorage.ts</code></td>
+<td>持久化（IMPORTANT 注释最多）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>73</td>
+<td><code>entrypoints/agentSdkTypes.ts</code></td>
+<td>Agent SDK 类型</td>
+</tr>
+<tr>
+<td>6</td>
+<td>61</td>
+<td><code>utils/auth.ts</code></td>
+<td>认证工具</td>
+</tr>
+<tr>
+<td>7</td>
+<td>55</td>
+<td><code>ink.ts</code></td>
+<td>UI 框架入口</td>
+</tr>
+<tr>
+<td>8</td>
+<td>54</td>
+<td><code>utils/teammateMailbox.ts</code></td>
+<td>团队邮箱</td>
+</tr>
+<tr>
+<td>9</td>
+<td>52</td>
+<td><code>utils/attachments.ts</code></td>
+<td>附件处理</td>
+</tr>
+<tr>
+<td>10</td>
+<td>51</td>
+<td><code>utils/hooks.ts</code></td>
+<td>Hook 系统</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- <code>bootstrap/state.ts</code> 215 个 export 是绝对的"上帝模块"，整个应用的全局状态都在这里
+- 前 10 中有 7 个是 <code>utils/</code>，说明工具函数的复用度很高
+- 这个排行和"复杂度 Top 10"几乎不重合——大模块不一定复杂，复杂模块不一定大</p>
+<hr />
+<h2 id="5-top-20">5. 被引用最多的模块 Top 20</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Count</th>
+<th>Module</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>761</strong></td>
+<td><code>react</code></td>
+<td>第三方</td>
+</tr>
+<tr>
+<td>2</td>
+<td>395</td>
+<td><code>react/compiler-runtime</code></td>
+<td>第三方</td>
+</tr>
+<tr>
+<td>3</td>
+<td>254</td>
+<td><code>path</code></td>
+<td>Node 内置</td>
+</tr>
+<tr>
+<td>4</td>
+<td>240</td>
+<td><code>../../ink.js</code></td>
+<td>项目内（Ink UI）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>194</td>
+<td><code>bun:bundle</code></td>
+<td>Bun 内置</td>
+</tr>
+<tr>
+<td>6</td>
+<td>167</td>
+<td><code>../../Tool.js</code></td>
+<td>项目内（Tool 抽象）</td>
+</tr>
+<tr>
+<td>7</td>
+<td>147</td>
+<td><code>../ink.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>8</td>
+<td>146</td>
+<td><code>fs/promises</code></td>
+<td>Node 内置</td>
+</tr>
+<tr>
+<td>9</td>
+<td>128</td>
+<td><code>zod/v4</code></td>
+<td>第三方（schema）</td>
+</tr>
+<tr>
+<td>10</td>
+<td>127</td>
+<td><code>../../commands.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>11</td>
+<td>125</td>
+<td><code>../../bootstrap/state.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>12</td>
+<td>117</td>
+<td><code>crypto</code></td>
+<td>Node 内置</td>
+</tr>
+<tr>
+<td>13</td>
+<td>104</td>
+<td><code>./types.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>14</td>
+<td>99</td>
+<td><code>services/analytics/index.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>15</td>
+<td>95</td>
+<td><code>utils/errors.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>16</td>
+<td>94</td>
+<td><code>../debug.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>17</td>
+<td>89</td>
+<td><code>bootstrap/state.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>18</td>
+<td>89</td>
+<td><code>figures</code></td>
+<td>第三方（终端图标）</td>
+</tr>
+<tr>
+<td>19</td>
+<td>86</td>
+<td><code>utils/log.js</code></td>
+<td>项目内</td>
+</tr>
+<tr>
+<td>20</td>
+<td>84</td>
+<td><code>utils/debug.js</code></td>
+<td>项目内</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- React 被引用 <strong>761 次</strong>——free-code45 实质上是个 React 应用，只不过渲染目标是终端
+- <code>bun:bundle</code> 被 194 个文件 import — 这是 Bun 的 feature flag 系统，用来做条件编译
+- <code>Tool.js</code> 被 167 个文件 import — 工具系统是核心抽象
+- <code>bootstrap/state.js</code> 多种路径写法合计 ~250 次，确认了它是状态枢纽
+- 没有任何 commands/* 进入 Top 20 — 命令是叶子模块，不是依赖中心</p>
+<hr />
+<h2 id="6-react">6. React 组件分析</h2>
+<h3 id="_9">总览</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总组件数</td>
+<td>573</td>
+</tr>
+<tr>
+<td>useState 总调用</td>
+<td>583</td>
+</tr>
+<tr>
+<td>useEffect 总调用</td>
+<td>252</td>
+</tr>
+<tr>
+<td>useCallback 总调用</td>
+<td>171</td>
+</tr>
+<tr>
+<td>useMemo 总调用</td>
+<td>104</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hook">组件复杂度分布（按 Hook 数量）</h3>
+<table>
+<thead>
+<tr>
+<th>桶</th>
+<th>组件数</th>
+<th>比例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 hooks</td>
+<td>220</td>
+<td>38.4%</td>
+</tr>
+<tr>
+<td>1-5 hooks</td>
+<td>240</td>
+<td>41.9%</td>
+</tr>
+<tr>
+<td>6-15 hooks</td>
+<td>87</td>
+<td>15.2%</td>
+</tr>
+<tr>
+<td>16-30 hooks</td>
+<td>18</td>
+<td>3.1%</td>
+</tr>
+<tr>
+<td>31+ hooks</td>
+<td><strong>8</strong></td>
+<td>1.4%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- 80% 的组件 Hook 数 ≤ 5，是"小组件"
+- 但有 8 个组件 Hook 数 &gt; 30，是"巨型组件"</p>
+<h3 id="hook-top-10">Hook 使用最多的组件 Top 10</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>useState</th>
+<th>useEffect</th>
+<th>useCallback</th>
+<th>useMemo</th>
+<th>总 Hook</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REPL</code></td>
+<td>65</td>
+<td>38</td>
+<td>43</td>
+<td>14</td>
+<td><strong>371</strong></td>
+<td><code>screens/REPL.tsx</code></td>
+</tr>
+<tr>
+<td><code>PromptInput</code></td>
+<td>17</td>
+<td>13</td>
+<td>26</td>
+<td>26</td>
+<td>160</td>
+<td><code>components/PromptInput/PromptInput.tsx</code></td>
+</tr>
+<tr>
+<td><code>Config</code></td>
+<td>15</td>
+<td>2</td>
+<td>6</td>
+<td>1</td>
+<td>67</td>
+<td><code>components/Settings/Config.tsx</code></td>
+</tr>
+<tr>
+<td><code>ManagePlugins</code></td>
+<td>14</td>
+<td>6</td>
+<td>5</td>
+<td>4</td>
+<td>56</td>
+<td><code>commands/plugin/ManagePlugins.tsx</code></td>
+</tr>
+<tr>
+<td><code>InstallGitHubApp</code></td>
+<td>2</td>
+<td>2</td>
+<td>5</td>
+<td>0</td>
+<td>39</td>
+<td><code>commands/install-github-app/install-github-app.tsx</code></td>
+</tr>
+<tr>
+<td><code>LogSelector</code></td>
+<td>17</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>38</td>
+<td><code>components/LogSelector.tsx</code></td>
+</tr>
+<tr>
+<td><code>MCPRemoteServerMenu</code></td>
+<td>13</td>
+<td>1</td>
+<td>6</td>
+<td>0</td>
+<td>34</td>
+<td><code>components/mcp/MCPRemoteServerMenu.tsx</code></td>
+</tr>
+<tr>
+<td><code>ModeIndicator</code></td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td>1</td>
+<td>34</td>
+<td><code>components/PromptInput/PromptInputFooterLeftSide.tsx</code></td>
+</tr>
+<tr>
+<td><code>MessagesImpl</code></td>
+<td>1</td>
+<td>2</td>
+<td>5</td>
+<td>14</td>
+<td>30</td>
+<td><code>components/Messages.tsx</code></td>
+</tr>
+<tr>
+<td><code>VirtualMessageList</code></td>
+<td>2</td>
+<td>2</td>
+<td>6</td>
+<td>0</td>
+<td>30</td>
+<td><code>components/VirtualMessageList.tsx</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现</strong>：</p>
+<h4 id="repl"><code>REPL</code> 组件是绝对的怪物</h4>
+<ul>
+<li><strong>371 个 hook 调用</strong>（含自定义 hook）</li>
+<li><strong>65 个 useState</strong></li>
+<li><strong>38 个 useEffect</strong></li>
+</ul>
+<p>REPL 是 Claude Code 的主界面，承担：用户输入、消息流、工具调用、状态显示、键盘事件、会话管理、各种弹窗和模式切换……所有交互逻辑都汇集在这一个组件里。</p>
+<p>这是经典的"上帝组件"——但在终端 UI 这种环境里，很难像 Web 那样把组件拆得很碎，因为终端是单一全屏视图。这个复杂度可能是不可避免的。</p>
+<h4 id="promptinput"><code>PromptInput</code> 是次重灾区</h4>
+<p>160 个 hook，其中 <strong>26 个 useCallback + 26 个 useMemo</strong> 说明做了大量的性能优化（防止不必要的重渲染）。输入框是用户交互最频繁的组件，性能敏感。</p>
+<hr />
+<h2 id="7_1">7. 与之前分析的交叉验证</h2>
+<h3 id="export-vs-lizard">Export 数 vs 复杂度（lizard 结果）</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>Export 数</th>
+<th>高复杂度函数</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bootstrap/state.ts</code></td>
+<td>215</td>
+<td>0</td>
+<td>大但不复杂（纯数据）</td>
+</tr>
+<tr>
+<td><code>utils/messages.ts</code></td>
+<td>114</td>
+<td>1 (<code>buildMessageLookups</code> CCN 38)</td>
+<td>大且有热点</td>
+</tr>
+<tr>
+<td><code>utils/sessionStorage.ts</code></td>
+<td>94</td>
+<td>6</td>
+<td><strong>大且复杂</strong>（重灾区）</td>
+</tr>
+<tr>
+<td><code>utils/bash/bashParser.ts</code></td>
+<td>少</td>
+<td><strong>10 个高复杂度</strong></td>
+<td>小但极复杂（解析器）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：
+- "大文件"和"复杂文件"是两个不同维度
+- bootstrap/state.ts 大但简单——是注册表式代码
+- bashParser.ts 不一定是 export 大户但内部极其复杂——是算法核心
+- sessionStorage.ts 两个维度都高——既是数据中心又是逻辑热点</p>
+<h3 id="vs-vs">工具数 vs 命令数 vs 文件数</h3>
+<div class="highlight"><pre><span></span><code>1932 文件
+  ├── 42 Tool 定义        (2.2% 文件占比)
+  ├── 73 Command 定义     (3.8% 文件占比)
+  └── 573 React 组件      (29.7% 文件占比)
+</code></pre></div>
+
+<p><strong>洞察</strong>：核心抽象（Tool、Command）只占文件总数的 6%，剩下 94% 是支撑代码——UI、工具函数、类型定义等。这符合"业务逻辑薄、基础设施厚"的健康比例。</p>
+<hr />
+<h2 id="8-ast">8. AST 分析的方法学价值</h2>
+<p>相比 grep 和 madge，AST 分析能做到：</p>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>grep</th>
+<th>madge</th>
+<th>AST</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>找文件</td>
+<td>✅</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>找文本模式</td>
+<td>✅</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>模块依赖</td>
+<td>-</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>找所有 export</strong></td>
+<td>难（需要正则）</td>
+<td>-</td>
+<td>✅ 准确</td>
+</tr>
+<tr>
+<td><strong>统计函数特征</strong></td>
+<td>❌</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>找 React Hook 使用</strong></td>
+<td>有误报</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>找特定结构（Tool 定义）</strong></td>
+<td>有误报</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>量化代码模式</strong></td>
+<td>❌</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>类型信息</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅（ts-morph）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ast">何时用 AST</h3>
+<p>✅ 好场景：
+- 需要精确找到某种<strong>语法结构</strong>（不是文本模式）
+- 需要量化<strong>代码风格</strong>（async 比例、参数数分布）
+- 需要做<strong>自动化重构</strong>（批量重命名、提取函数）
+- 需要生成<strong>统计报告</strong></p>
+<p>❌ 不适合：
+- 简单文本搜索（grep 更快）
+- 模块关系（madge 直接给依赖图）
+- 一次性的探索查询（写脚本成本高）</p>
+<hr />
+<h2 id="9">9. 完整数据文件</h2>
+<p>所有原始数据存储在 <code>reports/ast-analysis/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>大小</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>summary.md</code></td>
+<td>3KB</td>
+<td>人类可读总结</td>
+</tr>
+<tr>
+<td><code>tools.json</code></td>
+<td>7KB</td>
+<td>42 个 Tool 定义详情</td>
+</tr>
+<tr>
+<td><code>commands.json</code></td>
+<td>12KB</td>
+<td>73 个 Command 定义详情</td>
+</tr>
+<tr>
+<td><code>functions.json</code></td>
+<td>3KB</td>
+<td>函数统计 + Top 20 多参函数</td>
+</tr>
+<tr>
+<td><code>components.json</code></td>
+<td>121KB</td>
+<td>573 个 React 组件统计</td>
+</tr>
+<tr>
+<td><code>imports.json</code></td>
+<td>255KB</td>
+<td>3794 个被引模块的引用次数</td>
+</tr>
+<tr>
+<td><code>exports.json</code></td>
+<td>141KB</td>
+<td>每个文件的 export 数</td>
+</tr>
+</tbody>
+</table>
+<p>可以用 <code>jq</code> 或 Python 进一步查询，例如：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 找特定组件</span>
+jq<span class="w"> </span><span class="s1">&#39;.[] | select(.name == &quot;REPL&quot;)&#39;</span><span class="w"> </span>reports/ast-analysis/components.json
+
+<span class="c1"># Top 20 最多 export 的文件</span>
+jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;. | sort_by(.count) | reverse | .[:20] | .[] | &quot;\(.count) \(.file)&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>reports/ast-analysis/exports.json
+
+<span class="c1"># 找参数数最多的函数</span>
+jq<span class="w"> </span><span class="s1">&#39;.topByParams[] | &quot;\(.params) \(.name) @ \(.file):\(.line)&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>reports/ast-analysis/functions.json
+</code></pre></div>
+
+<hr />
+<h2 id="_10">附录：完整脚本</h2>
+<p>完整的分析脚本在 <code>tools/ast-analysis/analyze.mjs</code>，依赖：</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install<span class="w"> </span>ts-morph
+</code></pre></div>
+
+<p>可以复用到任何 TypeScript 项目（只需修改 <code>--tsConfigFilePath</code>）。</p>
+</div>
+</body>
+</html>

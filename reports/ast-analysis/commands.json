@@ -1,0 +1,586 @@
+[
+  {
+    "varName": "advisor",
+    "name": "advisor",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/advisor.ts",
+    "line": 96
+  },
+  {
+    "varName": "bridgeKick",
+    "name": "bridge-kick",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/bridge-kick.ts",
+    "line": 191
+  },
+  {
+    "varName": "brief",
+    "name": "brief",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/brief.ts",
+    "line": 47
+  },
+  {
+    "varName": "command",
+    "name": "commit-push-pr",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/commit-push-pr.ts",
+    "line": 108
+  },
+  {
+    "varName": "command",
+    "name": "commit",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/commit.ts",
+    "line": 57
+  },
+  {
+    "varName": "command",
+    "name": "init-verifiers",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/init-verifiers.ts",
+    "line": 3
+  },
+  {
+    "varName": "command",
+    "name": "init",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/init.ts",
+    "line": 226
+  },
+  {
+    "varName": "usageReport",
+    "name": "insights",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/insights.ts",
+    "line": 3039
+  },
+  {
+    "varName": "install",
+    "name": "install",
+    "type": "local-jsx",
+    "exported": true,
+    "file": "src/commands/install.tsx",
+    "line": 279
+  },
+  {
+    "varName": "review",
+    "name": "review",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/review.ts",
+    "line": 33
+  },
+  {
+    "varName": "ultrareview",
+    "name": "ultrareview",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/review.ts",
+    "line": 48
+  },
+  {
+    "varName": "statusline",
+    "name": "statusline",
+    "type": "prompt",
+    "exported": false,
+    "file": "src/commands/statusline.tsx",
+    "line": 4
+  },
+  {
+    "varName": "version",
+    "name": "version",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/version.ts",
+    "line": 12
+  },
+  {
+    "varName": "addDir",
+    "name": "add-dir",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/add-dir/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "agents",
+    "name": "agents",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/agents/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "branch",
+    "name": "branch",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/branch/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "bridge",
+    "name": "remote-control",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/bridge/index.ts",
+    "line": 12
+  },
+  {
+    "varName": "btw",
+    "name": "btw",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/btw/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "command",
+    "name": "chrome",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/chrome/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "clear",
+    "name": "clear",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/clear/index.ts",
+    "line": 10
+  },
+  {
+    "varName": "color",
+    "name": "color",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/color/index.ts",
+    "line": 7
+  },
+  {
+    "varName": "compact",
+    "name": "compact",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/compact/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "config",
+    "name": "config",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/config/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "context",
+    "name": "context",
+    "type": "local-jsx",
+    "exported": true,
+    "file": "src/commands/context/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "contextNonInteractive",
+    "name": "context",
+    "type": "local",
+    "exported": true,
+    "file": "src/commands/context/index.ts",
+    "line": 12
+  },
+  {
+    "varName": "copy",
+    "name": "copy",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/copy/index.ts",
+    "line": 7
+  },
+  {
+    "varName": "cost",
+    "name": "cost",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/cost/index.ts",
+    "line": 8
+  },
+  {
+    "varName": "desktop",
+    "name": "desktop",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/desktop/index.ts",
+    "line": 13
+  },
+  {
+    "varName": "doctor",
+    "name": "doctor",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/doctor/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "exit",
+    "name": "exit",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/exit/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "exportCommand",
+    "name": "export",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/export/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "extraUsage",
+    "name": "extra-usage",
+    "type": "local-jsx",
+    "exported": true,
+    "file": "src/commands/extra-usage/index.ts",
+    "line": 13
+  },
+  {
+    "varName": "extraUsageNonInteractive",
+    "name": "extra-usage",
+    "type": "local",
+    "exported": true,
+    "file": "src/commands/extra-usage/index.ts",
+    "line": 21
+  },
+  {
+    "varName": "fast",
+    "name": "fast",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/fast/index.ts",
+    "line": 8
+  },
+  {
+    "varName": "feedback",
+    "name": "feedback",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/feedback/index.ts",
+    "line": 6
+  },
+  {
+    "varName": "files",
+    "name": "files",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/files/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "heapDump",
+    "name": "heapdump",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/heapdump/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "help",
+    "name": "help",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/help/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "hooks",
+    "name": "hooks",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/hooks/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "ide",
+    "name": "ide",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/ide/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "installGitHubApp",
+    "name": "install-github-app",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/install-github-app/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "installSlackApp",
+    "name": "install-slack-app",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/install-slack-app/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "keybindings",
+    "name": "keybindings",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/keybindings/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "mcp",
+    "name": "mcp",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/mcp/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "memory",
+    "name": "memory",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/memory/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "mobile",
+    "name": "mobile",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/mobile/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "outputStyle",
+    "name": "output-style",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/output-style/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "permissions",
+    "name": "permissions",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/permissions/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "plan",
+    "name": "plan",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/plan/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "plugin",
+    "name": "plugin",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/plugin/index.tsx",
+    "line": 2
+  },
+  {
+    "varName": "privacySettings",
+    "name": "privacy-settings",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/privacy-settings/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "rateLimitOptions",
+    "name": "rate-limit-options",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/rate-limit-options/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "releaseNotes",
+    "name": "release-notes",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/release-notes/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "reloadPlugins",
+    "name": "reload-plugins",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/reload-plugins/index.ts",
+    "line": 7
+  },
+  {
+    "varName": "web",
+    "name": "web-setup",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/remote-setup/index.ts",
+    "line": 5
+  },
+  {
+    "varName": "rename",
+    "name": "rename",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/rename/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "resume",
+    "name": "resume",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/resume/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "rewind",
+    "name": "rewind",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/rewind/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "command",
+    "name": "sandbox",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/sandbox-toggle/index.ts",
+    "line": 5
+  },
+  {
+    "varName": "session",
+    "name": "session",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/session/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "skills",
+    "name": "skills",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/skills/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "stats",
+    "name": "stats",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/stats/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "status",
+    "name": "status",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/status/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "stickers",
+    "name": "stickers",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/stickers/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "tag",
+    "name": "tag",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/tag/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "tasks",
+    "name": "tasks",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/tasks/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "terminalSetup",
+    "name": "terminal-setup",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/terminalSetup/index.ts",
+    "line": 12
+  },
+  {
+    "varName": "theme",
+    "name": "theme",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/theme/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "thinkback",
+    "name": "think-back",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/thinkback/index.ts",
+    "line": 4
+  },
+  {
+    "varName": "thinkbackPlay",
+    "name": "thinkback-play",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/thinkback-play/index.ts",
+    "line": 6
+  },
+  {
+    "varName": "upgrade",
+    "name": "upgrade",
+    "type": "local-jsx",
+    "exported": false,
+    "file": "src/commands/upgrade/index.ts",
+    "line": 5
+  },
+  {
+    "varName": "command",
+    "name": "vim",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/vim/index.ts",
+    "line": 3
+  },
+  {
+    "varName": "voice",
+    "name": "voice",
+    "type": "local",
+    "exported": false,
+    "file": "src/commands/voice/index.ts",
+    "line": 7
+  }
+]
