@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代码架构分析方法大全</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="_1">代码架构分析方法大全</h1>
+<p>本文档汇总分析代码架构的各类方法，按分析维度分类，每种方法包含原理、工具、命令示例和适用场景。</p>
+<hr />
+<h2 id="_2">目录</h2>
+<ol>
+<li><a href="#1-静态依赖分析">静态依赖分析</a></li>
+<li><a href="#2-调用图分析">调用图分析</a></li>
+<li><a href="#3-ast-抽象语法树分析">AST 抽象语法树分析</a></li>
+<li><a href="#4-代码复杂度度量">代码复杂度度量</a></li>
+<li><a href="#5-运行时追踪">运行时追踪</a></li>
+<li><a href="#6-火焰图">火焰图</a></li>
+<li><a href="#7-git-考古与热点分析">Git 考古与热点分析</a></li>
+<li><a href="#8-变更频率--复杂度交叉分析">变更频率 × 复杂度交叉分析</a></li>
+<li><a href="#9-架构决策挖掘">架构决策挖掘</a></li>
+<li><a href="#10-目录结构与代码量可视化">目录结构与代码量可视化</a></li>
+<li><a href="#11-方法对比与选择指南">方法对比与选择指南</a></li>
+</ol>
+<hr />
+<h2 id="1">1. 静态依赖分析</h2>
+<h3 id="_3">原理</h3>
+<p>通过静态解析 <code>import</code> / <code>require</code> / <code>use</code> 语句，构建模块之间的依赖关系图。不需要运行代码，只做文本分析。</p>
+<h3 id="_4">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>安装</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>madge</td>
+<td>JS/TS</td>
+<td><code>npm install -g madge</code></td>
+</tr>
+<tr>
+<td>pydeps</td>
+<td>Python</td>
+<td><code>pip install pydeps</code></td>
+</tr>
+<tr>
+<td>cargo-tree</td>
+<td>Rust</td>
+<td>内置于 cargo</td>
+</tr>
+<tr>
+<td>go mod graph</td>
+<td>Go</td>
+<td>内置于 go</td>
+</tr>
+<tr>
+<td>dependency-cruiser</td>
+<td>JS/TS</td>
+<td><code>npm install -g dependency-cruiser</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># JS/TS: madge</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--circular<span class="w">   </span><span class="c1"># 循环依赖</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--depends<span class="w"> </span>foo.ts<span class="w">  </span><span class="c1"># 反向依赖</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--orphans<span class="w">    </span><span class="c1"># 孤立文件</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--json<span class="w"> </span>&gt;<span class="w"> </span>deps.json<span class="w">  </span><span class="c1"># 导出 JSON</span>
+
+<span class="c1"># Python: pydeps</span>
+pydeps<span class="w"> </span>mypackage<span class="w"> </span>--no-show<span class="w">              </span><span class="c1"># 生成依赖图 SVG</span>
+pydeps<span class="w"> </span>mypackage<span class="w"> </span>--max-bacon<span class="w"> </span><span class="m">3</span><span class="w">          </span><span class="c1"># 限制深度</span>
+
+<span class="c1"># Rust</span>
+cargo<span class="w"> </span>tree<span class="w">                              </span><span class="c1"># 完整依赖树</span>
+cargo<span class="w"> </span>tree<span class="w"> </span>--invert<span class="w"> </span>serde<span class="w">               </span><span class="c1"># 谁依赖了 serde</span>
+cargo<span class="w"> </span>tree<span class="w"> </span>--duplicates<span class="w">                  </span><span class="c1"># 重复依赖</span>
+
+<span class="c1"># Go</span>
+go<span class="w"> </span>mod<span class="w"> </span>graph<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20<span class="w">                 </span><span class="c1"># 模块依赖</span>
+</code></pre></div>
+
+<h3 id="_6">适用场景</h3>
+<ul>
+<li>初次接触项目，快速了解模块关系</li>
+<li>检测循环依赖</li>
+<li>评估修改某个文件的影响范围（反向依赖）</li>
+<li>找出废弃代码（孤立文件）</li>
+</ul>
+<h3 id="_7">进阶：分层依赖图</h3>
+<p>大项目直接渲染全图会 OOM。用 BFS 分层方式从入口逐层展开：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 导出 JSON 后用分层脚本</span>
+madge<span class="w"> </span>src/<span class="w"> </span>--ts-config<span class="w"> </span>tsconfig.json<span class="w"> </span>--extensions<span class="w"> </span>ts,tsx<span class="w"> </span>--json<span class="w"> </span>&gt;<span class="w"> </span>deps.json
+python3<span class="w"> </span>tools/layered-deps.py<span class="w"> </span>deps.json<span class="w"> </span>entry.ts<span class="w"> </span><span class="m">3</span>
+</code></pre></div>
+
+<p>详见 <a href="madge-guide.md">madge-guide.md</a> 第五步。</p>
+<hr />
+<h2 id="2">2. 调用图分析</h2>
+<h3 id="_8">原理</h3>
+<p>比模块依赖更细粒度——追踪<strong>函数之间</strong>的调用关系。模块 A 依赖模块 B 只说明"A import 了 B"，调用图则能告诉你"A 中的 <code>foo()</code> 调用了 B 中的 <code>bar()</code> 和 <code>baz()</code>"。</p>
+<h3 id="_9">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>安装</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ts-callgraph</td>
+<td>TypeScript</td>
+<td><code>npm install -g ts-callgraph</code></td>
+</tr>
+<tr>
+<td>pycallgraph2</td>
+<td>Python</td>
+<td><code>pip install pycallgraph2</code></td>
+</tr>
+<tr>
+<td>callgrind (Valgrind)</td>
+<td>C/C++</td>
+<td><code>apt install valgrind</code></td>
+</tr>
+<tr>
+<td>go-callvis</td>
+<td>Go</td>
+<td><code>go install github.com/ondrajz/go-callvis@latest</code></td>
+</tr>
+<tr>
+<td>doxygen</td>
+<td>多语言</td>
+<td><code>apt install doxygen</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># TypeScript</span>
+npx<span class="w"> </span>ts-callgraph<span class="w"> </span>src/query.ts<span class="w"> </span>--output<span class="w"> </span>callgraph.dot
+dot<span class="w"> </span>-Tsvg<span class="w"> </span>callgraph.dot<span class="w"> </span>-o<span class="w"> </span>callgraph.svg
+
+<span class="c1"># Python（运行时调用图）</span>
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<span class="s2">from pycallgraph2 import PyCallGraph</span>
+<span class="s2">from pycallgraph2.output import GraphvizOutput</span>
+<span class="s2">with PyCallGraph(output=GraphvizOutput(output_file=&#39;callgraph.png&#39;)):</span>
+<span class="s2">    import your_module</span>
+<span class="s2">    your_module.main()</span>
+<span class="s2">&quot;</span>
+
+<span class="c1"># Go</span>
+go-callvis<span class="w"> </span>-group<span class="w"> </span>pkg,type<span class="w"> </span>./cmd/app
+
+<span class="c1"># C/C++ (Valgrind + KCachegrind)</span>
+valgrind<span class="w"> </span>--tool<span class="o">=</span>callgrind<span class="w"> </span>./program
+kcachegrind<span class="w"> </span>callgrind.out.*
+
+<span class="c1"># 通用: doxygen</span>
+doxygen<span class="w"> </span>-g<span class="w"> </span>Doxyfile
+<span class="c1"># 编辑 Doxyfile: CALL_GRAPH = YES, CALLER_GRAPH = YES</span>
+doxygen<span class="w"> </span>Doxyfile
+</code></pre></div>
+
+<h3 id="_11">适用场景</h3>
+<ul>
+<li>理解某个函数被谁调用、调用了谁</li>
+<li>重构前评估函数的影响范围</li>
+<li>找出"上帝函数"（被大量调用的枢纽函数）</li>
+<li>优化性能瓶颈的调用链</li>
+</ul>
+<h3 id="vs">静态 vs 动态调用图</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>原理</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>静态</td>
+<td>分析源码中的函数调用语句</td>
+<td>不需要运行代码</td>
+<td>无法处理动态 dispatch、反射</td>
+</tr>
+<tr>
+<td>动态</td>
+<td>运行时记录实际执行路径</td>
+<td>100% 准确</td>
+<td>只能覆盖运行到的路径</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-ast">3. AST 抽象语法树分析</h2>
+<h3 id="_12">原理</h3>
+<p>将源码解析为树形结构（AST），每个节点代表一个语法元素（函数定义、变量声明、if 语句等）。可以编程遍历 AST 提取任意结构化信息。</p>
+<h3 id="_13">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>安装</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ts-morph</td>
+<td>TypeScript</td>
+<td><code>npm install ts-morph</code></td>
+</tr>
+<tr>
+<td>tree-sitter</td>
+<td>多语言</td>
+<td><code>pip install tree-sitter</code></td>
+</tr>
+<tr>
+<td>ast (内置)</td>
+<td>Python</td>
+<td>无需安装</td>
+</tr>
+<tr>
+<td>jscodeshift</td>
+<td>JS/TS</td>
+<td><code>npm install -g jscodeshift</code></td>
+</tr>
+<tr>
+<td>Roslyn</td>
+<td>C#</td>
+<td>NuGet 包</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">使用示例</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// TypeScript: 用 ts-morph 提取所有 export 的函数</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Project</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;ts-morph&quot;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">project</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Project</span><span class="p">({</span><span class="w"> </span><span class="nx">tsConfigFilePath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;tsconfig.json&quot;</span><span class="w"> </span><span class="p">});</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">file</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">project</span><span class="p">.</span><span class="nx">getSourceFiles</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">fn</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">file</span><span class="p">.</span><span class="nx">getFunctions</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">fn</span><span class="p">.</span><span class="nx">isExported</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">file</span><span class="p">.</span><span class="nx">getBaseName</span><span class="p">()</span><span class="si">}</span><span class="sb">: </span><span class="si">${</span><span class="nx">fn</span><span class="p">.</span><span class="nx">getName</span><span class="p">()</span><span class="si">}</span><span class="sb">()`</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Python: 用内置 ast 模块提取所有类和函数</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">ClassDef</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;class </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (line </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">FunctionDef</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  def </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (line </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># tree-sitter: 超快速多语言解析</span>
+pip<span class="w"> </span>install<span class="w"> </span>tree-sitter<span class="w"> </span>tree-sitter-typescript
+<span class="c1"># 然后用 Python 脚本遍历 AST</span>
+</code></pre></div>
+
+<h3 id="_15">适用场景</h3>
+<ul>
+<li>批量提取接口/类型定义</li>
+<li>自动化重构（重命名、提取函数）</li>
+<li>代码规范检查（自定义 lint 规则）</li>
+<li>生成 API 文档</li>
+</ul>
+<hr />
+<h2 id="4">4. 代码复杂度度量</h2>
+<h3 id="_16">原理</h3>
+<p>用数学指标量化代码的复杂程度。常用指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+<th>怎么算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>圈复杂度（Cyclomatic Complexity）</td>
+<td>独立执行路径数</td>
+<td>if/else/switch/loop 每增加一个分支 +1</td>
+</tr>
+<tr>
+<td>认知复杂度（Cognitive Complexity）</td>
+<td>人类理解难度</td>
+<td>嵌套层数越深惩罚越重</td>
+</tr>
+<tr>
+<td>代码行数（LOC）</td>
+<td>文件/函数长度</td>
+<td>计算有效代码行</td>
+</tr>
+<tr>
+<td>Halstead 指标</td>
+<td>操作符/操作数的复杂度</td>
+<td>基于词汇量计算</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_17">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>安装</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plato</td>
+<td>JS/TS</td>
+<td><code>npm install -g plato</code></td>
+</tr>
+<tr>
+<td>ts-complexity</td>
+<td>TypeScript</td>
+<td><code>npx ts-complexity</code></td>
+</tr>
+<tr>
+<td>radon</td>
+<td>Python</td>
+<td><code>pip install radon</code></td>
+</tr>
+<tr>
+<td>gocyclo</td>
+<td>Go</td>
+<td><code>go install github.com/fzipp/gocyclo/cmd/gocyclo@latest</code></td>
+</tr>
+<tr>
+<td>lizard</td>
+<td>多语言</td>
+<td><code>pip install lizard</code></td>
+</tr>
+<tr>
+<td>cloc</td>
+<td>多语言</td>
+<td><code>apt install cloc</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_18">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># JS/TS: plato 生成可视化报告</span>
+npx<span class="w"> </span>plato<span class="w"> </span>-r<span class="w"> </span>-d<span class="w"> </span>plato-report<span class="w"> </span>src/
+open<span class="w"> </span>plato-report/index.html
+
+<span class="c1"># TypeScript 圈复杂度</span>
+npx<span class="w"> </span>ts-complexity<span class="w"> </span>src/<span class="w"> </span>--threshold<span class="w"> </span><span class="m">10</span><span class="w">   </span><span class="c1"># 只显示复杂度 &gt; 10 的</span>
+
+<span class="c1"># Python</span>
+radon<span class="w"> </span>cc<span class="w"> </span>src/<span class="w"> </span>-a<span class="w"> </span>-nc<span class="w">                    </span><span class="c1"># 圈复杂度（-nc 不显示低复杂度）</span>
+radon<span class="w"> </span>mi<span class="w"> </span>src/<span class="w">                           </span><span class="c1"># 可维护性指数</span>
+radon<span class="w"> </span>hal<span class="w"> </span>src/<span class="w">                          </span><span class="c1"># Halstead 指标</span>
+
+<span class="c1"># Go</span>
+gocyclo<span class="w"> </span>-top<span class="w"> </span><span class="m">20</span><span class="w"> </span>.<span class="w">                       </span><span class="c1"># Top 20 最复杂的函数</span>
+
+<span class="c1"># 多语言</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>python<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w">     </span><span class="c1"># 跨语言复杂度分析</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>--sort<span class="w"> </span>cyclomatic_complexity<span class="w"> </span><span class="c1"># 按复杂度排序</span>
+
+<span class="c1"># 代码行数统计</span>
+cloc<span class="w"> </span>src/<span class="w"> </span>--by-file<span class="w"> </span>--include-lang<span class="o">=</span>TypeScript<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
+</code></pre></div>
+
+<h3 id="_19">解读标准</h3>
+<table>
+<thead>
+<tr>
+<th>圈复杂度</th>
+<th>风险等级</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-10</td>
+<td>低</td>
+<td>正常</td>
+</tr>
+<tr>
+<td>11-20</td>
+<td>中</td>
+<td>考虑拆分</td>
+</tr>
+<tr>
+<td>21-50</td>
+<td>高</td>
+<td>应该重构</td>
+</tr>
+<tr>
+<td>&gt; 50</td>
+<td>极高</td>
+<td>必须重构</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_20">适用场景</h3>
+<ul>
+<li>识别"最危险的代码"（高复杂度 = 高 bug 概率）</li>
+<li>代码审查时量化评估</li>
+<li>制定重构优先级</li>
+</ul>
+<hr />
+<h2 id="5">5. 运行时追踪</h2>
+<h3 id="_21">原理</h3>
+<p>实际运行代码，记录执行过程中的函数调用、耗时、内存分配等信息。比静态分析更准确，但只能覆盖实际执行到的路径。</p>
+<h3 id="_22">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>node --prof</td>
+<td>Node.js</td>
+<td>V8 CPU profiler</td>
+</tr>
+<tr>
+<td>node --inspect</td>
+<td>Node.js</td>
+<td>连接 Chrome DevTools</td>
+</tr>
+<tr>
+<td>cProfile</td>
+<td>Python</td>
+<td>内置 profiler</td>
+</tr>
+<tr>
+<td>pprof</td>
+<td>Go</td>
+<td>内置 profiler</td>
+</tr>
+<tr>
+<td>perf</td>
+<td>Linux</td>
+<td>系统级 profiler</td>
+</tr>
+<tr>
+<td>dtrace/bpftrace</td>
+<td>Linux/macOS</td>
+<td>动态追踪</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_23">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Node.js: CPU profiling</span>
+node<span class="w"> </span>--prof<span class="w"> </span>app.js
+node<span class="w"> </span>--prof-process<span class="w"> </span>isolate-*.log<span class="w"> </span>&gt;<span class="w"> </span>profile.txt
+
+<span class="c1"># Node.js: 连接 Chrome DevTools</span>
+node<span class="w"> </span>--inspect-brk<span class="w"> </span>src/main.ts
+<span class="c1"># 然后在 Chrome 打开 chrome://inspect</span>
+
+<span class="c1"># Python: cProfile</span>
+python<span class="w"> </span>-m<span class="w"> </span>cProfile<span class="w"> </span>-s<span class="w"> </span>cumulative<span class="w"> </span>main.py<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
+<span class="c1"># 或保存后可视化</span>
+python<span class="w"> </span>-m<span class="w"> </span>cProfile<span class="w"> </span>-o<span class="w"> </span>profile.out<span class="w"> </span>main.py
+pip<span class="w"> </span>install<span class="w"> </span>snakeviz<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>snakeviz<span class="w"> </span>profile.out
+
+<span class="c1"># Go: pprof</span>
+import<span class="w"> </span>_<span class="w"> </span><span class="s2">&quot;net/http/pprof&quot;</span>
+go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>http://localhost:6060/debug/pprof/profile?seconds<span class="o">=</span><span class="m">30</span>
+
+<span class="c1"># Linux: perf</span>
+perf<span class="w"> </span>record<span class="w"> </span>-g<span class="w"> </span>./program
+perf<span class="w"> </span>report
+</code></pre></div>
+
+<h3 id="_24">适用场景</h3>
+<ul>
+<li>性能优化（找到耗时最长的函数）</li>
+<li>理解实际执行流程（哪些代码真正被执行了）</li>
+<li>内存泄漏排查</li>
+<li>验证架构假设（某个函数是否真的被调用了）</li>
+</ul>
+<hr />
+<h2 id="6">6. 火焰图</h2>
+<h3 id="_25">原理</h3>
+<p>将调用栈采样数据可视化：X 轴是时间占比（越宽 = 越耗时），Y 轴是调用深度（从底到顶 = 从 main 到叶子函数）。一眼看出"时间花在哪里"。</p>
+<h3 id="_26">工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>语言</th>
+<th>安装</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x</td>
+<td>Node.js</td>
+<td><code>npm install -g 0x</code></td>
+</tr>
+<tr>
+<td>py-spy</td>
+<td>Python</td>
+<td><code>pip install py-spy</code></td>
+</tr>
+<tr>
+<td>pprof</td>
+<td>Go</td>
+<td>内置</td>
+</tr>
+<tr>
+<td>flamegraph.pl</td>
+<td>通用</td>
+<td><code>git clone https://github.com/brendangregg/FlameGraph</code></td>
+</tr>
+<tr>
+<td>speedscope</td>
+<td>通用</td>
+<td><code>npm install -g speedscope</code> 或在线 speedscope.app</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_27">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Node.js: 一键火焰图</span>
+npx<span class="w"> </span>0x<span class="w"> </span>app.js
+<span class="c1"># 自动打开交互式火焰图</span>
+
+<span class="c1"># Python: 非侵入式（不需要修改代码）</span>
+py-spy<span class="w"> </span>record<span class="w"> </span>-o<span class="w"> </span>flame.svg<span class="w"> </span>--<span class="w"> </span>python<span class="w"> </span>main.py
+<span class="c1"># 或附加到运行中的进程</span>
+py-spy<span class="w"> </span>record<span class="w"> </span>-o<span class="w"> </span>flame.svg<span class="w"> </span>--pid<span class="w"> </span><span class="m">12345</span>
+
+<span class="c1"># Go</span>
+go<span class="w"> </span>tool<span class="w"> </span>pprof<span class="w"> </span>-http<span class="o">=</span>:8080<span class="w"> </span>cpu.prof
+<span class="c1"># 在浏览器中查看火焰图</span>
+
+<span class="c1"># 通用: perf + flamegraph.pl</span>
+perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">99</span><span class="w"> </span>-g<span class="w"> </span>--<span class="w"> </span>./program
+perf<span class="w"> </span>script<span class="w"> </span><span class="p">|</span><span class="w"> </span>./FlameGraph/stackcollapse-perf.pl<span class="w"> </span><span class="p">|</span><span class="w"> </span>./FlameGraph/flamegraph.pl<span class="w"> </span>&gt;<span class="w"> </span>flame.svg
+
+<span class="c1"># 通用: speedscope（支持多种 profile 格式）</span>
+speedscope<span class="w"> </span>profile.json
+<span class="c1"># 或上传到 https://www.speedscope.app/</span>
+</code></pre></div>
+
+<h3 id="_28">如何阅读火焰图</h3>
+<div class="highlight"><pre><span></span><code>宽度 = 耗时占比（越宽 = 越值得优化）
+高度 = 调用深度（越高 = 调用链越深）
+颜色 = 通常随机，无特殊含义
+
+查找方法：
+1. 先看最宽的&quot;平台&quot;（耗时最多的函数）
+2. 从底部往上追踪调用链
+3. 比较同一层级的宽度差异
+</code></pre></div>
+
+<h3 id="_29">适用场景</h3>
+<ul>
+<li>性能瓶颈定位</li>
+<li>对比优化前后的效果</li>
+<li>理解运行时的实际调用深度</li>
+</ul>
+<hr />
+<h2 id="7-git">7. Git 考古与热点分析</h2>
+<h3 id="_30">原理</h3>
+<p>利用版本历史分析代码的演变：哪些文件改得最频繁（热点）、谁在改什么、哪些文件总是一起改（耦合）。不看代码内容，只看变更模式。</p>
+<h3 id="_31">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 热点文件（改得最多的 Top 20）</span>
+git<span class="w"> </span>log<span class="w"> </span>--format<span class="o">=</span>format:<span class="w"> </span>--name-only<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+
+<span class="c1"># 代码作者分布</span>
+git<span class="w"> </span>shortlog<span class="w"> </span>-sn<span class="w"> </span>--all<span class="w">                   </span><span class="c1"># 谁提交最多</span>
+git<span class="w"> </span>log<span class="w"> </span>--format<span class="o">=</span><span class="s1">&#39;%aN&#39;</span><span class="w"> </span>--<span class="w"> </span>src/query.ts<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w">  </span><span class="c1"># 某文件的作者</span>
+
+<span class="c1"># 文件共变分析（哪些文件总是一起改 → 高耦合）</span>
+git<span class="w"> </span>log<span class="w"> </span>--format<span class="o">=</span>format:<span class="w"> </span>--name-only<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;BEGIN{RS=&quot;&quot;} {for(i=1;i&lt;=NF;i++) for(j=i+1;j&lt;=NF;j++) print $i, $j}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+
+<span class="c1"># 某个函数/符号的完整演变历史</span>
+git<span class="w"> </span>log<span class="w"> </span>-p<span class="w"> </span>-S<span class="w"> </span><span class="s1">&#39;getSystemContext&#39;</span><span class="w"> </span>--<span class="w"> </span>src/context.ts
+
+<span class="c1"># 文件年龄（最后修改距今多久）</span>
+git<span class="w"> </span>log<span class="w"> </span>-1<span class="w"> </span>--format<span class="o">=</span><span class="s1">&#39;%ar&#39;</span><span class="w"> </span>--<span class="w"> </span>src/query.ts
+
+<span class="c1"># 代码变更频率（最近 30 天）</span>
+git<span class="w"> </span>log<span class="w"> </span>--since<span class="o">=</span><span class="s1">&#39;30 days ago&#39;</span><span class="w"> </span>--format<span class="o">=</span>format:<span class="w"> </span>--name-only<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+
+<span class="c1"># 大规模重构的 commit（改了最多文件的提交）</span>
+git<span class="w"> </span>log<span class="w"> </span>--pretty<span class="o">=</span>format:<span class="s1">&#39;%h %s&#39;</span><span class="w"> </span>--shortstat<span class="w"> </span><span class="p">|</span><span class="w"> </span>paste<span class="w"> </span>-<span class="w"> </span>-<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-t<span class="s1">&#39;,&#39;</span><span class="w"> </span>-k1<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-10
+</code></pre></div>
+
+<h3 id="_32">进阶工具</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># code-maat: 专业的 git 历史分析工具</span>
+git<span class="w"> </span>log<span class="w"> </span>--all<span class="w"> </span>--numstat<span class="w"> </span>--date<span class="o">=</span>short<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--pretty<span class="o">=</span>format:<span class="s1">&#39;--%h--%ad--%aN&#39;</span><span class="w"> </span>--no-renames<span class="w"> </span>&gt;<span class="w"> </span>gitlog.txt
+
+java<span class="w"> </span>-jar<span class="w"> </span>code-maat.jar<span class="w"> </span>-l<span class="w"> </span>gitlog.txt<span class="w"> </span>-c<span class="w"> </span>git2<span class="w"> </span>-a<span class="w"> </span>revisions<span class="w">   </span><span class="c1"># 变更频率</span>
+java<span class="w"> </span>-jar<span class="w"> </span>code-maat.jar<span class="w"> </span>-l<span class="w"> </span>gitlog.txt<span class="w"> </span>-c<span class="w"> </span>git2<span class="w"> </span>-a<span class="w"> </span>coupling<span class="w">     </span><span class="c1"># 文件耦合度</span>
+java<span class="w"> </span>-jar<span class="w"> </span>code-maat.jar<span class="w"> </span>-l<span class="w"> </span>gitlog.txt<span class="w"> </span>-c<span class="w"> </span>git2<span class="w"> </span>-a<span class="w"> </span>age<span class="w">          </span><span class="c1"># 代码年龄</span>
+
+<span class="c1"># git-of-theseus: 代码生存曲线</span>
+pip<span class="w"> </span>install<span class="w"> </span>git-of-theseus
+git-of-theseus-analyze<span class="w"> </span>.
+git-of-theseus-stack-plot<span class="w"> </span>cohorts.json<span class="w">   </span><span class="c1"># 可视化代码年龄分布</span>
+</code></pre></div>
+
+<h3 id="_33">适用场景</h3>
+<ul>
+<li>找到"改得最多 = 最可能有问题"的文件</li>
+<li>发现隐式耦合（总是一起修改的文件可能应该合并或解耦）</li>
+<li>了解团队分工和知识分布</li>
+<li>决定代码审查的重点</li>
+</ul>
+<hr />
+<h2 id="8">8. 变更频率 × 复杂度交叉分析</h2>
+<h3 id="_34">原理</h3>
+<p>将 git 热点分析（变更频率）和代码复杂度两个维度交叉，形成四象限：</p>
+<div class="highlight"><pre><span></span><code>         高复杂度
+            │
+  需要重构  │  最危险（高复杂度 + 频繁修改）
+  但不紧急  │  ← 优先重构这里
+            │
+───────────┼───────────
+            │
+  低风险    │  频繁修改但简单
+  不用管    │  保持现状
+            │
+         低复杂度
+    少修改          多修改
+</code></pre></div>
+
+<p><strong>右上角（高复杂度 + 频繁修改）= 最应该重构的代码。</strong></p>
+<h3 id="_35">操作步骤</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 步骤 1: 获取变更频率</span>
+git<span class="w"> </span>log<span class="w"> </span>--format<span class="o">=</span>format:<span class="w"> </span>--name-only<span class="w"> </span>--since<span class="o">=</span><span class="s1">&#39;90 days ago&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span>&gt;<span class="w"> </span>/tmp/churn.txt
+
+<span class="c1"># 步骤 2: 获取复杂度（以 lizard 为例）</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>--csv<span class="w"> </span>&gt;<span class="w"> </span>/tmp/complexity.csv
+
+<span class="c1"># 步骤 3: 交叉分析（用 Python 或 Excel）</span>
+<span class="c1"># 合并两个数据源，画散点图，找右上角的文件</span>
+</code></pre></div>
+
+<h3 id="_36">适用场景</h3>
+<ul>
+<li>制定重构优先级</li>
+<li>技术债务评估</li>
+<li>向管理层展示"为什么需要重构"</li>
+</ul>
+<hr />
+<h2 id="9">9. 架构决策挖掘</h2>
+<h3 id="_37">原理</h3>
+<p>代码中的注释、commit message、PR 描述中隐藏着架构决策的原因。搜索关键词可以快速定位"为什么这样设计"。</p>
+<h3 id="_38">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 搜索重要标记</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;IMPORTANT\|HACK\|TODO\|FIXME\|XXX\|WARN&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span>
+
+<span class="c1"># 搜索设计决策的解释</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;because\|reason\|workaround\|trade.off\|intentionally&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span>
+
+<span class="c1"># 搜索&quot;不要改&quot;的警告</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;do not change\|do not modify\|do not remove\|breaking change&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>-i
+
+<span class="c1"># 搜索循环依赖相关的注释（很多架构拆分是为了避免循环）</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;circular\|cycle\|avoid.*import\|prevent.*import&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>-i
+
+<span class="c1"># 从 commit message 挖掘</span>
+git<span class="w"> </span>log<span class="w"> </span>--all<span class="w"> </span>--grep<span class="o">=</span><span class="s2">&quot;refactor\|breaking\|migrate\|deprecat&quot;</span><span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+
+<span class="c1"># 从 PR 描述挖掘（GitHub）</span>
+gh<span class="w"> </span>pr<span class="w"> </span>list<span class="w"> </span>--state<span class="w"> </span>merged<span class="w"> </span>--limit<span class="w"> </span><span class="m">50</span><span class="w"> </span>--json<span class="w"> </span>title,body<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[].title&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;refactor\|architect\|redesign&quot;</span>
+</code></pre></div>
+
+<h3 id="_39">实际案例</h3>
+<p>在 free-code45 中搜索到的架构决策：</p>
+<div class="highlight"><pre><span></span><code>// &quot;Lives in its own file because it imports from context.ts and
+// constants/prompts.ts, which are high in the dependency graph.&quot;
+→ queryContext.ts 独立存在是为了避免循环依赖
+
+// &quot;IMPORTANT: Do not change adaptive thinking support without
+// notifying the model launch DRI and research.&quot;
+→ thinking 配置是敏感参数，修改需要跨团队协调
+
+// &quot;Subagents (agent:*) run in the same process and share
+// module-level state with the main thread.&quot;
+→ 子 agent 不是独立进程，共享状态需要特别小心
+</code></pre></div>
+
+<h3 id="_40">适用场景</h3>
+<ul>
+<li>理解"为什么不能简单重构"</li>
+<li>新人快速理解项目约束</li>
+<li>评估修改某段代码的风险</li>
+</ul>
+<hr />
+<h2 id="10">10. 目录结构与代码量可视化</h2>
+<h3 id="_41">原理</h3>
+<p>从宏观视角看项目的模块分布：哪个目录代码最多、文件如何组织、模块之间的大小比例。</p>
+<h3 id="_42">常用命令</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 按目录统计代码行数</span>
+cloc<span class="w"> </span>src/<span class="w"> </span>--by-file-by-lang<span class="w">              </span><span class="c1"># 按文件和语言统计</span>
+cloc<span class="w"> </span>src/*/<span class="w"> </span>--out<span class="o">=</span>/dev/stdout<span class="w">            </span><span class="c1"># 按顶级目录统计</span>
+
+<span class="c1"># 目录大小排序</span>
+du<span class="w"> </span>-sh<span class="w"> </span>src/*/<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rh
+
+<span class="c1"># 文件大小排序（找巨型文件）</span>
+find<span class="w"> </span>src/<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>-exec<span class="w"> </span>wc<span class="w"> </span>-l<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-20
+
+<span class="c1"># 交互式目录大小可视化</span>
+npx<span class="w"> </span>code-complexity<span class="w"> </span>.<span class="w"> </span>--limit<span class="w"> </span><span class="m">30</span><span class="w">         </span><span class="c1"># 复杂度排行</span>
+
+<span class="c1"># 生成 treemap 可视化</span>
+<span class="c1"># 工具: https://github.com/nickvdp/maptree 或在线 app.codescene.io</span>
+</code></pre></div>
+
+<h3 id="_43">适用场景</h3>
+<ul>
+<li>初次接触项目，了解规模和结构</li>
+<li>找到"上帝文件"（过大的文件通常需要拆分）</li>
+<li>评估各模块的相对复杂度</li>
+</ul>
+<hr />
+<h2 id="11">11. 方法对比与选择指南</h2>
+<h3 id="_44">按目标选择</h3>
+<table>
+<thead>
+<tr>
+<th>目标</th>
+<th>推荐方法</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>快速了解项目结构</td>
+<td>目录结构 + cloc + 依赖图</td>
+<td>cloc, madge</td>
+</tr>
+<tr>
+<td>理解模块关系</td>
+<td>静态依赖分析</td>
+<td>madge, pydeps</td>
+</tr>
+<tr>
+<td>理解函数调用链</td>
+<td>调用图</td>
+<td>ts-callgraph, doxygen</td>
+</tr>
+<tr>
+<td>找到高风险代码</td>
+<td>复杂度 × 变更频率</td>
+<td>lizard + git log</td>
+</tr>
+<tr>
+<td>性能优化</td>
+<td>火焰图 + profiling</td>
+<td>0x, py-spy, perf</td>
+</tr>
+<tr>
+<td>理解设计决策</td>
+<td>架构注释挖掘 + git 考古</td>
+<td>grep, git log</td>
+</tr>
+<tr>
+<td>重构评估</td>
+<td>反向依赖 + 耦合分析</td>
+<td>madge, code-maat</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_45">按阶段选择</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>刚接手项目</td>
+<td>目录结构 → 依赖图 → 入口追踪</td>
+<td>自顶向下建立全局认知</td>
+</tr>
+<tr>
+<td>修复 bug</td>
+<td>调用图 → git blame → 运行时追踪</td>
+<td>从症状定位到根因</td>
+</tr>
+<tr>
+<td>准备重构</td>
+<td>复杂度 → 热点 → 耦合分析</td>
+<td>量化风险，确定优先级</td>
+</tr>
+<tr>
+<td>性能优化</td>
+<td>profiling → 火焰图 → 调用图</td>
+<td>从瓶颈到优化方案</td>
+</tr>
+<tr>
+<td>代码审查</td>
+<td>复杂度 → 架构注释 → 反向依赖</td>
+<td>评估变更的影响范围</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_46">按有无运行环境选择</h3>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>可用方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>只有源码，不能运行</td>
+<td>静态依赖、AST、复杂度、git 考古、架构注释</td>
+</tr>
+<tr>
+<td>可以运行代码</td>
+<td>以上全部 + 运行时追踪、火焰图、动态调用图</td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
