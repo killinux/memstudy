@@ -264,18 +264,130 @@ dot -Tpng context-focused.dot -o context-focused.png
 
 ---
 
+## 第五步：分层依赖图生成（大项目必备）
+
+大项目的完整依赖树动辄上千节点，`dot` 渲染时会 OOM 或超时。分层方式从入口文件出发，按 BFS（广度优先搜索）逐层展开依赖，每层单独生成一张图。
+
+### 原理
+
+```
+Layer 0:  entry.ts                          ← 入口（1 个文件）
+Layer 1:  entry.ts 的直接依赖               ← import 了谁（~10 个）
+Layer 2:  Layer 1 每个文件的直接依赖         ← 二级展开（~40 个）
+Layer 3:  Layer 2 每个文件的直接依赖         ← 三级展开（~100 个）
+...
+```
+
+每层独立渲染，节点数可控（通常每层几十个），不会因为图太大而崩溃。同时生成一张概览图，用 subgraph 按层着色分组。
+
+### 步骤 1：导出 madge JSON
+
+```bash
+cd your-project/
+madge src/ --ts-config tsconfig.json --extensions ts,tsx,js,jsx \
+  --json 2>/dev/null > deps.json
+```
+
+这会生成完整的依赖关系 JSON，格式为 `{ "文件A": ["依赖1", "依赖2"], ... }`。
+
+### 步骤 2：运行分层脚本
+
+```bash
+# 基本用法：从 context.ts 出发，展开 3 层
+python3 layered-deps.py deps.json context.ts 3
+
+# 从项目入口出发，展开 5 层
+python3 layered-deps.py deps.json cli.tsx 5
+
+# 分析任意模块
+python3 layered-deps.py deps.json utils/auth.ts 2
+```
+
+脚本会自动：
+1. 从入口文件做 BFS 分层
+2. 为每层生成 DOT 文件和 SVG 图片
+3. 生成全局概览图（所有层合并，按层着色）
+4. 生成 README.md 汇总（层级表格 + 文件清单）
+
+### 步骤 3：查看输出
+
+```bash
+# 输出目录结构
+layers-context/
+├── README.md         # 汇总文档
+├── overview.svg      # 全局概览（所有层，按颜色分组）
+├── overview.dot
+├── layer-0.svg       # 入口层
+├── layer-0.dot
+├── layer-1.svg       # 直接依赖层
+├── layer-1.dot
+├── layer-2.svg       # 二级依赖层
+├── layer-2.dot
+└── ...
+```
+
+### 颜色含义
+
+| 颜色 | 层级 |
+|---|---|
+| 红色 `#ff9999` | Layer 0（入口） |
+| 橙色 `#ffcc99` | Layer 1（直接依赖） |
+| 黄色 `#ffff99` | Layer 2（二级依赖） |
+| 绿色 `#99ff99` | Layer 3（三级依赖） |
+| 蓝色 `#99ccff` | Layer 4 |
+| 紫色 `#cc99ff` | Layer 5 |
+
+### 实际案例
+
+以 free-code45 的 `context.ts` 为例：
+
+```bash
+# 导出
+madge src/context.ts --ts-config tsconfig.json \
+  --extensions ts,tsx,js,jsx --json 2>/dev/null > deps.json
+
+# 分 3 层
+python3 layered-deps.py deps.json context.ts 3
+```
+
+结果：
+
+```
+Layer 0:   1 个文件   context.ts
+Layer 1:   9 个文件   git.ts, claudemd.ts, envUtils.ts, ...
+Layer 2:  41 个文件   config.ts, settings.ts, model.ts, ...
+Layer 3: 105 个文件   Tool.ts, messages.ts, auth.ts, ...
+总计:    156 个文件
+```
+
+每层都能成功渲染 SVG，而直接对 1788 个节点跑 `dot` 则会 OOM。
+
+### 脚本依赖
+
+```bash
+pip install markdown    # 可选，仅 md2html 转换需要
+npm install -g madge    # madge 工具
+dnf install graphviz    # dot 渲染引擎（或 apt/brew）
+```
+
+脚本本身只依赖 Python 3 标准库，无需额外安装。
+
+---
+
 ## 常见问题
 
 ### Q: madge 只解析了很少的文件
 
 Bun/Deno 项目中 import 路径常带 `.js` 后缀（如 `import x from './foo.js'`），但实际文件是 `.ts`。需要加 `--extensions ts,tsx,js,jsx` 让 madge 正确解析。
 
-### Q: 渲染超时或失败
+### Q: 渲染超时或失败（OOM / SIGKILL）
 
-依赖图节点太多时 Graphviz 会很慢。解决方案：
-- 只分析单个入口文件而非整个 `src/`
-- 用 `--json` 导出后手动筛选
-- 手写 DOT 只画关心的部分
+依赖图节点太多时 Graphviz 的 `dot` 会内存爆炸。解决方案（按推荐顺序）：
+
+1. **分层生成**（推荐）：用 `layered-deps.py` 按 BFS 逐层渲染，详见第五步
+2. **手写 DOT**：只画关心的关键节点，详见第四步
+3. **缩小范围**：只分析单个入口文件而非整个 `src/`
+4. **导出 JSON**：用 `--json` 导出后用脚本筛选再渲染
 
 ### Q: 循环依赖数量巨大
 
@@ -326,4 +438,8 @@ madge src/entry.ts --ts-config tsconfig.json --extensions ts,tsx --json > graph.
 # 手动渲染 DOT
 dot -Tsvg graph.dot -o graph.svg
 dot -Tpng graph.dot -o graph.png
+
+# 分层生成（大项目推荐，避免 OOM）
+madge src/ --ts-config tsconfig.json --extensions ts,tsx --json 2>/dev/null > deps.json
+python3 layered-deps.py deps.json entry.ts 3
 ```
