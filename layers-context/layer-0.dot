@@ -1,0 +1,27 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "bootstrap/state.ts" [fillcolor="#ffcc99"];
+  "constants/common.ts" [fillcolor="#ffcc99"];
+  "context.ts" [fillcolor="#ff9999"];
+  "utils/claudemd.ts" [fillcolor="#ffcc99"];
+  "utils/diagLogs.ts" [fillcolor="#ffcc99"];
+  "utils/envUtils.ts" [fillcolor="#ffcc99"];
+  "utils/execFileNoThrow.ts" [fillcolor="#ffcc99"];
+  "utils/git.ts" [fillcolor="#ffcc99"];
+  "utils/gitSettings.ts" [fillcolor="#ffcc99"];
+  "utils/log.ts" [fillcolor="#ffcc99"];
+
+  "context.ts" -> "bootstrap/state.ts";
+  "context.ts" -> "constants/common.ts";
+  "context.ts" -> "utils/claudemd.ts";
+  "context.ts" -> "utils/diagLogs.ts";
+  "context.ts" -> "utils/envUtils.ts";
+  "context.ts" -> "utils/execFileNoThrow.ts";
+  "context.ts" -> "utils/git.ts";
+  "context.ts" -> "utils/gitSettings.ts";
+  "context.ts" -> "utils/log.ts";
+}
