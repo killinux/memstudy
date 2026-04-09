@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>free-code45 代码挖掘报告</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="free-code45">free-code45 代码挖掘报告</h1>
+<p>通过两种方法对 free-code45 (Claude Code v2.1.87) 做横向分析：</p>
+<ol>
+<li><strong>架构注释挖掘</strong> — 找出代码中标注的设计决策和"红线"</li>
+<li><strong>复杂度分析</strong> — 找出最复杂的函数和模块（项目的"心脏"和"重灾区"）</li>
+</ol>
+<hr />
+<h2 id="_1">第一部分：架构注释挖掘</h2>
+<h3 id="_2">方法</h3>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;IMPORTANT:&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;DO NOT&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;do not change&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+</code></pre></div>
+
+<h3 id="_3">总览数据</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>源文件总数</td>
+<td>1914 个 .ts/.tsx</td>
+</tr>
+<tr>
+<td><code>IMPORTANT:</code> 注释</td>
+<td>93 处，分布在 64 个文件</td>
+</tr>
+<tr>
+<td><code>IMPORTANT.*do not</code> 强约束</td>
+<td>16 处，11 个文件</td>
+</tr>
+<tr>
+<td><code>HACK/XXX/FIXME</code></td>
+<td>4 处（极少，代码质量高）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">关键发现</h3>
+<h4 id="1-6">1. 模型行为相关：6 处"不要随便改"的硬性约束</h4>
+<p>这些注释都指向"修改前必须找模型团队对齐"，是产品安全的红线：</p>
+<div class="highlight"><pre><span></span><code>src/utils/thinking.ts:100
+  // IMPORTANT: Do not change thinking support without notifying the model
+  // launch DRI and research. This can greatly affect model quality and bashing.
+
+src/utils/thinking.ts:131
+  // IMPORTANT: Do not change adaptive thinking support without notifying the
+  // model launch DRI and research.
+
+src/utils/thinking.ts:156
+  // IMPORTANT: Do not change default thinking enabled value...
+
+src/utils/effort.ts:41
+  // IMPORTANT: Do not change the default effort support...
+
+src/utils/effort.ts:303
+  // IMPORTANT: Do not change the default effort level...
+
+src/constants/cyberRiskInstruction.ts:8
+  /* IMPORTANT: DO NOT MODIFY THIS INSTRUCTION WITHOUT SAFEGUARDS TEAM REVIEW
+   * This instruction is owned by the Safeguards team... */
+</code></pre></div>
+
+<p><strong>洞察</strong>：thinking 和 effort 相关的所有默认值都是"敏感参数"。代码注释明确写明改动需要跨团队对齐，说明这些参数经过模型评估确定，随意改动会"silently degrade model quality"。这印证了我们在 <a href="cot-thinking-design.md">cot-thinking-design.md</a> 中的分析——adaptive thinking 是经过精心设计的默认行为。</p>
+<h4 id="2">2. 跨进程/跨模块约束：状态隔离与共享的边界</h4>
+<div class="highlight"><pre><span></span><code>src/utils/swarm/inProcessRunner.ts:973
+  // IMPORTANT: Set permissionMode to &#39;default&#39; so teammates always get full
+  // tool access regardless of the leader&#39;s permission mode.
+</code></pre></div>
+
+<p><strong>洞察</strong>：子 agent 不继承 leader 的权限模式。这避免了"leader 在受限模式下，团队成员意外被限制"的问题。</p>
+<div class="highlight"><pre><span></span><code>src/utils/sideQuestion.ts:107
+  // IMPORTANT: claude.ts yields one AssistantMessage PER CONTENT BLOCK,
+  // not one per API response. With adaptive thinking enabled (inherited
+  // from the main thread to preserve the cache key)...
+</code></pre></div>
+
+<p><strong>洞察</strong>：流式响应中"一条消息一个 content block"是一个容易踩坑的语义。子 agent 必须继承父级的 thinking 配置以保证 cache key 一致——这印证了我们在 agent-loop 文档中的发现。</p>
+<h4 id="3">3. 安全相关：路径、命令、权限</h4>
+<div class="highlight"><pre><span></span><code>src/utils/permissions/filesystem.ts:614
+  /* IMPORTANT: This function checks BOTH the original path AND resolved
+   * symlink paths to prevent bypasses via symlinks pointing to protected files. */
+
+src/utils/permissions/filesystem.ts:1428
+  // IMPORTANT: Include both the symlink path and resolved path so subsequent
+  // checks pass
+
+src/utils/managedEnvConstants.ts:88
+  /* IMPORTANT: This is the source of truth for which env vars are safe.
+   * Any env var NOT in this list is considered dangerous and will trigger
+   * a security dialog when set via remote managed settings. */
+
+src/utils/bash/commands.ts:491
+  // IMPORTANT: Bash commands may run multiple commands that are chained together.
+  // For safety, if the command seems to contain command injection, you must
+  // return &quot;command_injection_detected&quot;.
+</code></pre></div>
+
+<p><strong>洞察</strong>：权限系统对 symlink 攻击有专门防御。路径检查同时检查"原路径"和"resolved 路径"，防止用户通过 <code>ln -s /etc/passwd ./safe.txt</code> 这种方式绕过。</p>
+<h4 id="4-windowslinuxmacos">4. 跨平台兼容：Windows/Linux/macOS 约束</h4>
+<div class="highlight"><pre><span></span><code>src/utils/secureStorage/macOsKeychainHelpers.ts:25
+  // DO NOT change this value — it&#39;s part of the keychain lookup key
+  // and would orphan existing stored credentials.
+
+src/utils/tmuxSocket.ts:21
+  /* IMPORTANT: The user&#39;s original TMUX env var is NOT used. After socket
+   * initialization, getClaudeTmuxEnv() returns a value that overrides... */
+</code></pre></div>
+
+<p><strong>洞察</strong>：很多"DO NOT change"是为了<strong>向后兼容</strong>——一个常量看似可以重命名，但实际上它是数据迁移的桥梁。</p>
+<h4 id="5-api">5. API 协议约束</h4>
+<div class="highlight"><pre><span></span><code>src/utils/fingerprint.ts:43
+  /* IMPORTANT: Do not change this method without careful coordination with
+   * 1P and 3P (Bedrock, Vertex, Azure) APIs. */
+</code></pre></div>
+
+<p><strong>洞察</strong>：用户指纹算法跨多个 provider，修改会破坏跨 provider 的一致性。</p>
+<h4 id="6">6. 性能/稳定性陷阱</h4>
+<div class="highlight"><pre><span></span><code>src/utils/imageResizer.ts:288
+  // IMPORTANT: Always create fresh sharp(imageBuffer) instances for each operation.
+  // The native image-processor-napi module doesn&#39;t properly apply format
+  // conversions when reusing a sharp instance...
+
+src/components/Spinner.tsx:287
+  // IMPORTANT: we need this width=&quot;100%&quot; to avoid an Ink bug where the
+  // tip gets duplicated over and over while the spinner is running...
+</code></pre></div>
+
+<p><strong>洞察</strong>：这些都是"我踩过的坑"——通过注释把陷阱固化到代码里，避免后人重蹈覆辙。</p>
+<h4 id="7">7. 数据一致性</h4>
+<div class="highlight"><pre><span></span><code>src/utils/sessionStorage.ts:131
+  /* IMPORTANT: This is the single source of truth for what constitutes
+   * a transcript message. */
+
+src/utils/sessionStorage.ts:4353
+  // IMPORTANT: We deliberately filter out most attachments for non-ants because
+  // they have sensitive info for training that we don&#39;t want exposed to the public.
+</code></pre></div>
+
+<p><strong>洞察</strong>：sessionStorage.ts 是数据持久化的核心，注释明确标注了"single source of truth"模式。"non-ants"过滤暴露了一个细节：内部用户和外部用户的会话存储格式有差异，目的是防止训练数据泄露。</p>
+<h3 id="_5">注释挖掘的方法学价值</h3>
+<p>通过 93 个 IMPORTANT 注释，可以快速建立起项目的"心智地图"：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>数量</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型行为约束</td>
+<td>6</td>
+<td>改动需要跨团队对齐</td>
+</tr>
+<tr>
+<td>安全/权限</td>
+<td>8</td>
+<td>防止绕过的关键路径</td>
+</tr>
+<tr>
+<td>跨进程/状态</td>
+<td>5</td>
+<td>状态隔离边界</td>
+</tr>
+<tr>
+<td>跨平台兼容</td>
+<td>4</td>
+<td>不能动的常量/字段</td>
+</tr>
+<tr>
+<td>API 协议</td>
+<td>3</td>
+<td>跨 provider 一致性</td>
+</tr>
+<tr>
+<td>性能陷阱</td>
+<td>5</td>
+<td>已知 bug 的 workaround</td>
+</tr>
+<tr>
+<td>数据一致性</td>
+<td>4</td>
+<td>source of truth 模式</td>
+</tr>
+<tr>
+<td>Prompt 工程</td>
+<td>60+</td>
+<td>给模型的指令，不是给人的</td>
+</tr>
+</tbody>
+</table>
+<p>注意：60+ 是 prompt 文件里的 IMPORTANT，那些是给 Claude 模型看的 prompt 内容（如"IMPORTANT: Always use this scratchpad directory..."），不是设计约束。挖掘时需要分清两种 IMPORTANT。</p>
+<hr />
+<h2 id="_6">第二部分：复杂度分析</h2>
+<h3 id="_7">方法</h3>
+<div class="highlight"><pre><span></span><code>lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--CCN<span class="w"> </span><span class="m">30</span><span class="w"> </span>-w
+</code></pre></div>
+
+<p>参数：
+- <code>-l typescript</code> — 只分析 TS 文件
+- <code>--CCN 30</code> — 圈复杂度阈值 30（高于此值告警）
+- <code>-w</code> — 仅显示告警</p>
+<h3 id="_8">总览数据</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总有效代码行</td>
+<td>280,594 NLOC</td>
+</tr>
+<tr>
+<td>函数总数</td>
+<td>12,271</td>
+</tr>
+<tr>
+<td>平均圈复杂度</td>
+<td>3.0</td>
+</tr>
+<tr>
+<td>平均函数行数</td>
+<td>11.6</td>
+</tr>
+<tr>
+<td>高复杂度函数数（CCN &gt; 15）</td>
+<td>282</td>
+</tr>
+<tr>
+<td>极高复杂度（CCN &gt; 30）</td>
+<td>77</td>
+</tr>
+</tbody>
+</table>
+<p><strong>对比基准</strong>：业界平均圈复杂度约 4-6。free-code45 平均 3.0 属于<strong>非常健康</strong>的水平。但有 77 个函数复杂度爆表，这些就是"项目的雷区"。</p>
+<h3 id="top-20">圈复杂度 Top 20（最复杂的函数）</h3>
+<table>
+<thead>
+<tr>
+<th>排名</th>
+<th>函数</th>
+<th>CCN</th>
+<th>NLOC</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>peek</code></td>
+<td>229</td>
+<td>565</td>
+<td>utils/bash/bashParser.ts:1719</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>parseDoGroup</code></td>
+<td>176</td>
+<td>445</td>
+<td>utils/bash/bashParser.ts:3306</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>ansi256FromRgb</code></td>
+<td>164</td>
+<td>763</td>
+<td>native-ts/color-diff/index.ts:105</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>parseExpansionRest</code></td>
+<td>129</td>
+<td>298</td>
+<td>utils/bash/bashParser.ts:2807</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>parseTestNegatablePrimary</code></td>
+<td>120</td>
+<td>248</td>
+<td>utils/bash/bashParser.ts:3791</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>stringWidthJavaScript</code></td>
+<td>92</td>
+<td>140</td>
+<td>ink/stringWidth.ts:20</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>isDangerousRemovalRawPath</code></td>
+<td>87</td>
+<td>1111</td>
+<td>tools/PowerShellTool/pathValidation.ts:840</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>checkResponseForCacheBreak</code></td>
+<td>84</td>
+<td>174</td>
+<td>services/api/promptCacheBreakDetection.ts:437</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>layoutNode</code></td>
+<td>81</td>
+<td>258</td>
+<td>native-ts/yoga-layout/index.ts:1058</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>getLanguageFromPath</code></td>
+<td>79</td>
+<td>222</td>
+<td>commands/insights.ts:462</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>walkArgument</code></td>
+<td>76</td>
+<td>159</td>
+<td>utils/bash/ast.ts:605</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>isCommandSafeViaFlagParsing</code></td>
+<td>73</td>
+<td>553</td>
+<td>tools/BashTool/readOnlyValidation.ts:1246</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>parseSimpleCommand</code></td>
+<td>72</td>
+<td>229</td>
+<td>utils/bash/bashParser.ts:1141</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>isTextBreaker</code></td>
+<td>70</td>
+<td>230</td>
+<td>utils/collapseReadSearch.ts:331</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>parseCasePatternSegmented</code></td>
+<td>64</td>
+<td>235</td>
+<td>utils/bash/bashParser.ts:3525</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>classifyAPIError</code></td>
+<td>63</td>
+<td>157</td>
+<td>services/api/errors.ts:964</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>useVirtualScroll</code></td>
+<td>62</td>
+<td>213</td>
+<td>hooks/useVirtualScroll.ts:142</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>mapKey</code></td>
+<td>58</td>
+<td>115</td>
+<td>hooks/useTextInput.ts:318</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>validateFlagArgument</code></td>
+<td>57</td>
+<td>153</td>
+<td>utils/shell/readOnlyCommandValidation.ts:1649</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>flushGroup</code></td>
+<td>57</td>
+<td>133</td>
+<td>utils/collapseReadSearch.ts:770</td>
+</tr>
+</tbody>
+</table>
+<h3 id="top-10">高复杂度文件 Top 10</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>高复杂度函数数</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>utils/bash/bashParser.ts</code></td>
+<td>10</td>
+<td>Bash 语法解析器</td>
+</tr>
+<tr>
+<td><code>commands/insights.ts</code></td>
+<td>8</td>
+<td>使用统计分析</td>
+</tr>
+<tr>
+<td><code>utils/sessionStorage.ts</code></td>
+<td>6</td>
+<td>会话持久化</td>
+</tr>
+<tr>
+<td><code>utils/attachments.ts</code></td>
+<td>5</td>
+<td>Attachment 处理</td>
+</tr>
+<tr>
+<td><code>ink/styles.ts</code></td>
+<td>5</td>
+<td>UI 样式计算</td>
+</tr>
+<tr>
+<td><code>utils/shell/readOnlyCommandValidation.ts</code></td>
+<td>4</td>
+<td>Shell 命令验证</td>
+</tr>
+<tr>
+<td><code>utils/plugins/mcpbHandler.ts</code></td>
+<td>4</td>
+<td>MCP bundle 处理</td>
+</tr>
+<tr>
+<td><code>utils/collapseReadSearch.ts</code></td>
+<td>4</td>
+<td>工具结果压缩</td>
+</tr>
+<tr>
+<td><code>ink/selection.ts</code></td>
+<td>4</td>
+<td>终端选择</td>
+</tr>
+<tr>
+<td><code>utils/permissions/filesystem.ts</code></td>
+<td>3</td>
+<td>文件权限检查</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_9">关键发现</h3>
+<h4 id="1-bash">1. Bash 解析器是项目"最复杂的山头"</h4>
+<p><code>utils/bash/bashParser.ts</code> 一个文件就有 10 个高复杂度函数，圈复杂度 Top 5 中占了 4 个。</p>
+<p><strong>为什么这么复杂</strong>：</p>
+<p>Bash 是一个语法极其丰富的语言：
+- Heredoc (<code>&lt;&lt;EOF</code>)
+- Process substitution (<code>&lt;(cmd)</code>, <code>&gt;(cmd)</code>)
+- Brace expansion (<code>{a,b,c}</code>)
+- Parameter expansion (<code>${var:-default}</code>, <code>${var//pattern/replace}</code>)
+- Command substitution (<code>$(cmd)</code>, <code>\</code>cmd`<code>)
+- Arithmetic expansion (</code>$((expr))<code>)
+- Test commands (</code>[<code>,</code>[[<code>,</code>(<code>,</code>((<code>各有不同语法)
+- Here strings (</code>&lt;&lt;&lt;`)</p>
+<p>要正确解析所有这些结构，必须处理大量的状态和分支。<code>peek()</code> 函数（CCN 229）是 lookahead 解析的核心，它需要在不消耗 token 的前提下"偷看"接下来是什么语法结构——这是递归下降解析器最复杂的部分。</p>
+<p><strong>为什么不用第三方解析器</strong>：可能是为了精确控制错误处理和安全检查。Bash 解析的结果直接喂给权限验证（判断命令是否危险），需要保证每个语法节点都能被审查。</p>
+<h4 id="2_1">2. 安全验证集中在少数几个"巨型函数"</h4>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>CCN</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>isDangerousRemovalRawPath</code></td>
+<td>87</td>
+<td>PowerShell 路径删除安全检查</td>
+</tr>
+<tr>
+<td><code>isCommandSafeViaFlagParsing</code></td>
+<td>73</td>
+<td>Bash 命令通过 flag 解析判断只读</td>
+</tr>
+<tr>
+<td><code>validateFlagArgument</code></td>
+<td>57</td>
+<td>Shell flag 参数验证</td>
+</tr>
+<tr>
+<td><code>isGitSafe</code></td>
+<td>54</td>
+<td>PowerShell git 命令安全</td>
+</tr>
+</tbody>
+</table>
+<p>这些函数本质上是<strong>白名单 + 黑名单 + 规则引擎</strong>的混合体。每个分支对应一个安全场景：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// 伪代码示意</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">isDangerousRemovalRawPath</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;C:\\&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;~&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;~/&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">matchGlob</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;/etc/*&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/usr/*&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">...]))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isSymlink</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">resolvedPath</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;/etc&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">containsWildcard</span><span class="p">(</span><span class="nx">path</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">parentDirIsRoot</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nx">DANGEROUS</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">containsRecursiveWildcard</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// 50+ 行的递归判断</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// ... 持续 1000+ 行</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>洞察</strong>：这种"巨型安全函数"在防御编程中很常见。每一个 if 分支都对应一个真实发生过的攻击案例或边界情况。复杂度高不代表代码差——可能恰恰相反，说明经过了大量真实场景考验。</p>
+<h4 id="3-ui-ink">3. 终端 UI 渲染（Ink）的内在复杂性</h4>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>CCN</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stringWidthJavaScript</code></td>
+<td>92</td>
+<td>计算字符串视觉宽度</td>
+</tr>
+<tr>
+<td><code>layoutNode</code></td>
+<td>81</td>
+<td>Flexbox 布局计算</td>
+</tr>
+<tr>
+<td><code>diffEach</code></td>
+<td>44</td>
+<td>屏幕 diff</td>
+</tr>
+<tr>
+<td><code>renderChildren</code></td>
+<td>47</td>
+<td>节点渲染</td>
+</tr>
+</tbody>
+</table>
+<p>终端 UI 比 Web UI 更复杂，因为：
+- 字符宽度不固定（CJK 是 2 倍宽，emoji 不规律）
+- 没有像浏览器那样的 GPU 加速排版
+- 必须自己实现 flexbox 布局
+- 需要计算屏幕 diff 决定增量更新</p>
+<p><code>stringWidthJavaScript</code> 复杂度 92 的原因：要识别 CJK、emoji、组合字符（combining mark）、ZWJ 序列、控制字符、ANSI escape 等等所有可能影响宽度的字符。</p>
+<h4 id="4-queryts-top-50">4. query.ts 的核心循环也在 Top 50</h4>
+<div class="highlight"><pre><span></span><code>src/query.ts:671  ...  CCN 44, NLOC 217
+</code></pre></div>
+
+<p>这是 <code>queryLoop</code> 内的一个内部函数（流式处理逻辑）。CCN 44 不算极高，但放在 query.ts 这个本身就很大的文件里，说明它是协调中枢的复杂点。</p>
+<p>考虑到 query.ts 要处理：
+- 流式响应的多种事件类型
+- 工具调用的并发/串行
+- 各种中断和恢复路径
+- 多种循环停止条件
+- 错误重试和降级</p>
+<p>CCN 44 已经算克制了。</p>
+<h4 id="5-powershell-bash">5. PowerShell 工具复杂度堪比 Bash</h4>
+<p>很多人不知道 free-code45 还专门支持 PowerShell：</p>
+<div class="highlight"><pre><span></span><code>tools/PowerShellTool/pathValidation.ts        — 4 个高复杂度函数
+tools/PowerShellTool/powershellSecurity.ts    — 3 个
+tools/PowerShellTool/readOnlyValidation.ts    — 3 个
+tools/PowerShellTool/gitSafety.ts             — 1 个 (CCN 139)
+</code></pre></div>
+
+<p>PowerShell 比 Bash 还要"奇葩"——cmdlet 命名、属性访问、管道对象传递都和 Unix 不同。代码里有专门的 PowerShell 安全验证层，复杂度和 Bash 不相上下。</p>
+<p>这说明 free-code45 对 Windows 用户的支持是认真的，不是简单的"凑合用"。</p>
+<h4 id="6_1">6. 复杂度的"健康分布"</h4>
+<div class="highlight"><pre><span></span><code>高复杂度（CCN &gt; 30）的 77 个函数中：
+  - 解析器（Bash/PowerShell）   : 25 个 (32%)
+  - 安全验证                    : 18 个 (23%)
+  - UI 渲染（Ink）              : 12 个 (16%)
+  - 工具实现（具体业务）         : 10 个 (13%)
+  - 其他（统计、网络、配置）      : 12 个 (16%)
+</code></pre></div>
+
+<p><strong>洞察</strong>：高复杂度集中在三类"本质上就复杂"的领域——<strong>解析器、安全、UI 渲染</strong>。业务逻辑代码反而很简洁。这是健康的复杂度分布——把复杂性隔离在专门的模块里，而不是散布全代码库。</p>
+<hr />
+<h2 id="_10">综合洞察</h2>
+<h3 id="1">1. 注释挖掘和复杂度分析的互补</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>注释挖掘</th>
+<th>复杂度分析</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>看到的</td>
+<td>设计意图、跨团队约束、踩过的坑</td>
+<td>代码量化指标、热点位置</td>
+</tr>
+<tr>
+<td>看不到的</td>
+<td>没注释的复杂代码</td>
+<td>注释里的设计决策</td>
+</tr>
+<tr>
+<td>适合</td>
+<td>理解"为什么这样设计"</td>
+<td>找到"哪里值得深入"</td>
+</tr>
+</tbody>
+</table>
+<p>两种方法结合：</p>
+<ul>
+<li><strong>复杂度告诉你"哪里</strong>：bashParser.ts 复杂度爆表</li>
+<li><strong>注释告诉你"为什么"</strong>：bashPermissions.ts 的 IMPORTANT 注释解释了为什么需要解析（安全验证）</li>
+<li><strong>注释 × 复杂度</strong>：在两个维度都高的文件，是最"危险"也最"重要"的代码</li>
+</ul>
+<h3 id="2-free-code45">2. free-code45 的代码质量观察</h3>
+<p><strong>优点</strong>：
+- 平均圈复杂度 3.0，远低于业界平均
+- HACK/FIXME 极少（4 处），说明没有大量技术债
+- IMPORTANT 注释多达 93 处，设计意图被充分文档化
+- 复杂度集中在"本质上复杂"的模块（解析器、安全、UI），业务逻辑很干净</p>
+<p><strong>值得警惕</strong>：
+- bashParser.ts 一个文件 10 个高复杂度函数，是单点维护风险
+- 安全验证函数有 1000+ 行的"巨型 if 链"，难以审查
+- PowerShell 支持代码量大但用户群相对小，维护成本高</p>
+<h3 id="3_1">3. 学习这个项目的"地图"</h3>
+<p>如果想深入 free-code45，按照注释挖掘 + 复杂度分析的结果，最值得先读的 10 个文件：</p>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>文件</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td><code>query.ts</code></td>
+<td>主循环，所有功能的入口</td>
+</tr>
+<tr>
+<td>P0</td>
+<td><code>services/api/claude.ts</code></td>
+<td>API 调用核心</td>
+</tr>
+<tr>
+<td>P0</td>
+<td><code>Tool.ts</code></td>
+<td>工具系统抽象</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><code>tools/BashTool/bashPermissions.ts</code></td>
+<td>复杂度高 + 安全关键</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><code>utils/bash/commands.ts</code></td>
+<td>1180 NLOC + 注释多</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><code>utils/permissions/filesystem.ts</code></td>
+<td>路径权限核心</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><code>utils/thinking.ts</code> + <code>utils/effort.ts</code></td>
+<td>IMPORTANT 注释最多</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><code>utils/messages.ts</code></td>
+<td>消息处理中枢</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><code>services/compact/compact.ts</code></td>
+<td>上下文压缩核心</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><code>utils/sessionStorage.ts</code></td>
+<td>持久化 + IMPORTANT 注释多</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">附录：可复现的命令</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 注释挖掘</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;IMPORTANT:&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;DO NOT&quot;</span><span class="w"> </span>src/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span>
+grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;do not change\|do not modify&quot;</span><span class="w"> </span>src/<span class="w"> </span>-i
+
+<span class="c1"># 复杂度分析</span>
+pip<span class="w"> </span>install<span class="w"> </span>lizard
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w">                     </span><span class="c1"># 完整报告</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--CCN<span class="w"> </span><span class="m">30</span><span class="w">            </span><span class="c1"># 只显示 CCN &gt; 30 的告警</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--CCN<span class="w"> </span><span class="m">30</span><span class="w"> </span>-w<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w"> </span><span class="c1"># 高复杂度函数数量</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--sort<span class="w"> </span>cyclomatic_complexity<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-50
+
+<span class="c1"># 高复杂度文件排行</span>
+lizard<span class="w"> </span>src/<span class="w"> </span>-l<span class="w"> </span>typescript<span class="w"> </span>--CCN<span class="w"> </span><span class="m">30</span><span class="w"> </span>-w<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F:<span class="w"> </span><span class="s1">&#39;{print $1}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn
+</code></pre></div>
+</div>
+</body>
+</html>
