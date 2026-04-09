@@ -1,0 +1,406 @@
+{
+  "totalPrompts": 77,
+  "totalChars": 87003,
+  "byCategory": {
+    "system": {
+      "count": 15,
+      "totalChars": 12727
+    },
+    "services": {
+      "count": 3,
+      "totalChars": 7816
+    },
+    "tools": {
+      "count": 55,
+      "totalChars": 62019
+    },
+    "utils": {
+      "count": 4,
+      "totalChars": 4441
+    }
+  },
+  "byFile": {
+    "src/constants/prompts.ts": {
+      "count": 15,
+      "totalChars": 12727
+    },
+    "src/services/MagicDocs/prompts.ts": {
+      "count": 1,
+      "totalChars": 3189
+    },
+    "src/services/SessionMemory/prompts.ts": {
+      "count": 2,
+      "totalChars": 4627
+    },
+    "src/tools/AgentTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 3254
+    },
+    "src/tools/AskUserQuestionTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 1262
+    },
+    "src/tools/BashTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 6753
+    },
+    "src/tools/BriefTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 1671
+    },
+    "src/tools/ConfigTool/prompt.ts": {
+      "count": 5,
+      "totalChars": 1231
+    },
+    "src/tools/EnterPlanModeTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 6352
+    },
+    "src/tools/EnterWorktreeTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 1335
+    },
+    "src/tools/ExitPlanModeTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 1894
+    },
+    "src/tools/ExitWorktreeTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 1923
+    },
+    "src/tools/FileEditTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 1161
+    },
+    "src/tools/FileReadTool/prompt.ts": {
+      "count": 4,
+      "totalChars": 1874
+    },
+    "src/tools/FileWriteTool/prompt.ts": {
+      "count": 3,
+      "totalChars": 699
+    },
+    "src/tools/GlobTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 371
+    },
+    "src/tools/GrepTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 918
+    },
+    "src/tools/ListMcpResourcesTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 648
+    },
+    "src/tools/LSPTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 1039
+    },
+    "src/tools/NotebookEditTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 575
+    },
+    "src/tools/PowerShellTool/prompt.ts": {
+      "count": 4,
+      "totalChars": 6710
+    },
+    "src/tools/ReadMcpResourceTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 486
+    },
+    "src/tools/RemoteTriggerTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 578
+    },
+    "src/tools/ScheduleCronTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 2295
+    },
+    "src/tools/SkillTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 44
+    },
+    "src/tools/SleepTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 577
+    },
+    "src/tools/TaskCreateTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 2179
+    },
+    "src/tools/TaskGetTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 732
+    },
+    "src/tools/TaskListTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 995
+    },
+    "src/tools/TaskStopTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 203
+    },
+    "src/tools/TaskUpdateTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 2243
+    },
+    "src/tools/TodoWriteTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 9401
+    },
+    "src/tools/WebFetchTool/prompt.ts": {
+      "count": 2,
+      "totalChars": 1289
+    },
+    "src/tools/WebSearchTool/prompt.ts": {
+      "count": 1,
+      "totalChars": 1327
+    },
+    "src/utils/claudeInChrome/prompt.ts": {
+      "count": 4,
+      "totalChars": 4441
+    }
+  },
+  "topByLength": [
+    {
+      "file": "src/tools/TodoWriteTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "PROMPT",
+      "line": 3,
+      "length": 9132
+    },
+    {
+      "file": "src/tools/BashTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getCommitAndPRInstructions",
+      "line": 81,
+      "length": 6305
+    },
+    {
+      "file": "src/tools/PowerShellTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getPrompt",
+      "line": 78,
+      "length": 5127
+    },
+    {
+      "file": "src/constants/prompts.ts",
+      "category": "system",
+      "kind": "function-return",
+      "name": "getProactiveSection",
+      "line": 864,
+      "length": 3766
+    },
+    {
+      "file": "src/tools/EnterPlanModeTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getEnterPlanModeToolPromptExternal",
+      "line": 23,
+      "length": 3681
+    },
+    {
+      "file": "src/services/SessionMemory/prompts.ts",
+      "category": "services",
+      "kind": "function-return",
+      "name": "getDefaultUpdatePrompt",
+      "line": 44,
+      "length": 3459
+    },
+    {
+      "file": "src/utils/claudeInChrome/prompt.ts",
+      "category": "utils",
+      "kind": "export-const",
+      "name": "BASE_CHROME_PROMPT",
+      "line": 1,
+      "length": 3353
+    },
+    {
+      "file": "src/tools/AgentTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getPrompt",
+      "line": 252,
+      "length": 3208
+    },
+    {
+      "file": "src/services/MagicDocs/prompts.ts",
+      "category": "services",
+      "kind": "function-return",
+      "name": "getUpdatePromptTemplate",
+      "line": 9,
+      "length": 3189
+    },
+    {
+      "file": "src/constants/prompts.ts",
+      "category": "system",
+      "kind": "function-return",
+      "name": "getActionsSection",
+      "line": 256,
+      "length": 2832
+    },
+    {
+      "file": "src/tools/EnterPlanModeTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getEnterPlanModeToolPromptAnt",
+      "line": 108,
+      "length": 2671
+    },
+    {
+      "file": "src/constants/prompts.ts",
+      "category": "system",
+      "kind": "function-return",
+      "name": "getOutputEfficiencySection",
+      "line": 405,
+      "length": 2395
+    },
+    {
+      "file": "src/tools/ScheduleCronTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "buildCronCreatePrompt",
+      "line": 87,
+      "length": 2295
+    },
+    {
+      "file": "src/tools/TaskUpdateTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "PROMPT",
+      "line": 3,
+      "length": 2243
+    },
+    {
+      "file": "src/tools/TaskCreateTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getPrompt",
+      "line": 16,
+      "length": 2179
+    },
+    {
+      "file": "src/tools/ExitWorktreeTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getExitWorktreeToolPrompt",
+      "line": 2,
+      "length": 1923
+    },
+    {
+      "file": "src/tools/ExitPlanModeTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "EXIT_PLAN_MODE_V2_TOOL_PROMPT",
+      "line": 6,
+      "length": 1894
+    },
+    {
+      "file": "src/tools/FileReadTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "renderPromptTemplate",
+      "line": 32,
+      "length": 1565
+    },
+    {
+      "file": "src/tools/EnterWorktreeTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getEnterWorktreeToolPrompt",
+      "line": 2,
+      "length": 1335
+    },
+    {
+      "file": "src/tools/WebSearchTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getWebSearchPrompt",
+      "line": 7,
+      "length": 1327
+    },
+    {
+      "file": "src/tools/WebFetchTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "DESCRIPTION",
+      "line": 3,
+      "length": 1217
+    },
+    {
+      "file": "src/services/SessionMemory/prompts.ts",
+      "category": "services",
+      "kind": "export-const",
+      "name": "DEFAULT_SESSION_MEMORY_TEMPLATE",
+      "line": 11,
+      "length": 1168
+    },
+    {
+      "file": "src/tools/BriefTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "BRIEF_PROACTIVE_SECTION",
+      "line": 12,
+      "length": 1143
+    },
+    {
+      "file": "src/tools/AskUserQuestionTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "ASK_USER_QUESTION_TOOL_PROMPT",
+      "line": 32,
+      "length": 1119
+    },
+    {
+      "file": "src/tools/LSPTool/prompt.ts",
+      "category": "tools",
+      "kind": "export-const",
+      "name": "DESCRIPTION",
+      "line": 3,
+      "length": 1039
+    },
+    {
+      "file": "src/tools/TaskListTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getPrompt",
+      "line": 28,
+      "length": 995
+    },
+    {
+      "file": "src/tools/FileEditTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getDefaultEditDescription",
+      "line": 20,
+      "length": 990
+    },
+    {
+      "file": "src/tools/ConfigTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "generatePrompt",
+      "line": 50,
+      "length": 954
+    },
+    {
+      "file": "src/tools/GrepTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getDescription",
+      "line": 7,
+      "length": 918
+    },
+    {
+      "file": "src/tools/PowerShellTool/prompt.ts",
+      "category": "tools",
+      "kind": "function-return",
+      "name": "getEditionSection",
+      "line": 53,
+      "length": 917
+    }
+  ]
+}

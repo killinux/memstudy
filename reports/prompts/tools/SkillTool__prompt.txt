@@ -1,0 +1,9 @@
+// FILE: src/tools/SkillTool/prompt.ts
+// CATEGORY: tools
+// PROMPTS: 1
+
+================================================================================
+[function-return] formatCommandDescription @ line 65 (44 chars)
+================================================================================
+- ${cmd.name}: ${getCommandDescription(cmd)}
+

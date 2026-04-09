@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Prompt 提取与分析</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="claude-code-prompt">Claude Code Prompt 提取与分析</h1>
+<p>通过 AST 提取 free-code45 中的所有 prompt 字符串，分析 Anthropic 是如何用 prompt 工程"塑造"Claude Code 行为的。</p>
+<hr />
+<h2 id="_1">提取方法</h2>
+<h3 id="_2">工具</h3>
+<p><code>tools/ast-analysis/extract-prompts.mjs</code> 基于 ts-morph 实现：</p>
+<ol>
+<li>扫描所有 <code>prompt.ts</code> / <code>prompts.ts</code> 文件</li>
+<li>提取两类内容：</li>
+<li>顶层导出的字符串常量（<code>export const PROMPT = '...'</code>）</li>
+<li>名字像 prompt 的函数返回的字符串（<code>function getXxxPrompt() { return '...' }</code>）</li>
+<li>处理三种字符串字面量：StringLiteral、NoSubstitutionTemplateLiteral、TemplateExpression</li>
+<li>按文件路径分类：system / tools / services / utils</li>
+</ol>
+<h3 id="_3">后处理分析</h3>
+<p><code>tools/ast-analysis/analyze-prompts.mjs</code> 对提取的 prompt 计算：
+- 关键词频次：IMPORTANT, MUST, NEVER, ALWAYS, CRITICAL, DO NOT, REQUIRED 等
+- 软约束词：should, recommended, prefer, avoid
+- 指令密度：rules per 1000 chars</p>
+<hr />
+<h2 id="_4">总览数据</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>提取的 prompt 段总数</td>
+<td><strong>77</strong></td>
+</tr>
+<tr>
+<td>来源文件数</td>
+<td><strong>43</strong></td>
+</tr>
+<tr>
+<td>总字符数</td>
+<td><strong>87,003</strong></td>
+</tr>
+<tr>
+<td>估算 token 数</td>
+<td><strong>~21,750</strong></td>
+</tr>
+<tr>
+<td>硬约束总数</td>
+<td><strong>60</strong></td>
+</tr>
+<tr>
+<td>软约束总数</td>
+<td><strong>28</strong></td>
+</tr>
+<tr>
+<td>硬:软 比例</td>
+<td><strong>1 : 0.47</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察 1</strong>：Claude Code 的 prompt 总量约 22k token，但这只是显式 prompt 部分。运行时还会动态注入工具 schema、系统上下文（git status、CLAUDE.md）等，实际请求体会更大。</p>
+<p><strong>洞察 2</strong>：硬约束远多于软约束（60 vs 28），说明 Anthropic 倾向用<strong>强命令式语言</strong>来约束 Claude，而非"建议"。这是 prompt engineering 的一个重要选择——LLM 对 IMPORTANT/MUST/NEVER 这些词的响应明显强于 should/recommended。</p>
+<hr />
+<h2 id="_5">按类别分布</h2>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>Prompts</th>
+<th>字符数</th>
+<th>硬规则</th>
+<th>软规则</th>
+<th>密度（rules/k chars）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>tools</strong></td>
+<td>55</td>
+<td>62,019</td>
+<td>42</td>
+<td>23</td>
+<td><strong>1.0</strong></td>
+</tr>
+<tr>
+<td><strong>system</strong></td>
+<td>15</td>
+<td>12,727</td>
+<td>5</td>
+<td>3</td>
+<td>0.6</td>
+</tr>
+<tr>
+<td><strong>services</strong></td>
+<td>3</td>
+<td>7,816</td>
+<td>7</td>
+<td>2</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td><strong>utils</strong></td>
+<td>4</td>
+<td>4,441</td>
+<td>6</td>
+<td>0</td>
+<td><strong>1.4</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：
+- Tools 占了 71% 的字符数——大部分 prompt 工程都花在工具描述上
+- utils 类别（如 claudeInChrome）密度最高（1.4/k）——专门场景的指令最密集
+- system prompt 反而密度最低（0.6/k）——主要是介绍性内容，不是命令</p>
+<hr />
+<h2 id="top-10-prompt">Top 10 最长的 Prompt</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>字符数</th>
+<th>硬规则</th>
+<th>Prompt 名</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>9,132</strong></td>
+<td>1</td>
+<td><code>PROMPT</code></td>
+<td>TodoWriteTool/prompt.ts</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>6,305</strong></td>
+<td><strong>16</strong></td>
+<td><code>getCommitAndPRInstructions</code></td>
+<td>BashTool/prompt.ts</td>
+</tr>
+<tr>
+<td>3</td>
+<td>5,127</td>
+<td>5</td>
+<td><code>getPrompt</code></td>
+<td>PowerShellTool/prompt.ts</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3,766</td>
+<td>1</td>
+<td><code>getProactiveSection</code></td>
+<td>constants/prompts.ts</td>
+</tr>
+<tr>
+<td>5</td>
+<td>3,681</td>
+<td>0</td>
+<td><code>getEnterPlanModeToolPromptExternal</code></td>
+<td>EnterPlanModeTool/prompt.ts</td>
+</tr>
+<tr>
+<td>6</td>
+<td>3,459</td>
+<td>5</td>
+<td><code>getDefaultUpdatePrompt</code></td>
+<td>SessionMemory/prompts.ts</td>
+</tr>
+<tr>
+<td>7</td>
+<td>3,353</td>
+<td>3</td>
+<td><code>BASE_CHROME_PROMPT</code></td>
+<td>claudeInChrome/prompt.ts</td>
+</tr>
+<tr>
+<td>8</td>
+<td>3,208</td>
+<td>1</td>
+<td><code>getPrompt</code></td>
+<td>AgentTool/prompt.ts</td>
+</tr>
+<tr>
+<td>9</td>
+<td>3,189</td>
+<td>2</td>
+<td><code>getUpdatePromptTemplate</code></td>
+<td>MagicDocs/prompts.ts</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2,832</td>
+<td>0</td>
+<td><code>getActionsSection</code></td>
+<td>constants/prompts.ts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">几个有意思的发现</h3>
+<h4 id="todowritetool-prompt9132">TodoWriteTool 是最长的 prompt（9132 字符）</h4>
+<p>这个工具本身很简单（只是写一个 todo 数组），但 prompt 长达 9k 字符，因为里面包含<strong>5 个完整的使用场景示例</strong>（带 <code>&lt;example&gt;...&lt;/example&gt;</code> 标签）。</p>
+<div class="highlight"><pre><span></span><code>&lt;example&gt;
+User: I want to add a dark mode toggle to the application settings...
+Assistant: *Creates todo list with the following items:*
+1. Creating dark mode toggle component...
+&lt;reasoning&gt;
+The assistant used the todo list because:
+1. Adding dark mode is a multi-step feature...
+&lt;/reasoning&gt;
+&lt;/example&gt;
+</code></pre></div>
+
+<p><strong>洞察</strong>：Anthropic 用大量 few-shot 示例教 Claude <strong>何时</strong>使用 TodoWrite。工具本身简单，难的是判断"什么时候该用"——这是 prompt engineering 的核心。</p>
+<h4 id="bashtool-git-prompt-16">BashTool 的 git 操作 prompt 是硬规则之王（16 个）</h4>
+<div class="highlight"><pre><span></span><code>Git Safety Protocol:
+- NEVER update the git config
+- NEVER run destructive git commands (push --force, reset --hard, ...)
+- NEVER skip hooks (--no-verify, --no-gpg-sign, etc) ...
+- NEVER run force push to main/master, warn the user if they request it
+- CRITICAL: Always create NEW commits rather than amending...
+- NEVER commit changes unless the user explicitly asks you to.
+</code></pre></div>
+
+<p>5 个 NEVER + 1 个 CRITICAL + 多个 IMPORTANT，密集度极高。</p>
+<p><strong>洞察</strong>：git 是高风险操作（误操作会丢代码），所以这里用最强的命令式语言。这一段是从无数"用户被 Claude 误操作 git"的真实事故中沉淀出来的。</p>
+<hr />
+<h2 id="top-10-prompt_1">Top 10 指令密度最高的 Prompt</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>密度</th>
+<th>硬</th>
+<th>软</th>
+<th>Prompt 名</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>5.6</strong></td>
+<td>2</td>
+<td>1</td>
+<td><code>getSimpleIntroSection</code> (system)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4.6</td>
+<td>0</td>
+<td>1</td>
+<td><code>getLanguageSection</code> (system)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4.5</td>
+<td>2</td>
+<td>0</td>
+<td><code>getCommitAndPRInstructions</code> (BashTool, 短版)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4.1</td>
+<td>1</td>
+<td>4</td>
+<td><code>DESCRIPTION</code> (WebFetchTool)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>4.0</td>
+<td>2</td>
+<td>0</td>
+<td><code>CHROME_TOOL_SEARCH_INSTRUCTIONS</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>3.8</td>
+<td>5</td>
+<td>0</td>
+<td><code>getWebSearchPrompt</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>3.3</td>
+<td>1</td>
+<td>0</td>
+<td><code>CLAUDE_IN_CHROME_SKILL_HINT</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>3.0</td>
+<td>2</td>
+<td>1</td>
+<td><code>getDefaultEditDescription</code> (FileEditTool)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>2.9</td>
+<td>16</td>
+<td>2</td>
+<td><code>getCommitAndPRInstructions</code> (BashTool, 长版)</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2.8</td>
+<td>0</td>
+<td>1</td>
+<td><code>getEditionSection</code> (PowerShellTool)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>洞察</strong>：密度最高的 prompt 通常是<strong>短而精的指令片段</strong>。介绍 Claude Code 是什么的 <code>getSimpleIntroSection</code>（534 字符）只有 3 个规则就达到了 5.6/k 的密度——因为它直奔主题。</p>
+<hr />
+<h2 id="system-prompt-constantspromptsts">System Prompt 内部结构（constants/prompts.ts）</h2>
+<p><code>getSystemPrompt()</code> 是最重要的入口函数，组装 25+ 个 section：</p>
+<table>
+<thead>
+<tr>
+<th>Section 函数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getSimpleIntroSection</code></td>
+<td>"You are an interactive agent..."（角色定义）</td>
+</tr>
+<tr>
+<td><code>getSimpleSystemSection</code></td>
+<td>平台、shell、cwd、git 状态等环境信息</td>
+</tr>
+<tr>
+<td><code>getSimpleDoingTasksSection</code></td>
+<td>任务执行原则</td>
+</tr>
+<tr>
+<td><code>getActionsSection</code></td>
+<td><strong>执行高风险操作的护栏</strong></td>
+</tr>
+<tr>
+<td><code>getUsingYourToolsSection</code></td>
+<td>工具使用通用规则</td>
+</tr>
+<tr>
+<td><code>getAgentToolSection</code></td>
+<td>子 agent 使用指南</td>
+</tr>
+<tr>
+<td><code>getDiscoverSkillsGuidance</code></td>
+<td>Skill 发现机制</td>
+</tr>
+<tr>
+<td><code>getSessionSpecificGuidanceSection</code></td>
+<td>会话级指引</td>
+</tr>
+<tr>
+<td><code>getOutputEfficiencySection</code></td>
+<td><strong>沟通效率（怎么写给用户的文字）</strong></td>
+</tr>
+<tr>
+<td><code>getSimpleToneAndStyleSection</code></td>
+<td>语气和风格</td>
+</tr>
+<tr>
+<td><code>getOutputStyleSection</code></td>
+<td>用户配置的输出风格</td>
+</tr>
+<tr>
+<td><code>getLanguageSection</code></td>
+<td>语言偏好</td>
+</tr>
+<tr>
+<td><code>getMcpInstructionsSection</code></td>
+<td>MCP 工具使用</td>
+</tr>
+<tr>
+<td><code>getHooksSection</code></td>
+<td>Hook 系统说明</td>
+</tr>
+<tr>
+<td><code>getSystemRemindersSection</code></td>
+<td>system-reminder 标签语义</td>
+</tr>
+<tr>
+<td><code>getProactiveSection</code></td>
+<td>主动模式（KAIROS）</td>
+</tr>
+<tr>
+<td><code>getBriefSection</code></td>
+<td>简报功能</td>
+</tr>
+</tbody>
+</table>
+<h3 id="section">最重要的两个 section</h3>
+<h4 id="getactionssection2832"><code>getActionsSection</code>（2832 字符）— 操作安全护栏</h4>
+<p>完整内容值得细读：</p>
+<blockquote>
+<p>Carefully consider the <strong>reversibility</strong> and <strong>blast radius</strong> of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for actions that are hard to reverse, affect shared systems beyond your local environment, or could otherwise be risky or destructive, <strong>check with the user before proceeding</strong>.</p>
+<p>The cost of pausing to confirm is low, while the cost of an unwanted action (lost work, unintended messages sent, deleted branches) can be very high.</p>
+<p>Examples of risky actions:
+- Destructive operations: deleting files/branches, dropping database tables, killing processes, rm -rf, overwriting uncommitted changes
+- Hard-to-reverse: force-pushing, git reset --hard, amending published commits, removing dependencies
+- Visible to others: pushing code, creating PRs, sending Slack messages
+- Uploading to third-party tools: pastebins, gists (may be cached/indexed)</p>
+<p>When you encounter an obstacle, <strong>do not use destructive actions as a shortcut to simply make it go away</strong>. Try to identify root causes... If you discover unexpected state... investigate before deleting or overwriting, as it may represent the user's in-progress work.</p>
+<p><strong>measure twice, cut once.</strong></p>
+</blockquote>
+<p><strong>洞察</strong>：这一段定义了 Claude Code 的"风险意识框架"——把操作按 reversibility（可逆性）和 blast radius（影响范围）二维分类，对高风险操作要求显式确认。这不是简单的"小心点"，而是一个完整的决策框架。</p>
+<h4 id="getoutputefficiencysection2395"><code>getOutputEfficiencySection</code>（2395 字符）— 怎么和用户沟通</h4>
+<blockquote>
+<p>When sending user-facing text, you're writing for a person, not logging to a console. Assume users can't see most tool calls or thinking - only your text output...</p>
+<p>When making updates, assume the person has stepped away and lost the thread. They don't know codenames, abbreviations, or shorthand...</p>
+<p>Write user-facing text in <strong>flowing prose</strong> while eschewing fragments, excessive em dashes, symbols and notation...</p>
+<p>Only use tables when appropriate; for example to hold short enumerable facts (file names, line numbers, pass/fail), or communicate quantitative data. <strong>Don't pack explanatory reasoning into table cells</strong> -- explain before or after.</p>
+<p>What's most important is the reader understanding your output without mental overhead or follow-ups, not how terse you are. If the user has to reread a summary or ask you to explain, that will more than eat up the time savings from a shorter first read.</p>
+</blockquote>
+<p><strong>洞察</strong>：这段完全是写作指南，<strong>没有一个 IMPORTANT/MUST</strong>。Anthropic 用解释性的方式教 Claude 写作风格，因为风格是判断题不是规则题。这和 git 安全 prompt 的高强度命令式形成强烈对比。</p>
+<hr />
+<h2 id="tool-prompt">Tool Prompt 设计模式</h2>
+<h3 id="1readeditwrite">模式 1：纯描述（Read/Edit/Write 等基础工具）</h3>
+<div class="highlight"><pre><span></span><code>Reads a file from the local filesystem.
+Usage:
+- The file_path parameter must be an absolute path
+- By default, it reads up to 2000 lines starting from the beginning
+- ...
+</code></pre></div>
+
+<p>只描述参数和行为，不教"什么时候用"——因为读文件是基础操作，模型自己会判断。</p>
+<h3 id="2todowritetool">模式 2：带使用场景的指令（TodoWriteTool）</h3>
+<div class="highlight"><pre><span></span><code>## When to Use This Tool
+1. Complex multi-step tasks ...
+2. Non-trivial and complex tasks ...
+
+## When NOT to Use This Tool
+Skip when:
+1. There is only a single, straightforward task
+...
+
+## Examples
+&lt;example&gt;
+...
+&lt;reasoning&gt;
+...
+&lt;/reasoning&gt;
+&lt;/example&gt;
+</code></pre></div>
+
+<p>明确"用 vs 不用"，配合多个示例。这是教 Claude 在<strong>判断时机</strong>上对齐。</p>
+<h3 id="3bashtool-git">模式 3：安全协议（BashTool 的 git 部分）</h3>
+<div class="highlight"><pre><span></span><code>Git Safety Protocol:
+- NEVER ...
+- NEVER ...
+- CRITICAL: Always ...
+</code></pre></div>
+
+<p>高密度命令式，针对高风险操作。</p>
+<h3 id="4bashtool-commit">模式 4：流程模板（BashTool 的 commit 流程）</h3>
+<div class="highlight"><pre><span></span><code>1. Run the following bash commands in parallel:
+   - git status
+   - git diff
+   - git log
+2. Analyze all staged changes...
+3. Run the following commands in parallel:
+   - git add
+   - git commit
+   - git status (verify)
+</code></pre></div>
+
+<p>把一个完整工作流分步骤模板化。这是把"专家工作流"硬编码成 prompt。</p>
+<h3 id="5agenttool">模式 5：负面示例引导（AgentTool）</h3>
+<div class="highlight"><pre><span></span><code>- The agent&#39;s outputs should generally be trusted
+- Clearly tell the agent whether you expect it to write code or just to do research
+- If the user specifies that they want you to run agents &quot;in parallel&quot;, you MUST send a single message with multiple Agent tool use content blocks.
+</code></pre></div>
+
+<p>通过"反例"教学：用户说什么时该怎么做。</p>
+<hr />
+<h2 id="anthropic-prompt">Anthropic 的 Prompt 工程哲学（从代码中归纳）</h2>
+<h3 id="1">1. 命令式 &gt; 建议式（用于安全/正确性）</h3>
+<p><strong>选择 IMPORTANT/MUST/NEVER 而不是 should/please</strong> 当你需要可靠的行为约束。这是基于经验：LLM 对强命令式的响应明显更稳定。</p>
+<h3 id="2">2. 解释性 &gt; 命令式（用于风格/品味）</h3>
+<p>写作风格、沟通方式这类<strong>判断题</strong>用解释性语言。命令式语言会让模型死板地遵循规则，反而失去灵活性。</p>
+<h3 id="3-few-shot">3. Few-shot &gt; 抽象描述（用于判断时机）</h3>
+<p>教 Claude <strong>何时</strong>使用某工具时，提供 3-5 个完整示例比抽象规则更有效。TodoWriteTool 的 9k 字符 prompt 大部分是示例。</p>
+<h3 id="4">4. 把工作流模板化</h3>
+<p>复杂操作（如 git commit）不是依赖 Claude 自己想步骤，而是把整个流程作为模板写进 prompt。这降低了变异性，提高了可靠性。</p>
+<h3 id="5">5. 显式约束高风险操作</h3>
+<p>列出具体的"危险操作清单"（destructive/hard-to-reverse/visible-to-others）比泛泛的"小心点"有效得多。</p>
+<h3 id="6-example">6. 用 example 标签教学</h3>
+<p>XML 标签（<code>&lt;example&gt;</code>, <code>&lt;reasoning&gt;</code>）让 Claude 能区分"这是示例"和"这是当前任务"。</p>
+<h3 id="7">7. 把"为什么"也写进去</h3>
+<p>Git 安全 prompt 不只说"NEVER force push to main"，还解释 "warn the user if they request it"——给出上下文让 Claude 理解约束的边界。</p>
+<h3 id="8">8. 区分硬约束和软约束的明确语言</h3>
+<div class="highlight"><pre><span></span><code>NEVER X      ← 硬约束，零容忍
+You should Y ← 软约束，可以违反
+prefer Z     ← 倾向，模型自由判断
+</code></pre></div>
+
+<p>这种语言层级让模型知道每条规则的"权重"。</p>
+<hr />
+<h2 id="agent-prompt">实用启示：怎么写自己的 Agent Prompt</h2>
+<p>基于对 Claude Code prompt 的分析，给写自己 agent prompt 的人几点建议：</p>
+<h3 id="1_1">1. 区分场景用不同语气</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>用什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安全/正确性约束</td>
+<td>NEVER, MUST, CRITICAL, IMPORTANT</td>
+</tr>
+<tr>
+<td>风格/审美建议</td>
+<td>解释性长段落，用 should</td>
+</tr>
+<tr>
+<td>教使用时机</td>
+<td><code>&lt;example&gt;</code> + <code>&lt;reasoning&gt;</code> 配对</td>
+</tr>
+<tr>
+<td>复杂工作流</td>
+<td>分步骤模板</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2_1">2. 工具描述要包含"什么时候用"和"什么时候不用"</h3>
+<p>只描述"工具做什么"是不够的。模型需要知道何时调用、何时不调用。看 TodoWriteTool 的"When NOT to Use This Tool"部分。</p>
+<h3 id="3">3. 列出具体的反面操作</h3>
+<p>不要说"不要做危险的事"，而要说"不要 force-push、不要 reset --hard、不要 rm -rf"。具体清单远胜抽象类别。</p>
+<h3 id="4_1">4. 解释"为什么"</h3>
+<p>NEVER 后面跟一句"因为 X 会导致 Y"。模型理解了约束的原因，在边界情况下才能做出合理判断。</p>
+<h3 id="5_1">5. 主动告诉模型"什么时候停下来问用户"</h3>
+<p><code>getActionsSection</code> 的核心就是这一条。Agent 的失控通常不是因为不会做事，而是因为不会停。</p>
+<hr />
+<h2 id="_7">数据文件</h2>
+<p>完整提取的 prompt 文本和分析数据存储在 <code>reports/prompts/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>system/</code></td>
+<td>constants/prompts.ts 的 15 个 section</td>
+</tr>
+<tr>
+<td><code>tools/</code></td>
+<td>35 个工具的 prompt 文件（55 个 prompt 段）</td>
+</tr>
+<tr>
+<td><code>services/</code></td>
+<td>3 个服务级 prompt（compact、SessionMemory、MagicDocs）</td>
+</tr>
+<tr>
+<td><code>utils/</code></td>
+<td>4 个工具类 prompt（含 claudeInChrome）</td>
+</tr>
+<tr>
+<td><code>index.json</code></td>
+<td>全部 prompt 元数据</td>
+</tr>
+<tr>
+<td><code>stats.json</code></td>
+<td>提取阶段统计</td>
+</tr>
+<tr>
+<td><code>analysis.json</code></td>
+<td>关键词分析结果 + 排行榜</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">查询示例</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 看 BashTool 的所有 prompt</span>
+cat<span class="w"> </span>reports/prompts/tools/BashTool__prompt.txt
+
+<span class="c1"># 找最严的安全 prompt</span>
+jq<span class="w"> </span><span class="s1">&#39;.topByHardRules[:5]&#39;</span><span class="w"> </span>reports/prompts/analysis.json
+
+<span class="c1"># 找指令密度最高的</span>
+jq<span class="w"> </span><span class="s1">&#39;.topByDensity[:5]&#39;</span><span class="w"> </span>reports/prompts/analysis.json
+</code></pre></div>
+
+<hr />
+<h2 id="_9">附录：可复现的命令</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. 提取</span>
+node<span class="w"> </span>tools/ast-analysis/extract-prompts.mjs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/path/to/free-code45<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/tmp/prompts-output
+
+<span class="c1"># 2. 分析</span>
+node<span class="w"> </span>tools/ast-analysis/analyze-prompts.mjs<span class="w"> </span>/tmp/prompts-output
+
+<span class="c1"># 3. 阅读</span>
+ls<span class="w"> </span>/tmp/prompts-output/tools/
+cat<span class="w"> </span>/tmp/prompts-output/tools/BashTool__prompt.txt
+</code></pre></div>
+
+<p>依赖：<code>npm install ts-morph</code></p>
+</div>
+</body>
+</html>
