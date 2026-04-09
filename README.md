@@ -16,10 +16,14 @@ memstudy/
 │   │   ├── context-focused.svg/dot    #   核心依赖图（手工精选，24 节点）
 │   │   └── layers-context/            #   分层依赖图（BFS 3 层，156 文件）
 │   │
-│   └── cot/                           # CoT / Extended Thinking 模块
-│       ├── cot-overview.svg/dot       #   三层架构全景图（手工精选）
-│       ├── layers-thinking/           #   thinking.ts 分层图（3 层，117 文件）
-│       └── layers-effort/             #   effort.ts 分层图（2 层，59 文件）
+│   ├── cot/                           # CoT / Extended Thinking 模块
+│   │   ├── cot-overview.svg/dot       #   三层架构全景图（手工精选）
+│   │   ├── layers-thinking/           #   thinking.ts 分层图（3 层，117 文件）
+│   │   └── layers-effort/             #   effort.ts 分层图（2 层，59 文件）
+│   │
+│   └── agent-loop/                    # Agent Loop 协调中枢
+│       ├── agent-loop-overview.svg    #   完整数据流图（10 步编号路径）
+│       └── layers-query/              #   query.ts 分层图（2 层，269 文件）
 │
 ├── tools/                             # 可复用工具脚本
 │   ├── layered-deps.py                # 分层依赖图生成器（BFS + Graphviz）

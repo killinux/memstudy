@@ -1,0 +1,114 @@
+digraph agent_loop {
+  rankdir=TB;
+  node [shape=box, style=filled, fontsize=9, fontname="Helvetica"];
+  label="Agent Loop Architecture (free-code45)";
+  labelloc=t; fontsize=14;
+  compound=true;
+
+  // ═══ Core: Main Loop ═══
+  subgraph cluster_loop {
+    label="Main Loop (query.ts)";
+    style=filled; color="#e0d0d0"; fillcolor="#fae8e8";
+
+    "query.ts::queryLoop()" [fillcolor="#ff9999", label="queryLoop()\n[query.ts:241]\nasync generator\nwhile(true) { ... }"];
+    "query.ts::state" [fillcolor="#ffb3b3", label="State\nmessages[]\nturnCount\nabortController"];
+    "query.ts::stopConditions" [fillcolor="#ffb3b3", label="Stop Conditions\n[query.ts:1062,1357,1705]\n- !needsFollowUp\n- maxTurns reached\n- aborted"];
+  }
+
+  // ═══ API Layer ═══
+  subgraph cluster_api {
+    label="API Layer (services/api/)";
+    style=filled; color="#d0d0e0"; fillcolor="#e8e8fa";
+
+    "claude.ts::queryModelWithStreaming" [fillcolor="#99ccff", label="queryModelWithStreaming()\n[claude.ts]\nbuild request + stream"];
+    "claude.ts::streamHandler" [fillcolor="#b3d9ff", label="Stream Handler\n[claude.ts:2020-2170]\ncontent_block_start\nthinking_delta\ntool_use block"];
+    "normalizeMessages" [fillcolor="#b3d9ff", label="normalizeMessagesForAPI()\n[utils/messages.ts]\nformat for API"];
+  }
+
+  // ═══ Tool Execution ═══
+  subgraph cluster_tools {
+    label="Tool Execution (services/tools/)";
+    style=filled; color="#d0e0d0"; fillcolor="#e8fae8";
+
+    "StreamingToolExecutor" [fillcolor="#99ff99", label="StreamingToolExecutor\n[StreamingToolExecutor.ts]\naddTool() / processQueue()\nconcurrent vs serial"];
+    "toolOrchestration" [fillcolor="#b3ffb3", label="runTools()\n[toolOrchestration.ts:19]\nruntTools Concurrently\nrunToolsSerially"];
+    "toolExecution" [fillcolor="#b3ffb3", label="runToolUse()\n[toolExecution.ts]\ntool.call() + error handling"];
+    "useCanUseTool" [fillcolor="#b3ffb3", label="canUseTool()\n[useCanUseTool.tsx:28]\nallow/deny/ask"];
+  }
+
+  // ═══ Tool Registry ═══
+  subgraph cluster_registry {
+    label="Tool Registry (tools/)";
+    style=filled; color="#e0e0d0"; fillcolor="#fafae8";
+
+    "Tool.ts" [fillcolor="#ffff99", label="Tool.ts\ninterface Tool\nZod schema + call()"];
+    "BashTool" [fillcolor="#ffffb3", label="BashTool"];
+    "FileReadTool" [fillcolor="#ffffb3", label="FileReadTool"];
+    "FileEditTool" [fillcolor="#ffffb3", label="FileEditTool"];
+    "GrepTool" [fillcolor="#ffffb3", label="GrepTool"];
+    "AgentTool" [fillcolor="#ffffb3", label="AgentTool\n(sub-agent fork)"];
+    "OtherTools" [fillcolor="#ffffb3", label="... 20+ tools\n(Glob, Write, WebFetch,\nWebSearch, ...)"];
+  }
+
+  // ═══ Supporting Systems ═══
+  subgraph cluster_support {
+    label="Supporting Systems";
+    style=filled; color="#e0d0e0"; fillcolor="#fae8fa";
+
+    "context.ts" [fillcolor="#cc99ff", label="context.ts\ngit status\nCLAUDE.md"];
+    "compact/" [fillcolor="#cc99ff", label="compact/\nautoCompact\nmicroCompact"];
+    "thinking.ts" [fillcolor="#cc99ff", label="thinking.ts\nThinkingConfig"];
+    "effort.ts" [fillcolor="#cc99ff", label="effort.ts\nEffort levels"];
+  }
+
+  // ═══ External ═══
+  "Claude API" [shape=cylinder, fillcolor="#f0f0f0", label="Claude API\n(external)"];
+  "User" [shape=ellipse, fillcolor="#f0f0f0"];
+  "UI/Ink" [shape=ellipse, fillcolor="#f0f0f0", label="UI / Ink\n(yield events)"];
+
+  // ═══ Edges: Data Flow ═══
+
+  "User" -> "query.ts::queryLoop()" [label=" prompt + images"];
+  "query.ts::queryLoop()" -> "query.ts::state" [label=" init", style=dotted];
+
+  // Loop → API
+  "query.ts::queryLoop()" -> "normalizeMessages" [label=" 1. normalize"];
+  "normalizeMessages" -> "claude.ts::queryModelWithStreaming" [label=" 2. build request"];
+  "claude.ts::queryModelWithStreaming" -> "context.ts" [label=" system ctx", style=dashed];
+  "claude.ts::queryModelWithStreaming" -> "thinking.ts" [label=" thinking param", style=dashed];
+  "claude.ts::queryModelWithStreaming" -> "effort.ts" [label=" effort param", style=dashed];
+  "claude.ts::queryModelWithStreaming" -> "Tool.ts" [label=" tool schemas", style=dashed];
+  "claude.ts::queryModelWithStreaming" -> "Claude API" [label=" 3. HTTP POST"];
+
+  // API → Loop (streaming response)
+  "Claude API" -> "claude.ts::streamHandler" [label=" 4. stream events"];
+  "claude.ts::streamHandler" -> "query.ts::queryLoop()" [label=" 5. yield events"];
+
+  // Tool execution path
+  "query.ts::queryLoop()" -> "StreamingToolExecutor" [label=" 6. tool_use block\n   arrived"];
+  "StreamingToolExecutor" -> "toolOrchestration" [label=" or fallback", style=dashed];
+  "StreamingToolExecutor" -> "useCanUseTool" [label=" 7. permission"];
+  "StreamingToolExecutor" -> "toolExecution" [label=" 8. execute"];
+  "toolOrchestration" -> "toolExecution" [label=" delegates"];
+  "toolExecution" -> "Tool.ts" [label=" dispatch"];
+  "Tool.ts" -> "BashTool" [style=dashed];
+  "Tool.ts" -> "FileReadTool" [style=dashed];
+  "Tool.ts" -> "FileEditTool" [style=dashed];
+  "Tool.ts" -> "GrepTool" [style=dashed];
+  "Tool.ts" -> "AgentTool" [style=dashed];
+  "Tool.ts" -> "OtherTools" [style=dashed];
+
+  // Results back
+  "toolExecution" -> "query.ts::queryLoop()" [label=" 9. tool_result\n   (user msg)", color="#006600"];
+
+  // Loop continuation
+  "query.ts::queryLoop()" -> "query.ts::stopConditions" [label=" 10. check"];
+  "query.ts::stopConditions" -> "query.ts::state" [label=" continue:\n update messages", color="#0066ff"];
+  "query.ts::stopConditions" -> "UI/Ink" [label=" stop:\n return", color="#990000"];
+
+  // Compaction (cross-cutting)
+  "query.ts::queryLoop()" -> "compact/" [label=" token > threshold", style=dotted, color="#666666"];
+
+  // UI output
+  "query.ts::queryLoop()" -> "UI/Ink" [label=" yield events\n (streaming)", color="#0099cc"];
+}
