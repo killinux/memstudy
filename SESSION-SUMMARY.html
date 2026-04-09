@@ -147,10 +147,15 @@
 │   │   ├── cot-overview.svg               # 三层架构图
 │   │   ├── layers-thinking/               # thinking.ts 分层（117 文件）
 │   │   └── layers-effort/                 # effort.ts 分层（59 文件）
-│   └── agent-loop/                        # Agent Loop 协调中枢
+│   ├── agent-loop/                        # Agent Loop 协调中枢
+│   │   ├── README.md
+│   │   ├── agent-loop-overview.svg        # 数据流图（10 步编号）
+│   │   └── layers-query/                  # query.ts 分层（269 文件）
+│   └── tools/                             # Tool 系统（核心抽象，最大）
 │       ├── README.md
-│       ├── agent-loop-overview.svg        # 数据流图（10 步编号）
-│       └── layers-query/                  # query.ts 分层（269 文件）
+│       ├── tool-system-overview.svg       # 4 层架构图（接口/注册/分类/执行）
+│       ├── tool-categories.svg            # 42 工具按 13 类分组
+│       └── layers-tool/                   # Tool.ts 分层（533 文件，3 层）
 │
 ├── tools/                                 # 可复用工具脚本
 │   ├── layered-deps.py                    # BFS 分层依赖图生成器
@@ -472,6 +477,16 @@
 <td><strong>subagent_type 不继承 leader 权限</strong>（避免意外受限）</td>
 <td>codebase-insights.md</td>
 </tr>
+<tr>
+<td>11</td>
+<td><strong>buildTool() 工厂 + fail-closed 默认值</strong>（isConcurrencySafe/isReadOnly 默认 false）</td>
+<td>graphs/tools/README.md</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>工具注册是命令式的</strong>（运行时根据 feature flag 动态决定工具集）</td>
+<td>graphs/tools/README.md</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -603,6 +618,56 @@
 </tbody>
 </table>
 <p>复杂度集中在三类<strong>本质复杂</strong>的领域：解析器（32%）、安全验证（23%）、UI 渲染（16%）。</p>
+<h3 id="top-5layer-123">模块依赖广度 Top 5（Layer 1+2+3 总数）</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>Layer 1</th>
+<th>Layer 2</th>
+<th>Layer 3</th>
+<th>总计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tool.ts</strong> ⭐</td>
+<td>19</td>
+<td>187</td>
+<td>326</td>
+<td><strong>533</strong></td>
+</tr>
+<tr>
+<td>query.ts</td>
+<td>41</td>
+<td>227</td>
+<td>-</td>
+<td>269</td>
+</tr>
+<tr>
+<td>context.ts</td>
+<td>9</td>
+<td>41</td>
+<td>105</td>
+<td>156</td>
+</tr>
+<tr>
+<td>thinking.ts</td>
+<td>6</td>
+<td>41</td>
+<td>69</td>
+<td>117</td>
+</tr>
+<tr>
+<td>effort.ts</td>
+<td>8</td>
+<td>50</td>
+<td>-</td>
+<td>59</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tool.ts 是最大的依赖中枢</strong>——3 层展开占项目 28%。原因是 ToolUseContext 类型有 70+ 个字段，拉入了整个项目的类型系统。</p>
 <h3 id="prompt-top-5">最长 Prompt Top 5</h3>
 <table>
 <thead>
@@ -643,75 +708,112 @@
 <hr />
 <h2 id="_12">尚未验证的方向</h2>
 <p>按价值排序的待办：</p>
-<h3 id="_13">🥇 高价值</h3>
+<h3 id="graphs">🥇 高价值（核心子系统，应该补全 graphs/）</h3>
+<h4 id="1-utilspermissions">1. 权限系统（utils/permissions/）</h4>
+<p><strong>为什么必须有</strong>：
+- 之前列为 P0 但没做
+- bashPermissions.ts 复杂度爆表（10 个高 CCN 函数）
+- 是 Claude Code 安全边界的核心，市面上做得最严的 agent 框架之一</p>
+<p><strong>关键文件</strong>：
+- <code>utils/permissions/permissions.ts</code> — 规则引擎
+- <code>utils/permissions/PermissionRule.ts</code> — 规则匹配
+- <code>utils/permissions/yoloClassifier.ts</code> — LLM 风险分类
+- <code>utils/permissions/filesystem.ts</code> — 路径权限（symlink 防御）
+- <code>tools/BashTool/bashPermissions.ts</code> — Bash 命令分析
+- <code>hooks/useCanUseTool.tsx</code> — 入口</p>
+<p><strong>应该产出</strong>：
+- <code>docs/permission-system.md</code> — 权限决策流程深度文档
+- <code>graphs/permissions/permission-decision-flow.svg</code> — allow/deny/ask 决策树
+- <code>graphs/permissions/permission-overview.svg</code> — 整体架构
+- <code>graphs/permissions/layers-permissions/</code> — 分层依赖</p>
+<h4 id="2-bootstrap">2. Bootstrap / 启动流程</h4>
+<p><strong>为什么必须有</strong>：
+- 我们分析了主循环但<strong>没分析 main.tsx 怎么启动到主循环</strong>
+- bootstrap/state.ts 215 个 export，是绝对的"上帝模块"，但我们从没专门画过
+- 启动流程是任何项目的"骨架"</p>
+<p><strong>关键文件</strong>：
+- <code>entrypoints/cli.tsx</code> — 入口
+- <code>main.tsx</code> — 主初始化（4.7k 行）
+- <code>bootstrap/state.ts</code> — 全局状态枢纽
+- <code>setup.ts</code> — 环境设置</p>
+<p><strong>应该产出</strong>：
+- <code>docs/bootstrap-flow.md</code>
+- <code>graphs/bootstrap/startup-flow.svg</code> — cli → setup → main → REPL → queryLoop
+- <code>graphs/bootstrap/layers-state/</code> — bootstrap/state.ts 分层</p>
+<h4 id="3-agent-fork-toolsagenttool-coordinator">3. 子 Agent / Fork 机制（tools/AgentTool/ + coordinator/）</h4>
+<p><strong>为什么值得</strong>：
+- Claude Code 最有创意的设计之一（OpenAI Codex 没有这个）
+- 涉及并发、缓存共享、上下文隔离等多个有意思的工程问题
+- 之前在 cot 文档里提到了 fork 继承 thinking config，但没单独深入</p>
+<p><strong>关键文件</strong>：
+- <code>tools/AgentTool/AgentTool.tsx</code>
+- <code>tools/AgentTool/runAgent.ts</code>
+- <code>utils/forkedAgent.ts</code>
+- <code>coordinator/coordinatorMode.ts</code>
+- <code>coordinator/workerAgent.ts</code></p>
+<p><strong>应该产出</strong>：
+- <code>docs/sub-agent-fork.md</code>
+- <code>graphs/agent-fork/agent-fork-mechanism.svg</code> — fork vs spawn 对比
+- <code>graphs/agent-fork/coordinator-overview.svg</code> — 多 worker 协调</p>
+<h4 id="4-bashtool">4. BashTool 内部实现</h4>
+<p><strong>为什么值得</strong>：
+- BashTool 是最复杂的工具（lizard 显示 bashPermissions.ts 有 10 个高复杂度函数）
+- bashParser.ts 的 <code>peek</code> 函数是项目复杂度第一（CCN 229）
+- 是"代码到行为"的完整闭环案例</p>
+<p><strong>关键文件</strong>：
+- <code>tools/BashTool/BashTool.tsx</code>
+- <code>tools/BashTool/bashPermissions.ts</code>
+- <code>utils/bash/bashParser.ts</code>
+- <code>utils/bash/commands.ts</code>
+- <code>tools/BashTool/bashSecurity.ts</code></p>
+<h3 id="_13">🥈 中价值（独立子系统）</h3>
 <table>
 <thead>
 <tr>
 <th>#</th>
 <th>主题</th>
 <th>关键文件</th>
-<th>预期产出</th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>1</td>
-<td><strong>权限系统深入</strong></td>
-<td><code>utils/permissions/</code>, <code>BashTool/bashPermissions.ts</code>, <code>yoloClassifier.ts</code></td>
-<td>安全决策树 + LLM 风险分类</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>子 Agent / Fork 机制</strong></td>
-<td><code>tools/AgentTool/</code>, <code>coordinator/</code>, <code>forkedAgent.ts</code></td>
-<td>多 agent 协调架构</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>BashTool 内部实现</strong></td>
-<td><code>tools/BashTool/</code>, <code>utils/bash/bashParser.ts</code></td>
-<td>命令解析 + 安全 + 执行的完整闭环</td>
-</tr>
-</tbody>
-</table>
-<h3 id="_14">🥈 中价值</h3>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>主题</th>
-<th>关键文件</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>4</td>
-<td><strong>Skills 系统</strong></td>
-<td><code>skills/</code>, <code>services/skillSearch/</code></td>
-</tr>
 <tr>
 <td>5</td>
+<td><strong>Compact 系统</strong>（独立画图）</td>
+<td><code>services/compact/compact.ts</code>, <code>microCompact.ts</code>, <code>autoCompact.ts</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Command 系统</strong>（73 个命令的注册和调度）</td>
+<td><code>commands.ts</code>, <code>commands/*</code></td>
+</tr>
+<tr>
+<td>7</td>
 <td><strong>MCP 集成</strong></td>
 <td><code>services/mcp/</code>, MCP 工具</td>
 </tr>
 <tr>
-<td>6</td>
+<td>8</td>
+<td><strong>Skills 系统</strong></td>
+<td><code>skills/</code>, <code>services/skillSearch/</code></td>
+</tr>
+<tr>
+<td>9</td>
 <td><strong>Hooks 扩展机制</strong></td>
 <td><code>utils/hooks.ts</code>, <code>utils/hooks/*</code></td>
 </tr>
 <tr>
-<td>7</td>
+<td>10</td>
 <td><strong>Prompt Cache 机制</strong></td>
 <td><code>services/api/promptCacheBreakDetection.ts</code>, <code>cachedMicrocompact.ts</code></td>
 </tr>
 <tr>
-<td>8</td>
+<td>11</td>
 <td><strong>多 Provider 支持</strong></td>
 <td><code>services/api/claude.ts</code>, <code>model/providers.ts</code></td>
 </tr>
 </tbody>
 </table>
-<h3 id="_15">🥉 锦上添花</h3>
+<h3 id="_14">🥉 锦上添花</h3>
 <table>
 <thead>
 <tr>
@@ -721,24 +823,44 @@
 </thead>
 <tbody>
 <tr>
-<td>9</td>
+<td>12</td>
 <td>全景架构总结文档（把所有零散发现织成一张网）</td>
 </tr>
 <tr>
-<td>10</td>
+<td>13</td>
 <td>与 Aider/Cursor/Codex CLI 的横向对比</td>
 </tr>
 <tr>
-<td>11</td>
+<td>14</td>
 <td>Memory 系统（memdir）</td>
 </tr>
 <tr>
-<td>12</td>
-<td>流式 UI 渲染（Ink）</td>
+<td>15</td>
+<td>流式 UI 渲染（Ink + components/）</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Session 存储（utils/sessionStorage.ts，IMPORTANT 注释最多）</td>
 </tr>
 </tbody>
 </table>
-<h3 id="_16">❌ 不推荐做</h3>
+<h3 id="graphs_1">📊 graphs/ 目录补全计划</h3>
+<div class="highlight"><pre><span></span><code>graphs/
+├── context/         ✅ 已完成
+├── cot/             ✅ 已完成
+├── tools/           ✅ 已完成（最新）
+├── agent-loop/      ✅ 已完成
+│
+├── permissions/     ⬜ 待补 (P0 - 安全核心)
+├── bootstrap/       ⬜ 待补 (P0 - 启动骨架)
+├── agent-fork/      ⬜ 待补 (P1 - 最有创意的设计)
+│
+├── compact/         ⬜ 待补 (P2 - 独立子系统)
+└── commands/        ⬜ 待补 (P2 - 73 个命令)
+</code></pre></div>
+
+<p>补全这 5 个，graphs/ 就完整覆盖了 Claude Code 所有核心子系统。</p>
+<h3 id="_15">❌ 不推荐做</h3>
 <table>
 <thead>
 <tr>
@@ -771,7 +893,7 @@
 </tbody>
 </table>
 <hr />
-<h2 id="_17">复用脚本</h2>
+<h2 id="_16">复用脚本</h2>
 <p>所有脚本都在 <code>tools/</code> 下，可直接用于其他 TypeScript 项目：</p>
 <h3 id="1">1. 分层依赖图</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># 第一步：用 madge 导出 JSON</span>
@@ -814,21 +936,22 @@ grep<span class="w"> </span>-rn<span class="w"> </span><span class="s2">&quot;DO
 </code></pre></div>
 
 <hr />
-<h2 id="_18">下次接续指南</h2>
+<h2 id="_17">下次接续指南</h2>
 <h3 id="30">如果只有 30 分钟，看什么</h3>
 <ol>
 <li><strong>本文档</strong>（5 分钟）— 唤起记忆</li>
 <li><strong><code>docs/agent-loop-implementation.md</code></strong> 的"代码 vs 模型边界"章节（10 分钟）— 核心抽象</li>
 <li><strong><code>docs/prompt-analysis.md</code></strong> 的"5 种 prompt 设计模式"（10 分钟）— 实用启示</li>
-<li>浏览 <code>graphs/agent-loop/agent-loop-overview.svg</code>（5 分钟）— 直观架构</li>
+<li>浏览 <code>graphs/agent-loop/agent-loop-overview.svg</code> + <code>graphs/tools/tool-system-overview.svg</code>（5 分钟）— 直观架构</li>
 </ol>
-<h3 id="_19">如果有半天，做什么</h3>
-<p><strong>首选：权限系统深入</strong>（之前列为 P0）</p>
+<h3 id="_18">如果有半天，做什么</h3>
+<p><strong>首选：权限系统深入</strong>（P0，graphs/ 还缺）</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 起步代码点</span>
-src/hooks/useCanUseTool.tsx<span class="w">          </span><span class="c1"># 入口</span>
-src/utils/permissions/permissions.ts<span class="w">  </span><span class="c1"># 规则引擎</span>
-src/utils/permissions/yoloClassifier.ts<span class="w">  </span><span class="c1"># LLM 风险分类</span>
-src/tools/BashTool/bashPermissions.ts<span class="w">    </span><span class="c1"># Bash 命令分析（CCN 极高）</span>
+src/hooks/useCanUseTool.tsx<span class="w">               </span><span class="c1"># 入口</span>
+src/utils/permissions/permissions.ts<span class="w">      </span><span class="c1"># 规则引擎</span>
+src/utils/permissions/yoloClassifier.ts<span class="w">   </span><span class="c1"># LLM 风险分类</span>
+src/utils/permissions/filesystem.ts<span class="w">       </span><span class="c1"># 路径权限 + symlink 防御</span>
+src/tools/BashTool/bashPermissions.ts<span class="w">     </span><span class="c1"># Bash 命令分析（CCN 极高）</span>
 </code></pre></div>
 
 <p><strong>做什么</strong>：
@@ -836,15 +959,27 @@ src/tools/BashTool/bashPermissions.ts<span class="w">    </span><span class="c1"
 2. 解读 yoloClassifier 的 LLM 风险判断
 3. 理解 isDangerousRemovalRawPath 87 个分支的意图
 4. 写一份 <code>docs/permission-system.md</code>
-5. 生成 <code>graphs/permissions/</code> 依赖图</p>
-<h3 id="_20">如果有一天，做什么</h3>
+5. 生成 <code>graphs/permissions/</code>：
+   - permission-decision-flow.svg（手工决策树）
+   - permission-overview.svg（架构总览）
+   - layers-permissions/（filesystem.ts 分层）</p>
+<p><strong>备选：Bootstrap / 启动流程</strong>（P0，graphs/ 还缺）</p>
+<div class="highlight"><pre><span></span><code>src/entrypoints/cli.tsx<span class="w">                   </span><span class="c1"># 入口</span>
+src/main.tsx<span class="w">                              </span><span class="c1"># 4.7k 行的初始化</span>
+src/bootstrap/state.ts<span class="w">                    </span><span class="c1"># 215 export 的状态枢纽</span>
+src/setup.ts<span class="w">                              </span><span class="c1"># 环境设置</span>
+</code></pre></div>
+
+<p><strong>产出</strong>：<code>docs/bootstrap-flow.md</code> + <code>graphs/bootstrap/</code></p>
+<h3 id="_19">如果有一天，做什么</h3>
 <p><strong>做"Tool 内部实现深度系列"</strong>：</p>
 <p>挑 3 个代表性工具各写一篇深度文档：
 - BashTool（最复杂）
 - FileEditTool（最常用）
-- AgentTool（最有创意）</p>
+- AgentTool（最有创意，对应"子 Agent / Fork 机制"P0）</p>
 <p>每篇按"prompt → 代码实现 → 与 agent loop 的交互"三层组织。</p>
-<h3 id="_21">思维框架（写新文档时用）</h3>
+<p><strong>或者：补全 graphs/ 的 5 个待办</strong>（permissions / bootstrap / agent-fork / compact / commands）</p>
+<h3 id="_20">思维框架（写新文档时用）</h3>
 <p>每个子系统按这个模板分析：</p>
 <div class="highlight"><pre><span></span><code>1. 在 prompt 里被怎么描述？     → reports/prompts/
 2. 入口代码在哪？               → grep + Read
@@ -856,7 +991,7 @@ src/tools/BashTool/bashPermissions.ts<span class="w">    </span><span class="c1"
 </code></pre></div>
 
 <hr />
-<h2 id="_22">关键洞察备忘</h2>
+<h2 id="_21">关键洞察备忘</h2>
 <h3 id="1-claude">1. "Claude 看图就知道怎么做"的真相</h3>
 <p>不是任何一份文档单独能解释，而是三层共同作用：
 - <strong>模型权重</strong>：视觉理解 + 领域知识（API 服务端，看不见）

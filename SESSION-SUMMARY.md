@@ -44,10 +44,15 @@ memstudy/
 │   │   ├── cot-overview.svg               # 三层架构图
 │   │   ├── layers-thinking/               # thinking.ts 分层（117 文件）
 │   │   └── layers-effort/                 # effort.ts 分层（59 文件）
-│   └── agent-loop/                        # Agent Loop 协调中枢
+│   ├── agent-loop/                        # Agent Loop 协调中枢
+│   │   ├── README.md
+│   │   ├── agent-loop-overview.svg        # 数据流图（10 步编号）
+│   │   └── layers-query/                  # query.ts 分层（269 文件）
+│   └── tools/                             # Tool 系统（核心抽象，最大）
 │       ├── README.md
-│       ├── agent-loop-overview.svg        # 数据流图（10 步编号）
-│       └── layers-query/                  # query.ts 分层（269 文件）
+│       ├── tool-system-overview.svg       # 4 层架构图（接口/注册/分类/执行）
+│       ├── tool-categories.svg            # 42 工具按 13 类分组
+│       └── layers-tool/                   # Tool.ts 分层（533 文件，3 层）
 │
 ├── tools/                                 # 可复用工具脚本
 │   ├── layered-deps.py                    # BFS 分层依赖图生成器
@@ -206,6 +211,8 @@ memstudy/
 | 8 | **命令式 vs 解释式分场景**（安全用 NEVER，风格用解释） | prompt-analysis.md |
 | 9 | **子 agent 的 fork vs 普通分支**（fork 继承 thinking config 命中 cache） | cot-thinking-design.md |
 | 10 | **subagent_type 不继承 leader 权限**（避免意外受限） | codebase-insights.md |
+| 11 | **buildTool() 工厂 + fail-closed 默认值**（isConcurrencySafe/isReadOnly 默认 false） | graphs/tools/README.md |
+| 12 | **工具注册是命令式的**（运行时根据 feature flag 动态决定工具集） | graphs/tools/README.md |
 
 ---
 
@@ -246,6 +253,18 @@ memstudy/
 
 复杂度集中在三类**本质复杂**的领域：解析器（32%）、安全验证（23%）、UI 渲染（16%）。
 
+### 模块依赖广度 Top 5（Layer 1+2+3 总数）
+
+| 模块 | Layer 1 | Layer 2 | Layer 3 | 总计 |
+|---|---|---|---|---|
+| **Tool.ts** ⭐ | 19 | 187 | 326 | **533** |
+| query.ts | 41 | 227 | - | 269 |
+| context.ts | 9 | 41 | 105 | 156 |
+| thinking.ts | 6 | 41 | 69 | 117 |
+| effort.ts | 8 | 50 | - | 59 |
+
+**Tool.ts 是最大的依赖中枢**——3 层展开占项目 28%。原因是 ToolUseContext 类型有 70+ 个字段，拉入了整个项目的类型系统。
+
 ### 最长 Prompt Top 5
 
 | Prompt | 字符数 | 备注 |
@@ -262,32 +281,120 @@ memstudy/
 
 按价值排序的待办：
 
-### 🥇 高价值
+### 🥇 高价值（核心子系统，应该补全 graphs/）
 
-| # | 主题 | 关键文件 | 预期产出 |
-|---|---|---|---|
-| 1 | **权限系统深入** | `utils/permissions/`, `BashTool/bashPermissions.ts`, `yoloClassifier.ts` | 安全决策树 + LLM 风险分类 |
-| 2 | **子 Agent / Fork 机制** | `tools/AgentTool/`, `coordinator/`, `forkedAgent.ts` | 多 agent 协调架构 |
-| 3 | **BashTool 内部实现** | `tools/BashTool/`, `utils/bash/bashParser.ts` | 命令解析 + 安全 + 执行的完整闭环 |
+#### 1. 权限系统（utils/permissions/）
 
-### 🥈 中价值
+**为什么必须有**：
+- 之前列为 P0 但没做
+- bashPermissions.ts 复杂度爆表（10 个高 CCN 函数）
+- 是 Claude Code 安全边界的核心，市面上做得最严的 agent 框架之一
+
+**关键文件**：
+- `utils/permissions/permissions.ts` — 规则引擎
+- `utils/permissions/PermissionRule.ts` — 规则匹配
+- `utils/permissions/yoloClassifier.ts` — LLM 风险分类
+- `utils/permissions/filesystem.ts` — 路径权限（symlink 防御）
+- `tools/BashTool/bashPermissions.ts` — Bash 命令分析
+- `hooks/useCanUseTool.tsx` — 入口
+
+**应该产出**：
+- `docs/permission-system.md` — 权限决策流程深度文档
+- `graphs/permissions/permission-decision-flow.svg` — allow/deny/ask 决策树
+- `graphs/permissions/permission-overview.svg` — 整体架构
+- `graphs/permissions/layers-permissions/` — 分层依赖
+
+#### 2. Bootstrap / 启动流程
+
+**为什么必须有**：
+- 我们分析了主循环但**没分析 main.tsx 怎么启动到主循环**
+- bootstrap/state.ts 215 个 export，是绝对的"上帝模块"，但我们从没专门画过
+- 启动流程是任何项目的"骨架"
+
+**关键文件**：
+- `entrypoints/cli.tsx` — 入口
+- `main.tsx` — 主初始化（4.7k 行）
+- `bootstrap/state.ts` — 全局状态枢纽
+- `setup.ts` — 环境设置
+
+**应该产出**：
+- `docs/bootstrap-flow.md`
+- `graphs/bootstrap/startup-flow.svg` — cli → setup → main → REPL → queryLoop
+- `graphs/bootstrap/layers-state/` — bootstrap/state.ts 分层
+
+#### 3. 子 Agent / Fork 机制（tools/AgentTool/ + coordinator/）
+
+**为什么值得**：
+- Claude Code 最有创意的设计之一（OpenAI Codex 没有这个）
+- 涉及并发、缓存共享、上下文隔离等多个有意思的工程问题
+- 之前在 cot 文档里提到了 fork 继承 thinking config，但没单独深入
+
+**关键文件**：
+- `tools/AgentTool/AgentTool.tsx`
+- `tools/AgentTool/runAgent.ts`
+- `utils/forkedAgent.ts`
+- `coordinator/coordinatorMode.ts`
+- `coordinator/workerAgent.ts`
+
+**应该产出**：
+- `docs/sub-agent-fork.md`
+- `graphs/agent-fork/agent-fork-mechanism.svg` — fork vs spawn 对比
+- `graphs/agent-fork/coordinator-overview.svg` — 多 worker 协调
+
+#### 4. BashTool 内部实现
+
+**为什么值得**：
+- BashTool 是最复杂的工具（lizard 显示 bashPermissions.ts 有 10 个高复杂度函数）
+- bashParser.ts 的 `peek` 函数是项目复杂度第一（CCN 229）
+- 是"代码到行为"的完整闭环案例
+
+**关键文件**：
+- `tools/BashTool/BashTool.tsx`
+- `tools/BashTool/bashPermissions.ts`
+- `utils/bash/bashParser.ts`
+- `utils/bash/commands.ts`
+- `tools/BashTool/bashSecurity.ts`
+
+### 🥈 中价值（独立子系统）
 
 | # | 主题 | 关键文件 |
 |---|---|---|
-| 4 | **Skills 系统** | `skills/`, `services/skillSearch/` |
-| 5 | **MCP 集成** | `services/mcp/`, MCP 工具 |
-| 6 | **Hooks 扩展机制** | `utils/hooks.ts`, `utils/hooks/*` |
-| 7 | **Prompt Cache 机制** | `services/api/promptCacheBreakDetection.ts`, `cachedMicrocompact.ts` |
-| 8 | **多 Provider 支持** | `services/api/claude.ts`, `model/providers.ts` |
+| 5 | **Compact 系统**（独立画图） | `services/compact/compact.ts`, `microCompact.ts`, `autoCompact.ts` |
+| 6 | **Command 系统**（73 个命令的注册和调度） | `commands.ts`, `commands/*` |
+| 7 | **MCP 集成** | `services/mcp/`, MCP 工具 |
+| 8 | **Skills 系统** | `skills/`, `services/skillSearch/` |
+| 9 | **Hooks 扩展机制** | `utils/hooks.ts`, `utils/hooks/*` |
+| 10 | **Prompt Cache 机制** | `services/api/promptCacheBreakDetection.ts`, `cachedMicrocompact.ts` |
+| 11 | **多 Provider 支持** | `services/api/claude.ts`, `model/providers.ts` |
 
 ### 🥉 锦上添花
 
 | # | 主题 |
 |---|---|
-| 9 | 全景架构总结文档（把所有零散发现织成一张网） |
-| 10 | 与 Aider/Cursor/Codex CLI 的横向对比 |
-| 11 | Memory 系统（memdir）|
-| 12 | 流式 UI 渲染（Ink）|
+| 12 | 全景架构总结文档（把所有零散发现织成一张网） |
+| 13 | 与 Aider/Cursor/Codex CLI 的横向对比 |
+| 14 | Memory 系统（memdir）|
+| 15 | 流式 UI 渲染（Ink + components/）|
+| 16 | Session 存储（utils/sessionStorage.ts，IMPORTANT 注释最多）|
+
+### 📊 graphs/ 目录补全计划
+
+```
+graphs/
+├── context/         ✅ 已完成
+├── cot/             ✅ 已完成
+├── tools/           ✅ 已完成（最新）
+├── agent-loop/      ✅ 已完成
+│
+├── permissions/     ⬜ 待补 (P0 - 安全核心)
+├── bootstrap/       ⬜ 待补 (P0 - 启动骨架)
+├── agent-fork/      ⬜ 待补 (P1 - 最有创意的设计)
+│
+├── compact/         ⬜ 待补 (P2 - 独立子系统)
+└── commands/        ⬜ 待补 (P2 - 73 个命令)
+```
+
+补全这 5 个，graphs/ 就完整覆盖了 Claude Code 所有核心子系统。
 
 ### ❌ 不推荐做
 
@@ -363,18 +470,19 @@ grep -rn "DO NOT\|do not change\|do not modify" src/ -i
 1. **本文档**（5 分钟）— 唤起记忆
 2. **`docs/agent-loop-implementation.md`** 的"代码 vs 模型边界"章节（10 分钟）— 核心抽象
 3. **`docs/prompt-analysis.md`** 的"5 种 prompt 设计模式"（10 分钟）— 实用启示
-4. 浏览 `graphs/agent-loop/agent-loop-overview.svg`（5 分钟）— 直观架构
+4. 浏览 `graphs/agent-loop/agent-loop-overview.svg` + `graphs/tools/tool-system-overview.svg`（5 分钟）— 直观架构
 
 ### 如果有半天，做什么
 
-**首选：权限系统深入**（之前列为 P0）
+**首选：权限系统深入**（P0，graphs/ 还缺）
 
 ```bash
 # 起步代码点
-src/hooks/useCanUseTool.tsx          # 入口
-src/utils/permissions/permissions.ts  # 规则引擎
-src/utils/permissions/yoloClassifier.ts  # LLM 风险分类
-src/tools/BashTool/bashPermissions.ts    # Bash 命令分析（CCN 极高）
+src/hooks/useCanUseTool.tsx               # 入口
+src/utils/permissions/permissions.ts      # 规则引擎
+src/utils/permissions/yoloClassifier.ts   # LLM 风险分类
+src/utils/permissions/filesystem.ts       # 路径权限 + symlink 防御
+src/tools/BashTool/bashPermissions.ts     # Bash 命令分析（CCN 极高）
 ```
 
 **做什么**：
@@ -382,7 +490,21 @@ src/tools/BashTool/bashPermissions.ts    # Bash 命令分析（CCN 极高）
 2. 解读 yoloClassifier 的 LLM 风险判断
 3. 理解 isDangerousRemovalRawPath 87 个分支的意图
 4. 写一份 `docs/permission-system.md`
-5. 生成 `graphs/permissions/` 依赖图
+5. 生成 `graphs/permissions/`：
+   - permission-decision-flow.svg（手工决策树）
+   - permission-overview.svg（架构总览）
+   - layers-permissions/（filesystem.ts 分层）
+
+**备选：Bootstrap / 启动流程**（P0，graphs/ 还缺）
+
+```bash
+src/entrypoints/cli.tsx                   # 入口
+src/main.tsx                              # 4.7k 行的初始化
+src/bootstrap/state.ts                    # 215 export 的状态枢纽
+src/setup.ts                              # 环境设置
+```
+
+**产出**：`docs/bootstrap-flow.md` + `graphs/bootstrap/`
 
 ### 如果有一天，做什么
 
@@ -391,9 +513,11 @@ src/tools/BashTool/bashPermissions.ts    # Bash 命令分析（CCN 极高）
 挑 3 个代表性工具各写一篇深度文档：
 - BashTool（最复杂）
 - FileEditTool（最常用）
-- AgentTool（最有创意）
+- AgentTool（最有创意，对应"子 Agent / Fork 机制"P0）
 
 每篇按"prompt → 代码实现 → 与 agent loop 的交互"三层组织。
+
+**或者：补全 graphs/ 的 5 个待办**（permissions / bootstrap / agent-fork / compact / commands）
 
 ### 思维框架（写新文档时用）
 
