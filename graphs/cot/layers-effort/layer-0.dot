@@ -1,0 +1,25 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "entrypoints/sdk/runtimeTypes.ts" [fillcolor="#ffcc99"];
+  "services/analytics/growthbook.ts" [fillcolor="#ffcc99"];
+  "utils/auth.ts" [fillcolor="#ffcc99"];
+  "utils/effort.ts" [fillcolor="#ff9999"];
+  "utils/envUtils.ts" [fillcolor="#ffcc99"];
+  "utils/model/modelSupportOverrides.ts" [fillcolor="#ffcc99"];
+  "utils/model/providers.ts" [fillcolor="#ffcc99"];
+  "utils/settings/settings.ts" [fillcolor="#ffcc99"];
+  "utils/thinking.ts" [fillcolor="#ffcc99"];
+
+  "utils/effort.ts" -> "entrypoints/sdk/runtimeTypes.ts";
+  "utils/effort.ts" -> "services/analytics/growthbook.ts";
+  "utils/effort.ts" -> "utils/auth.ts";
+  "utils/effort.ts" -> "utils/envUtils.ts";
+  "utils/effort.ts" -> "utils/model/modelSupportOverrides.ts";
+  "utils/effort.ts" -> "utils/model/providers.ts";
+  "utils/effort.ts" -> "utils/settings/settings.ts";
+  "utils/effort.ts" -> "utils/thinking.ts";
+}

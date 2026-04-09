@@ -1,0 +1,21 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "services/analytics/growthbook.ts" [fillcolor="#ffcc99"];
+  "utils/model/model.ts" [fillcolor="#ffcc99"];
+  "utils/model/modelSupportOverrides.ts" [fillcolor="#ffcc99"];
+  "utils/model/providers.ts" [fillcolor="#ffcc99"];
+  "utils/settings/settings.ts" [fillcolor="#ffcc99"];
+  "utils/theme.ts" [fillcolor="#ffcc99"];
+  "utils/thinking.ts" [fillcolor="#ff9999"];
+
+  "utils/thinking.ts" -> "services/analytics/growthbook.ts";
+  "utils/thinking.ts" -> "utils/model/model.ts";
+  "utils/thinking.ts" -> "utils/model/modelSupportOverrides.ts";
+  "utils/thinking.ts" -> "utils/model/providers.ts";
+  "utils/thinking.ts" -> "utils/settings/settings.ts";
+  "utils/thinking.ts" -> "utils/theme.ts";
+}

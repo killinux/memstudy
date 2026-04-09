@@ -1,0 +1,74 @@
+digraph cot_architecture {
+  rankdir=TB;
+  node [shape=box, style=filled, fontsize=9];
+  label="CoT / Extended Thinking Architecture";
+  labelloc=t; fontsize=14;
+  compound=true;
+
+  // ═══ Layer 1: 三层核心 ═══
+  subgraph cluster_core {
+    label="Core: Three-Layer Thinking System";
+    style=filled; color="#e0e0e0"; fillcolor="#f8f8f8";
+
+    "utils/thinking.ts" [fillcolor="#ff9999", label="thinking.ts\n(ThinkingConfig type\nmodel capability detection\nultrathink keyword)"];
+    "utils/effort.ts" [fillcolor="#ffcc99", label="effort.ts\n(Effort levels: low/med/high/max\npriority chain\nmodel defaults)"];
+    "utils/attachments.ts" [fillcolor="#ffff99", label="attachments.ts\n(ultrathink attachment\neffort → system reminder)"];
+  }
+
+  // ═══ Layer 2: API 层 ═══
+  subgraph cluster_api {
+    label="API Layer: Request & Response";
+    style=filled; color="#d0d0e0"; fillcolor="#f0f0fa";
+
+    "services/api/claude.ts" [fillcolor="#99ccff", label="claude.ts\n(thinking param assembly\neffort param assembly\nstreaming handler\nsignature handling)"];
+    "utils/context.ts" [fillcolor="#99ccff", label="utils/context.ts\n(thinking token budget\nmodel output limits)"];
+    "utils/betas.ts" [fillcolor="#99ccff", label="betas.ts\n(REDACT_THINKING beta\nEFFORT beta header)"];
+  }
+
+  // ═══ Layer 3: 消费者 ═══
+  subgraph cluster_consumers {
+    label="Consumers: UI & Agents";
+    style=filled; color="#d0e0d0"; fillcolor="#f0faf0";
+
+    "components/PromptInput" [fillcolor="#99ff99", label="PromptInput.tsx\n(ultrathink rainbow text\neffort notification)"];
+    "components/AssistantThinkingMessage" [fillcolor="#99ff99", label="AssistantThinkingMessage\n(thinking block render\n∴ Thinking / Ctrl+O)"];
+    "components/AssistantRedactedThinking" [fillcolor="#99ff99", label="RedactedThinkingMessage\n(✻ Thinking…\ncontent hidden)"];
+    "tools/AgentTool/runAgent.ts" [fillcolor="#99ff99", label="AgentTool/runAgent.ts\n(fork: inherit thinking\nnormal: disable thinking)"];
+    "screens/REPL.tsx" [fillcolor="#99ff99", label="REPL.tsx\n(ThinkingConfig init\nsession lifecycle)"];
+  }
+
+  // ═══ Layer 4: 支撑模块 ═══
+  subgraph cluster_support {
+    label="Support: Messages & Compact";
+    style=filled; color="#e0d0e0"; fillcolor="#faf0fa";
+
+    "utils/messages.ts" [fillcolor="#cc99ff", label="messages.ts\n(thinking block filter\nsignature cleanup\nultrathink → reminder)"];
+    "services/compact/" [fillcolor="#cc99ff", label="compact/\n(thinking token count\npost-compact cleanup)"];
+  }
+
+  // ═══ Edges ═══
+
+  // Core internal
+  "utils/effort.ts" -> "utils/thinking.ts" [label="isUltrathinkEnabled()"];
+  "utils/attachments.ts" -> "utils/thinking.ts" [label="hasUltrathinkKeyword()"];
+
+  // Core → API
+  "services/api/claude.ts" -> "utils/thinking.ts" [label="modelSupportsThinking()\nmodelSupportsAdaptive()"];
+  "services/api/claude.ts" -> "utils/effort.ts" [label="resolveAppliedEffort()"];
+  "services/api/claude.ts" -> "utils/context.ts" [label="getMaxThinkingTokens()"];
+  "services/api/claude.ts" -> "utils/betas.ts" [label="REDACT_THINKING\nEFFORT beta"];
+
+  // Core → Consumers
+  "components/PromptInput" -> "utils/thinking.ts" [label="rainbow detect"];
+  "components/PromptInput" -> "utils/effort.ts" [label="effort display"];
+  "screens/REPL.tsx" -> "utils/thinking.ts" [label="init ThinkingConfig"];
+  "screens/REPL.tsx" -> "utils/effort.ts" [label="init effort"];
+  "tools/AgentTool/runAgent.ts" -> "utils/thinking.ts" [label="inherit/disable"];
+
+  // API → Messages
+  "services/api/claude.ts" -> "utils/messages.ts" [label="normalize thinking blocks", style=dashed];
+  "utils/messages.ts" -> "utils/attachments.ts" [label="ultrathink_effort\n→ system reminder", style=dashed];
+
+  // Compact
+  "services/compact/" -> "utils/messages.ts" [label="thinking token count", style=dashed];
+}

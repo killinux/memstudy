@@ -11,14 +11,15 @@ memstudy/
 │   ├── cot-thinking-design            # CoT / Extended Thinking 设计详解
 │   └── madge-guide                    # Madge 依赖分析工具使用指南
 │
-├── graphs/                            # 依赖关系图
-│   ├── context-focused.svg/dot        # context.ts 核心依赖图（手工精选）
-│   └── layers-context/                # context.ts 分层依赖图（自动生成）
-│       ├── overview.svg               #   全局概览（156 个节点，按层着色）
-│       ├── layer-0.svg                #   Layer 0: 入口（1 文件）
-│       ├── layer-1.svg                #   Layer 1: 直接依赖（9 文件）
-│       ├── layer-2.svg                #   Layer 2: 二级依赖（41 文件）
-│       └── layer-3.svg                #   Layer 3: 三级依赖（105 文件）
+├── graphs/                            # 依赖关系图（每个子目录含 README 解释原理）
+│   ├── context/                       # Context 管理模块
+│   │   ├── context-focused.svg/dot    #   核心依赖图（手工精选，24 节点）
+│   │   └── layers-context/            #   分层依赖图（BFS 3 层，156 文件）
+│   │
+│   └── cot/                           # CoT / Extended Thinking 模块
+│       ├── cot-overview.svg/dot       #   三层架构全景图（手工精选）
+│       ├── layers-thinking/           #   thinking.ts 分层图（3 层，117 文件）
+│       └── layers-effort/             #   effort.ts 分层图（2 层，59 文件）
 │
 ├── tools/                             # 可复用工具脚本
 │   ├── layered-deps.py                # 分层依赖图生成器（BFS + Graphviz）
