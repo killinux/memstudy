@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>斯坦福小镇 vs Claude Code — 记忆架构对比分析</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="vs-claude-code">斯坦福小镇 vs Claude Code — 记忆架构对比分析</h1>
+<blockquote>
+<p>斯坦福 Generative Agents 论文（Park et al., 2023）提出了 LLM agent 的记忆-反思-规划三层架构，被视为"给 LLM 装上长期记忆"的开山之作。Claude Code (free-code45) 的记忆系统在 2025 年实现了一套生产级方案。本文逐模块对比两者的设计选择，找出同源点、分歧点和背后的工程权衡。</p>
+<p>前置阅读：<code>docs/memory-system.md</code>（Claude Code 记忆系统深度解析）</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一句话对比">一句话对比</a></li>
+<li><a href="#论文回顾generative-agents-的三层架构">论文回顾：Generative Agents 的三层架构</a></li>
+<li><a href="#模块级对照表">模块级对照表</a></li>
+<li><a href="#记忆写入memory-stream-vs-extractmemories">记忆写入：Memory Stream vs extractMemories</a></li>
+<li><a href="#记忆整合reflection-vs-autodream">记忆整合：Reflection vs autoDream</a></li>
+<li><a href="#记忆检索三维评分-vs-llm-sidequery">记忆检索：三维评分 vs LLM sidequery</a></li>
+<li><a href="#记忆分类三类-vs-四类封闭分类法">记忆分类：三类 vs 四类封闭分类法</a></li>
+<li><a href="#遗忘机制隐式衰减-vs-显式-staleness">遗忘机制：隐式衰减 vs 显式 staleness</a></li>
+<li><a href="#规划plan-组件-vs-会话级-plan-工具">规划：Plan 组件 vs 会话级 Plan 工具</a></li>
+<li><a href="#claude-code-独有的设计">Claude Code 独有的设计</a></li>
+<li><a href="#为什么会有这些分歧">为什么会有这些分歧</a></li>
+<li><a href="#设计决策对照15-条">设计决策对照（15 条）</a></li>
+<li><a href="#结语">结语</a></li>
+</ol>
+<hr />
+<h2 id="_2">一句话对比</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents (2023)</th>
+<th>Claude Code (2025)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>一句话</strong></td>
+<td>用 embedding + 公式给 25 个小镇居民装上"看起来像人"的记忆</td>
+<td>用 LLM 自身给开发者装上"跨会话有用"的记忆</td>
+</tr>
+<tr>
+<td><strong>核心押注</strong></td>
+<td>模型太弱 → 需要算法辅助（embedding + 加权公式）</td>
+<td>模型够强 → 让模型自己当检索器和整理者</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="generative-agents">论文回顾：Generative Agents 的三层架构</h2>
+<p>Park et al. (2023) <em>"Generative Agents: Interactive Simulacra of Human Behavior"</em> 的核心贡献是为 LLM agent 设计了三个记忆组件：</p>
+<h3 id="1-memory-stream">1. Memory Stream（记忆流）</h3>
+<p>一个 <strong>append-only</strong> 的观察日志。agent 每个时间步都把感知到的事件写进去，格式：</p>
+<div class="highlight"><pre><span></span><code>[2023-02-13 09:14] Klaus Mueller is reading a book on gentrification
+[2023-02-13 09:15] Klaus Mueller sees Maria Lopez painting
+</code></pre></div>
+
+<p>每条带时间戳 + 自然语言描述。不过滤、不分类，全部记下来。</p>
+<h3 id="2-reflection">2. Reflection（反思）</h3>
+<p>定期触发的<strong>高阶抽象</strong>。当累积的 importance score 超过阈值时，agent 对最近的记忆做一次反思：</p>
+<div class="highlight"><pre><span></span><code>输入：最近 100 条 memory stream 记录
+过程：
+  1. 生成 3 个高阶问题（&quot;What are the most salient questions about X?&quot;）
+  2. 对每个问题检索相关记忆
+  3. 合成 insight（&quot;Klaus Mueller is passionate about gentrification research&quot;）
+输出：一条新的 reflection 记录，写回 memory stream
+</code></pre></div>
+
+<p>反思的产物<strong>和普通观察存在同一个流里</strong>，但标记为 reflection 类型，有更高的 importance score。</p>
+<h3 id="3-planning">3. Planning（规划）</h3>
+<p>日常行程规划。每天早上 agent 生成一天的粗粒度计划，然后逐步细化：</p>
+<div class="highlight"><pre><span></span><code>粗粒度：9:00-12:00 在图书馆做研究
+细粒度：9:00-9:30 阅读论文 → 9:30-10:00 做笔记 → ...
+</code></pre></div>
+
+<p>计划可以被突发事件打断（encounter 另一个 agent → 重新规划）。</p>
+<h3 id="_3">检索机制</h3>
+<p>检索是三个因素的<strong>加权求和</strong>：</p>
+<div class="highlight"><pre><span></span><code>score(memory) = α × recency(memory)
+              + β × importance(memory)
+              + γ × relevance(memory, query)
+</code></pre></div>
+
+<ul>
+<li><strong>recency</strong>：指数衰减，最近的得分高</li>
+<li><strong>importance</strong>：1-10 整数，由 LLM 在写入时评分（"吃早饭" = 1，"分手" = 9）</li>
+<li><strong>relevance</strong>：query 与 memory 文本的 embedding cosine similarity</li>
+</ul>
+<hr />
+<h2 id="_4">模块级对照表</h2>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+<th>对应源码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>记忆写入</strong></td>
+<td>Memory Stream（append-only 日志）</td>
+<td>extractMemories（fork agent 后台抽取）</td>
+<td><code>services/extractMemories/</code></td>
+</tr>
+<tr>
+<td><strong>记忆整合</strong></td>
+<td>Reflection（importance 阈值触发）</td>
+<td>autoDream（24h + 5 session 触发）</td>
+<td><code>services/autoDream/</code></td>
+</tr>
+<tr>
+<td><strong>记忆检索</strong></td>
+<td>三维加权（recency + importance + relevance）</td>
+<td>Sonnet sidequery（纯 LLM 判断）</td>
+<td><code>memdir/findRelevantMemories.ts</code></td>
+</tr>
+<tr>
+<td><strong>记忆分类</strong></td>
+<td>3 类（observation / reflection / plan）</td>
+<td>4 类封闭（user / feedback / project / reference）</td>
+<td><code>memdir/memoryTypes.ts</code></td>
+</tr>
+<tr>
+<td><strong>记忆存储</strong></td>
+<td>Python list（内存）</td>
+<td>文件系统（~/.claude/projects/.../memory/）</td>
+<td><code>memdir/paths.ts</code></td>
+</tr>
+<tr>
+<td><strong>遗忘</strong></td>
+<td>recency 指数衰减（隐式）</td>
+<td>staleness warning + autoDream 删除（显式）</td>
+<td><code>memdir/memoryAge.ts</code></td>
+</tr>
+<tr>
+<td><strong>规划</strong></td>
+<td>Planning 组件（日程 + 细化）</td>
+<td>Plan 工具（会话级，不持久化）</td>
+<td><code>tools/EnterPlanModeTool/</code></td>
+</tr>
+<tr>
+<td><strong>索引</strong></td>
+<td>无（全量检索）</td>
+<td>MEMORY.md（≤200 行常驻系统提示）</td>
+<td><code>memdir/memdir.ts</code></td>
+</tr>
+<tr>
+<td><strong>多 agent 同步</strong></td>
+<td>无（每个 agent 独立）</td>
+<td>teamMemorySync（server API 同步）</td>
+<td><code>services/teamMemorySync/</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="memory-stream-vs-extractmemories">记忆写入：Memory Stream vs extractMemories</h2>
+<h3 id="_5">共同点：被动、不中断主流程</h3>
+<p>两者都选择了<strong>不打断主行为</strong>的被动写入：</p>
+<ul>
+<li><strong>Generative Agents</strong>：每个时间步自动把感知写入 stream，agent 的"行动"不会因为"记录"而暂停</li>
+<li><strong>Claude Code</strong>：<code>extractMemories</code> 是 <code>void</code>（fire-and-forget），query loop 结束后 fork 一个 agent 在后台抽取</li>
+</ul>
+<h3 id="1-vs">分歧 1：全记 vs 选记</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>策略</strong></td>
+<td>全记（每步都写）</td>
+<td>选记（LLM 判断什么值得存）</td>
+</tr>
+<tr>
+<td><strong>过滤</strong></td>
+<td>不过滤，靠 importance score 在检索时降权</td>
+<td>写入时过滤——"可从代码推导的不存"</td>
+</tr>
+<tr>
+<td><strong>原因</strong></td>
+<td>模拟"人类观察即记录"</td>
+<td>工程实用——存太多 token 浪费</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 的 <code>memoryTypes.ts:183-195</code> 明确列了"What NOT to save"，而且加了一条强约束：</p>
+<blockquote>
+<p>These exclusions apply even when the user explicitly asks you to save.</p>
+</blockquote>
+<p>斯坦福小镇没有这种门——因为它的 recency decay 会自然把低 importance 的记忆"沉底"。</p>
+<h3 id="2-vs">分歧 2：平铺流 vs 分类文件</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>存储</strong></td>
+<td>单一有序流（list）</td>
+<td>独立文件（每条一个 .md）</td>
+</tr>
+<tr>
+<td><strong>结构</strong></td>
+<td>时间戳 + 自然语言</td>
+<td>frontmatter（name/description/type）+ body</td>
+</tr>
+<tr>
+<td><strong>索引</strong></td>
+<td>无，全量扫描</td>
+<td>MEMORY.md 索引（一行一条）</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 的 frontmatter <code>description</code> 字段是关键设计——它让检索只需看 description 清单而不用读全文。这在斯坦福小镇里没有对应物。</p>
+<h3 id="3-agent">分歧 3：主 agent 也能写</h3>
+<p>Claude Code 有<strong>双轨写入</strong>：</p>
+<ol>
+<li>主 agent 在对话中直接写（用户说"记住这个"）</li>
+<li>extractMemories fork 在后台抽取</li>
+</ol>
+<p>如果主 agent 写了，后台抽取就跳过（<code>hasMemoryWritesSince</code> 检测）。斯坦福小镇只有一条写入通道。</p>
+<hr />
+<h2 id="reflection-vs-autodream">记忆整合：Reflection vs autoDream</h2>
+<p>这是<strong>最直接的同源关系</strong>。</p>
+<h3 id="_6">共同的核心思想</h3>
+<p>两者都认为：<strong>碎片记忆需要定期整理成更高层的结构化知识</strong>。</p>
+<ul>
+<li>Generative Agents 叫 <strong>Reflection</strong>（反思）</li>
+<li>Claude Code 叫 <strong>autoDream</strong>（做梦），代码注释明确说"模拟人类在 REM 睡眠中巩固长期记忆"</li>
+</ul>
+<h3 id="_7">触发条件</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>触发逻辑</strong></td>
+<td>importance score 累积超过阈值</td>
+<td>三道 gate：24h 时间 + 5 个 session + 锁</td>
+</tr>
+<tr>
+<td><strong>设计哲学</strong></td>
+<td>内容驱动（重要的事多了就该反思）</td>
+<td>时间驱动（足够久了就该整理）</td>
+</tr>
+<tr>
+<td><strong>开销控制</strong></td>
+<td>无显式开销控制</td>
+<td>cheapest-first gate（stat → readdir → lock）</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 的三道 gate 是典型的工程化——先做最便宜的检查（一次 <code>stat</code>），不过就早退。论文里没有这种考虑。</p>
+<h3 id="_8">整理方式</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>输入</strong></td>
+<td>最近 N 条记忆</td>
+<td>整个 memory 目录的所有文件</td>
+</tr>
+<tr>
+<td><strong>输出</strong></td>
+<td>新的 reflection 条目，<strong>追加到流里</strong></td>
+<td><strong>修改原有文件</strong>（合并重复、删过时、更新索引）</td>
+</tr>
+<tr>
+<td><strong>结果去哪</strong></td>
+<td>和 observation 混在一起</td>
+<td>原地修改，不产生新层级</td>
+</tr>
+</tbody>
+</table>
+<p>这是一个关键分歧：<strong>斯坦福小镇的 reflection 是增量的</strong>（往流里加一条），<strong>Claude Code 的 dream 是就地修改的</strong>（改原文件）。</p>
+<p>斯坦福小镇的 reflection 会越来越多层（observation → reflection → reflection-of-reflection）。Claude Code 故意<strong>不分层</strong>——dream 的结果直接修改 topic 文件，不产生"meta-memory"。</p>
+<h3 id="autodream-4-phase">autoDream 的 4 Phase</h3>
+<div class="highlight"><pre><span></span><code>Phase 1 — Orient（读目录、读索引）
+Phase 2 — Gather recent signal（找新信号）
+Phase 3 — Consolidate（合并进已有 topic）
+Phase 4 — Prune and index（修剪 MEMORY.md）
+</code></pre></div>
+
+<p>对比 Generative Agents 的 reflection：</p>
+<div class="highlight"><pre><span></span><code>Step 1 — 基于最近记忆生成高阶问题
+Step 2 — 对每个问题检索相关记忆
+Step 3 — 合成 insight
+</code></pre></div>
+
+<p>Claude Code 的 Phase 4（Prune and index）<strong>在斯坦福小镇里没有对应物</strong>。因为斯坦福小镇的 memory stream 是 append-only 的，不删不改；而 Claude Code 必须维护 MEMORY.md 索引在 200 行以内。</p>
+<hr />
+<h2 id="vs-llm-sidequery">记忆检索：三维评分 vs LLM sidequery</h2>
+<p>这是<strong>两套系统分歧最大的地方</strong>，也是最能体现时代差异的地方。</p>
+<h3 id="_9">斯坦福小镇：公式化检索</h3>
+<div class="highlight"><pre><span></span><code><span class="n">score</span> <span class="o">=</span> <span class="n">α</span> <span class="o">*</span> <span class="n">recency_score</span> <span class="o">+</span> <span class="n">β</span> <span class="o">*</span> <span class="n">importance_score</span> <span class="o">+</span> <span class="n">γ</span> <span class="o">*</span> <span class="n">relevance_score</span>
+
+<span class="c1"># recency: 指数衰减，e^(-λt)</span>
+<span class="c1"># importance: LLM 在写入时打的 1-10 分</span>
+<span class="c1"># relevance: embedding cosine similarity</span>
+</code></pre></div>
+
+<p>三个维度各自独立计算，线性加权，取 top-K。</p>
+<h3 id="claude-codellm">Claude Code：LLM 直接判断</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// findRelevantMemories.ts</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">sideQuery</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">model</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;sonnet&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">system</span><span class="o">:</span><span class="w"> </span><span class="kt">SELECT_MEMORIES_SYSTEM_PROMPT</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="sb">`Query: </span><span class="si">${</span><span class="nx">query</span><span class="si">}</span><span class="sb">\n\nAvailable memories:\n</span><span class="si">${</span><span class="nx">manifest</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+<span class="w">  </span><span class="c1">// manifest = 每条只有 [type] filename (mtime): description</span>
+<span class="p">})</span>
+<span class="c1">// 返回：最多 5 个 filename</span>
+</code></pre></div>
+
+<p>没有 embedding，没有公式，没有 importance score。<strong>一切交给 Sonnet</strong>。</p>
+<h3 id="_10">为什么可以这样做？</h3>
+<table>
+<thead>
+<tr>
+<th>因素</th>
+<th>2023 (GPT-3.5)</th>
+<th>2025 (Sonnet)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型判断相关性的能力</td>
+<td>不可靠 → 需要 embedding 兜底</td>
+<td>足够强 → 直接当检索器</td>
+</tr>
+<tr>
+<td>上下文窗口</td>
+<td>4K-8K → 放不下太多候选</td>
+<td>200K → manifest 全放进去</td>
+</tr>
+<tr>
+<td>API 成本</td>
+<td>高 → 不敢给每次检索调一次 LLM</td>
+<td>低（Sonnet 便宜，且 max_tokens=256）</td>
+</tr>
+<tr>
+<td>记忆总量</td>
+<td>数千条（模拟几天）</td>
+<td>数十到数百条（实际项目）</td>
+</tr>
+</tbody>
+</table>
+<p>关键洞察：Claude Code 的记忆数量远少于斯坦福小镇（一个项目通常 10-50 条 vs 小镇数千条），但每条的<strong>语义密度更高</strong>（整个 topic 文件 vs 一句观察）。在这个规模下，让 LLM 读 50 条 description 比 embedding 检索更准。</p>
+<h3 id="tool-aware">tool-aware 过滤</h3>
+<p>Claude Code 还有一个斯坦福小镇没有的机制：</p>
+<blockquote>
+<p>如果已知最近用过某些工具，不选那些工具的 API 文档类记忆，但要选那些工具的 warning/gotcha 类记忆——正在用恰好是这类记忆最该被看到的时候。</p>
+</blockquote>
+<p>这是<strong>上下文感知检索</strong>——检索器知道 agent 正在做什么，据此调整策略。斯坦福小镇的检索只看 query 和 memory 本身。</p>
+<hr />
+<h2 id="vs">记忆分类：三类 vs 四类封闭分类法</h2>
+<h3 id="_11">斯坦福小镇的三类</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>内容</th>
+<th>怎么产生</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Observation</strong></td>
+<td>感知到的事件</td>
+<td>自动记录</td>
+</tr>
+<tr>
+<td><strong>Reflection</strong></td>
+<td>高阶 insight</td>
+<td>reflection 过程生成</td>
+</tr>
+<tr>
+<td><strong>Plan</strong></td>
+<td>未来行程</td>
+<td>planning 过程生成</td>
+</tr>
+</tbody>
+</table>
+<p>三类按<strong>产生方式</strong>区分（被动观察 / 主动反思 / 规划）。</p>
+<h3 id="claude-code">Claude Code 的四类</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>内容</th>
+<th>怎么产生</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>user</strong></td>
+<td>用户的角色/目标/知识</td>
+<td>主 agent 或 extract</td>
+</tr>
+<tr>
+<td><strong>feedback</strong></td>
+<td>做事方式的正负反馈</td>
+<td>主 agent 或 extract</td>
+</tr>
+<tr>
+<td><strong>project</strong></td>
+<td>正在进行的工作/截止日期</td>
+<td>主 agent 或 extract</td>
+</tr>
+<tr>
+<td><strong>reference</strong></td>
+<td>外部系统的指针</td>
+<td>主 agent 或 extract</td>
+</tr>
+</tbody>
+</table>
+<p>四类按<strong>内容语义</strong>区分（关于谁 / 怎么做 / 做什么 / 去哪找）。</p>
+<h3 id="_12">对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>分类依据</strong></td>
+<td>产生方式</td>
+<td>内容语义</td>
+</tr>
+<tr>
+<td><strong>是否封闭</strong></td>
+<td>是（硬编码 3 类）</td>
+<td>是（<code>as const</code>，不可扩展）</td>
+</tr>
+<tr>
+<td><strong>是否分层</strong></td>
+<td>是（observation → reflection 是层级关系）</td>
+<td>否（四类平行）</td>
+</tr>
+<tr>
+<td><strong>plan 去哪</strong></td>
+<td>memory stream 里</td>
+<td><strong>不进记忆</strong>（Plan 工具是会话级）</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 把 plan 排除出记忆系统是刻意的——prompt 里明确说：</p>
+<blockquote>
+<p>When to use or update a plan instead of memory: 非平凡实现任务的对齐</p>
+</blockquote>
+<hr />
+<h2 id="vs-staleness">遗忘机制：隐式衰减 vs 显式 staleness</h2>
+<h3 id="recency">斯坦福小镇：recency 指数衰减</h3>
+<p>旧记忆不会被删除，但 recency score 随时间指数衰减。效果：<strong>自然沉底</strong>——不手动删，但检索时排名越来越低。</p>
+<h3 id="claude-code-staleness">Claude Code：显式 staleness + 主动删除</h3>
+<p>两层机制：</p>
+<p><strong>1. staleness warning（被动）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">// memoryAge.ts</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">memoryAgeDays</span><span class="p">(</span><span class="nx">mtimeMs</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`This memory is </span><span class="si">${</span><span class="nx">d</span><span class="si">}</span><span class="sb"> days old. Verify against current code before asserting as fact.`</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>2 天后开始警告。代码注释里的动机：</p>
+<blockquote>
+<p>精确的 <code>file:line</code> 引用反而让模型更相信过时信息。</p>
+</blockquote>
+<p><strong>2. autoDream 主动删除（主动）</strong></p>
+<p>Phase 3 里明确说"删掉被推翻的事实"。这在斯坦福小镇里没有——memory stream 是 append-only 的，reflection 只追加不修改。</p>
+<h3 id="_13">对比</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>旧记忆命运</strong></td>
+<td>永存，recency 衰减</td>
+<td>可被 dream 删除</td>
+</tr>
+<tr>
+<td><strong>衰减方式</strong></td>
+<td>连续（指数函数）</td>
+<td>离散（2 天阈值 + dream 整理）</td>
+</tr>
+<tr>
+<td><strong>哲学</strong></td>
+<td>"记忆不会消失，只会变淡"</td>
+<td>"错误的记忆比没有记忆更有害"</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 更激进。因为代码领域里，<strong>过时的 file:line 引用是 actively harmful</strong>（让模型说出错误的代码位置）。斯坦福小镇的记忆（"Klaus 在看书"）过时了只是无关，不会有害。</p>
+<hr />
+<h2 id="plan-vs-plan">规划：Plan 组件 vs 会话级 Plan 工具</h2>
+<h3 id="planning">斯坦福小镇的 Planning</h3>
+<p>是记忆系统的一部分——计划写进 memory stream，像记忆一样被检索。</p>
+<div class="highlight"><pre><span></span><code>[Plan] 9:00-12:00: Research at the library
+[Plan] 12:00-13:00: Lunch at the cafe
+</code></pre></div>
+
+<p>计划可以被意外事件打断，触发重新规划。</p>
+<h3 id="claude-code-plan">Claude Code 的 Plan</h3>
+<p><strong>完全不在记忆系统里</strong>。Plan 是一个独立的会话级工具（<code>EnterPlanModeTool</code>），用于在开始实现前与用户对齐方案。</p>
+<div class="highlight"><pre><span></span><code>持久化层级：
+  CLAUDE.md      — VCS 永久 — 人手写
+  auto memory    — 本地永久 — 模型写
+  Plan           — 当前会话 — 模型写  ← 不持久化
+  Task           — 当前会话 — 模型写  ← 不持久化
+</code></pre></div>
+
+<p>这个设计选择反映了不同的使用场景：</p>
+<ul>
+<li>小镇居民需要"明天的计划"（持久化有意义）</li>
+<li>开发者需要"这次对话的方案"（会话结束就失效）</li>
+</ul>
+<hr />
+<h2 id="claude-code_1">Claude Code 独有的设计</h2>
+<p>以下是 Claude Code 有而斯坦福小镇完全没有的：</p>
+<h3 id="1">1. 双注入路径</h3>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>内容</th>
+<th>常驻？</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统提示中的 MEMORY.md 索引</td>
+<td>一行/文件，≤25KB</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>附件中的相关文件完整内容</td>
+<td>≤5 个文件</td>
+<td>❌（可被 compact 清掉）</td>
+</tr>
+</tbody>
+</table>
+<p>斯坦福小镇只有一条路径：检索 → 拼入 prompt。</p>
+<h3 id="2-fork-pattern-prompt-cache">2. Fork pattern + prompt cache 共享</h3>
+<p>extractMemories 和 autoDream 都通过 <code>runForkedAgent</code> 执行，构造 byte-identical 的 API 请求前缀以共享 Anthropic prompt cache。</p>
+<p>这是纯工程优化——论文不需要考虑 API 成本。</p>
+<h3 id="3-canusetool">3. canUseTool 权限控制</h3>
+<p>后台 agent（extract / dream）的工具权限被精确限制：只能读一切、只能写记忆目录、bash 只能 read-only。而且<strong>不是通过裁剪工具列表实现的</strong>（那会破坏 cache key），而是通过运行时 deny。</p>
+<h3 id="4-carve-out">4. 写入 carve-out 安全模型</h3>
+<p>记忆目录享有"不需要用户确认就能写"的特殊权限，但：
+- <code>projectSettings</code>（.claude/settings.json）被排除 → 防恶意 repo 指定 <code>~/.ssh</code>
+- env var 覆盖路径时 carve-out 失效</p>
+<h3 id="5-team-memory">5. team memory 跨人同步</h3>
+<p>通过 server API 在组织内共享记忆。斯坦福小镇的 agent 各自独立，不共享记忆（它们通过直接对话交流）。</p>
+<h3 id="6-secret-scanner">6. secret scanner</h3>
+<p>写入 team 目录前扫描敏感信息。斯坦福小镇不需要——虚拟小镇没有 API key。</p>
+<hr />
+<h2 id="_14">为什么会有这些分歧</h2>
+<p>大部分分歧可以归结为<strong>三个根本差异</strong>：</p>
+<h3 id="1_1">差异 1：模型能力</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>2023</th>
+<th>2025</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基础模型</td>
+<td>GPT-3.5-turbo</td>
+<td>Claude Sonnet / Opus</td>
+</tr>
+<tr>
+<td>上下文窗口</td>
+<td>4K-8K tokens</td>
+<td>200K tokens</td>
+</tr>
+<tr>
+<td>判断相关性的能力</td>
+<td>弱 → 需要 embedding 辅助</td>
+<td>强 → 直接当检索器</td>
+</tr>
+<tr>
+<td>遵循复杂指令的能力</td>
+<td>弱 → 用公式约束行为</td>
+<td>强 → 用 prompt 约束行为</td>
+</tr>
+</tbody>
+</table>
+<p>这解释了为什么 Claude Code 能放弃 embedding + 公式，转而用"让模型读 description 清单"。</p>
+<h3 id="2">差异 2：使用场景</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>agent 数量</td>
+<td>25 个持续运行</td>
+<td>1 个按需启动</td>
+</tr>
+<tr>
+<td>记忆量</td>
+<td>数千条（模拟几天）</td>
+<td>数十条（一个项目）</td>
+</tr>
+<tr>
+<td>记忆寿命</td>
+<td>模拟时间内（~2 天）</td>
+<td>数月到数年</td>
+</tr>
+<tr>
+<td>错误代价</td>
+<td>低（行为看起来不太像人）</td>
+<td>高（给出错误的代码建议）</td>
+</tr>
+</tbody>
+</table>
+<p>错误代价的差异解释了为什么 Claude Code 对 staleness 更激进（2 天就警告）、对分类更严格（封闭四类 + "不存可推导的"）。</p>
+<h3 id="3">差异 3：工程约束</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>论文</th>
+<th>生产系统</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API 成本</td>
+<td>不重要</td>
+<td>必须优化（fork cache 共享）</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>不考虑</td>
+<td>核心关注（carve-out / secret scanner / path validation）</td>
+</tr>
+<tr>
+<td>并发</td>
+<td>单线程模拟</td>
+<td>多 session 并发（锁 / debounce / stale holder 回收）</td>
+</tr>
+<tr>
+<td>存储</td>
+<td>内存</td>
+<td>文件系统（持久化 + 跨会话）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="15">设计决策对照（15 条）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>决策维度</th>
+<th>Generative Agents</th>
+<th>Claude Code</th>
+<th>谁更好？</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>检索算法</strong></td>
+<td>embedding + 公式</td>
+<td>LLM sidequery</td>
+<td>取决于模型能力</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>写入策略</strong></td>
+<td>全记</td>
+<td>选记（gate: "可推导的不存"）</td>
+<td>Claude Code（token 经济）</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>整合方式</strong></td>
+<td>追加新条目</td>
+<td>修改原文件</td>
+<td>Claude Code（避免膨胀）</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>分类依据</strong></td>
+<td>产生方式（3 类）</td>
+<td>内容语义（4 类）</td>
+<td>Claude Code（更实用）</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>遗忘机制</strong></td>
+<td>隐式衰减</td>
+<td>显式 staleness + 删除</td>
+<td>Claude Code（代码场景更安全）</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>plan 归属</strong></td>
+<td>记忆系统内</td>
+<td>独立会话级工具</td>
+<td>场景决定</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>importance score</strong></td>
+<td>有（1-10，LLM 打分）</td>
+<td>无</td>
+<td>小镇需要（量大时区分优先级）</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>索引</strong></td>
+<td>无</td>
+<td>MEMORY.md（常驻系统提示）</td>
+<td>Claude Code（跨会话必需）</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>多 agent 共享</strong></td>
+<td>无（对话交流）</td>
+<td>teamMemorySync（API 同步）</td>
+<td>场景决定</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>安全模型</strong></td>
+<td>无</td>
+<td>carve-out + secret scan + path validation</td>
+<td>Claude Code（生产必需）</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>成本优化</strong></td>
+<td>无</td>
+<td>fork cache 共享</td>
+<td>Claude Code（API 计费必需）</td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>触发整理</strong></td>
+<td>importance 累积阈值</td>
+<td>时间 + session + 锁</td>
+<td>小镇更自然，Claude Code 更可控</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>反思层级</strong></td>
+<td>多层（reflection of reflection）</td>
+<td>单层（dream 不分层）</td>
+<td>小镇更丰富，Claude Code 更简单</td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>存储介质</strong></td>
+<td>内存</td>
+<td>文件系统</td>
+<td>Claude Code（持久化必需）</td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>上下文注入</strong></td>
+<td>单路径（拼入 prompt）</td>
+<td>双路径（索引常驻 + 附件按需）</td>
+<td>Claude Code（token 效率）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_15">结语</h2>
+<h3 id="_16">同源</h3>
+<p>Claude Code 的记忆系统和斯坦福小镇<strong>共享同一个核心信念</strong>：</p>
+<blockquote>
+<p>LLM agent 需要<strong>被动记录 + 主动整理 + 按需检索</strong>三个环节才能拥有有用的长期记忆。</p>
+</blockquote>
+<p><code>extractMemories</code> ≈ Memory Stream，<code>autoDream</code> ≈ Reflection，<code>findRelevantMemories</code> ≈ Retrieval。命名不同，角色一致。autoDream 甚至直接用了"dream"和"REM 睡眠"的隐喻——这与斯坦福小镇用"sleep"来触发 reflection 的思路如出一辙。</p>
+<h3 id="_17">分歧</h3>
+<p>但具体实现几乎处处不同。核心原因是<strong>模型能力的代际差异</strong>：</p>
+<ul>
+<li>2023 年的 GPT-3.5 需要 embedding + 公式来做模型做不好的事（相关性排序、重要性评估）</li>
+<li>2025 年的 Sonnet/Opus 足够强，可以直接承担检索和整理的全部判断</li>
+</ul>
+<p>Claude Code 的押注是：</p>
+<blockquote>
+<p><strong>prompt + eval 迭代 &gt;&gt; 预设算法</strong></p>
+</blockquote>
+<p>这在 <code>docs/memory-system.md</code> 的结尾被精确总结：</p>
+<blockquote>
+<p>整个系统极度依赖 Claude 的"自觉"。没有自动 evictor、没有 embedding 重排、没有 TTL 自动清理——所有"整理"都是靠 autoDream 里的 prompt "希望模型自己识别什么该删"。</p>
+</blockquote>
+<p>如果 2023 年的论文是"<strong>用工程弥补模型不足</strong>"，那 2025 年的 Claude Code 就是"<strong>相信模型，只给它足够的工具和指令</strong>"。</p>
+<h3 id="_18">演化方向</h3>
+<p>两者的关系不是"Claude Code 抄了斯坦福小镇"，而是：</p>
+<div class="highlight"><pre><span></span><code>                    认知科学的&quot;记忆三阶段&quot;
+                    (编码 → 巩固 → 检索)
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+     Generative Agents (2023)   Claude Code (2025)
+     用算法模拟三阶段             用 LLM 自身实现三阶段
+     embedding + 公式             prompt + sidequery
+     append-only stream           typed files + index
+     隐式衰减                      显式 staleness
+</code></pre></div>
+
+<p>两者都是把<strong>认知科学中的记忆模型</strong>（编码-巩固-检索）工程化。斯坦福小镇更忠实于"模拟人类"（连"重要的事情记得更牢"都模拟了），Claude Code 更务实地解决"跨会话上下文"问题。</p>
+<p>它们的共同贡献是确立了一个被广泛验证的 pattern：<strong>agent 的记忆不能只是 append-only 日志，必须有主动整理环节</strong>。无论叫 reflection 还是 dream，这一步都不可省。</p>
+</div>
+</body>
+</html>

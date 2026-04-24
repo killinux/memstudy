@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>为什么 Claude Code 换别的模型效果就没这么好</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="claude-code">为什么 Claude Code 换别的模型效果就没这么好</h1>
+<blockquote>
+<p>一个常见的疑问：Claude Code 如果接上 GPT-4o 或 Gemini，是不是改个 API key 就行了？答案是不行——效果会显著下降。本文基于对 free-code45 源码的逆向分析，解释这背后的三层绑定关系。</p>
+<p>前置阅读：
+- <code>docs/memory-system.md</code>（记忆系统深度解析）
+- <code>docs/prompt-analysis.md</code>（Prompt 工程分析）
+- <code>docs/agent-loop-implementation.md</code>（Agent Loop 实现）
+- <code>docs/sub-agent-fork.md</code>（Fork 机制）</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一句话回答">一句话回答</a></li>
+<li><a href="#三层绑定总览">三层绑定总览</a></li>
+<li><a href="#第一层prompt-是针对-claude-做-eval-迭代出来的">第一层：Prompt 是针对 Claude 做 eval 迭代出来的</a></li>
+<li><a href="#第二层记忆系统的协议依赖-claude-的特定能力">第二层：记忆系统的协议依赖 Claude 的特定能力</a></li>
+<li><a href="#第三层代码和模型之间的暗协议">第三层：代码和模型之间的暗协议</a></li>
+<li><a href="#换模型到底要改什么">换模型到底要改什么</a></li>
+<li><a href="#对斯坦福小镇升级的启示">对斯坦福小镇升级的启示</a></li>
+</ol>
+<hr />
+<h2 id="_2">一句话回答</h2>
+<blockquote>
+<p>Claude Code 的 22k token prompt、代码逻辑、模型行为三者是<strong>作为一个整体被 eval 迭代出来的</strong>。换模型不是换个 API key 的事，而是三层绑定中的每一层都会失效。</p>
+</blockquote>
+<hr />
+<h2 id="_3">三层绑定总览</h2>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────┐
+│  第三层：代码-模型暗协议                     换模型 → 改代码 │
+│  tool_use 格式 / stop_reason / thinking / prompt cache   │
+├─────────────────────────────────────────────────────────┤
+│  第二层：记忆系统协议                  换模型 → 边界 case 出错 │
+│  frontmatter / 封闭分类 / LLM 检索 / dream 指令跟随       │
+├─────────────────────────────────────────────────────────┤
+│  第一层：Prompt 行为校准            换模型 → 重跑 eval 重调  │
+│  60 硬约束 / eval-validated / 命令式 vs 解释式              │
+└─────────────────────────────────────────────────────────┘
+</code></pre></div>
+
+<p>三层从上往下：第三层最硬（格式不兼容，直接报错），第二层最隐蔽（大部分能跑但偶尔出错），第一层最费力（要重新调 prompt 措辞）。</p>
+<hr />
+<h2 id="prompt-claude-eval">第一层：Prompt 是针对 Claude 做 eval 迭代出来的</h2>
+<h3 id="eval-validated">证据：eval-validated 注释</h3>
+<p>源码注释中有明确的 eval 迭代痕迹（<code>memoryTypes.ts:183</code>）：</p>
+<blockquote>
+<p>Eval-validated: memory-prompt-iteration case 3, <strong>0/2 → 3/3</strong></p>
+</blockquote>
+<p>这表示：
+- 初始 prompt 写法：Claude 在 2 个测试用例中答对 <strong>0</strong> 个
+- 迭代后的写法：Claude 在 3 个测试用例中答对 <strong>3</strong> 个</p>
+<p>每条关键 prompt 都有对应的评测用例，而且是<strong>在 Claude 模型上跑的评测</strong>。当注释说"0/2 → 3/3"时，措辞的改动是为了让 <strong>Claude</strong> 从答错到答对。换一个模型，同样的措辞调整可能没有同样的效果——甚至可能让效果变差。</p>
+<h3 id="22k-token-prompt">22k token 的 prompt 是怎么组织的</h3>
+<p>从 <code>docs/prompt-analysis.md</code> 的分析数据：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prompt 段总数</td>
+<td>77</td>
+</tr>
+<tr>
+<td>总 token 量</td>
+<td>~22k</td>
+</tr>
+<tr>
+<td>硬约束（NEVER/MUST/CRITICAL）</td>
+<td><strong>60 个</strong></td>
+</tr>
+<tr>
+<td>软约束（should/recommended）</td>
+<td><strong>28 个</strong></td>
+</tr>
+<tr>
+<td>硬:软比例</td>
+<td>1 : 0.47</td>
+</tr>
+</tbody>
+</table>
+<p>Anthropic 用两种不同的语气写 prompt，<strong>而这两种语气的选择是针对 Claude 的响应特性调的</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>语气</th>
+<th>例子</th>
+<th>为什么这样写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安全关键操作</td>
+<td>命令式（NEVER/MUST）</td>
+<td><code>NEVER run destructive git commands</code></td>
+<td>Claude 对 NEVER 的遵守度经过 eval 验证</td>
+</tr>
+<tr>
+<td>风格偏好</td>
+<td>解释式（描述 + 理由）</td>
+<td><code>Write user-facing text in flowing prose...</code></td>
+<td>风格是判断题，命令式反而让 Claude 太死板</td>
+</tr>
+<tr>
+<td>时机判断</td>
+<td>few-shot 示例</td>
+<td>TodoWriteTool 的 5 个 <code>&lt;example&gt;</code> 标签</td>
+<td>Claude 对 example 标签有特定的理解方式</td>
+</tr>
+<tr>
+<td>复杂流程</td>
+<td>分步模板</td>
+<td>BashTool 的 commit 4 步</td>
+<td>Claude 对编号步骤的跟随度高</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">换模型会怎样</h3>
+<table>
+<thead>
+<tr>
+<th>Claude Code 的 prompt 技巧</th>
+<th>Claude 的反应</th>
+<th>其他模型可能的反应</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NEVER commit unless explicitly asked</code></td>
+<td>严格遵守</td>
+<td>可能打折扣——觉得"用户暗示了就算"</td>
+</tr>
+<tr>
+<td><code>CRITICAL: Always create NEW commits</code></td>
+<td>绝对不 amend</td>
+<td>可能忽略 CRITICAL 这个词的权重</td>
+</tr>
+<tr>
+<td><code>measure twice, cut once</code></td>
+<td>理解为决策框架隐喻</td>
+<td>可能理解为字面意思</td>
+</tr>
+<tr>
+<td><code>&lt;system-reminder&gt;</code> 标签</td>
+<td>知道是系统注入，高优先级</td>
+<td>可能当普通文本处理</td>
+</tr>
+<tr>
+<td><code>getActionsSection</code> 的风险矩阵</td>
+<td>内化为二维判断（reversibility × blast radius）</td>
+<td>可能只当描述文本读过就忘</td>
+</tr>
+</tbody>
+</table>
+<p>关键：<strong>prompt 的措辞不是通用的"好 prompt"，而是针对 Claude 的行为特性校准过的</strong>。就像一副给特定度数配的眼镜——别人戴不一定合适。</p>
+<hr />
+<h2 id="claude">第二层：记忆系统的协议依赖 Claude 的特定能力</h2>
+<p>这一层回答你最初的问题：<strong>是不是因为 Claude 能识别自己存的记忆规则？</strong></p>
+<p>答案是：不完全是"识别规则"这么简单，而是记忆系统的<strong>整个协议栈</strong>都假设了 Claude 的特定能力。</p>
+<h3 id="2a-frontmatter">2a. frontmatter 精确解析</h3>
+<p>记忆文件的格式：</p>
+<div class="highlight"><pre><span></span><code>---
+name: testing preferences
+description: integration tests must use real DB, not mocks
+<span class="gu">type: feedback</span>
+<span class="gu">---</span>
+
+Integration tests must hit a real database, not mocks.
+Why: prior incident where mock/prod divergence masked a broken migration.
+</code></pre></div>
+
+<p>Claude Code 假设模型能：
+1. 精确解析 YAML frontmatter
+2. 区分 <code>description</code>（一行摘要）和 body（完整内容）
+3. 在被要求"只看 description"时真的不看 body</p>
+<p><strong>证据</strong>：<code>findRelevantMemories.ts</code> 的 manifest 只喂 description，不喂 body。prompt 说：</p>
+<blockquote>
+<p>Only include memories that you are certain will be helpful <strong>based on their name and description</strong>.</p>
+</blockquote>
+<p>这需要模型能精确地把判断<strong>限制在 description 字段内</strong>。Claude 做到了这一点（通过 eval 验证），但换模型后，模型可能倾向于要求看完整内容才做判断——那整个"只用 description 做轻量检索"的设计就废了。</p>
+<h3 id="2b">2b. 封闭分类法的严格遵守</h3>
+<p>四类记忆是 <code>as const</code> 封闭的：<code>user | feedback | project | reference</code>。</p>
+<p>prompt 里有一条极端规则（<code>memoryTypes.ts:183-195</code>）：</p>
+<blockquote>
+<p>These exclusions apply <strong>even when the user explicitly asks you to save</strong>. If they ask you to save a PR list or activity summary, ask what was <em>surprising</em> or <em>non-obvious</em> about it — that is the part worth keeping.</p>
+</blockquote>
+<p>这要求模型在<strong>用户明确要求存某个东西</strong>时，拒绝执行并引导用户说出真正值得存的部分。这需要：
+1. 系统指令优先于用户指令（Claude 在这方面有明确的优先级设计）
+2. 在"拒绝用户"时仍然表现得有帮助（Claude 的 harmlessness 训练）
+3. 精确区分"可从代码推导的事实" vs "推不出的上下文"</p>
+<p>其他模型在"系统指令 vs 用户指令"的优先级权衡上可能有不同的行为——有些模型更倾向于顺从用户的直接要求。</p>
+<h3 id="2c-llm">2c. LLM 做检索器</h3>
+<p><code>findRelevantMemories</code> 不用 embedding，直接让 Sonnet 读 description 清单选记忆：</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">SELECT_MEMORIES_SYSTEM_PROMPT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`You are selecting memories that will be useful </span>
+<span class="sb">to Claude Code as it processes a user&#39;s query...</span>
+<span class="sb">Return a list of filenames for the memories that will clearly be useful (up to 5). </span>
+<span class="sb">Only include memories that you are certain will be helpful.</span>
+<span class="sb">Be selective and discerning.`</span>
+</code></pre></div>
+
+<p>这个设计的前提是 <strong>Sonnet 能在 200 条 description 清单中做出高质量的相关性判断</strong>。</p>
+<p>已知的模型间差异：
+- <strong>位置偏差</strong>：有些模型对清单中间位置的条目关注度下降（"lost in the middle" 问题）
+- <strong>选择力度</strong>：prompt 说"be selective"——有些模型倾向于选太多（过度 inclusive），有些选太少
+- <strong>工具感知</strong>：prompt 要求"如果最近用过某工具，不选该工具的 API 文档但选 warning"——这需要精细的条件推理</p>
+<h3 id="2d-autodream">2d. autoDream 的复杂指令跟随</h3>
+<p>Dream 的 consolidation prompt 要求模型在<strong>一次调用</strong>里执行 4 个 phase：</p>
+<div class="highlight"><pre><span></span><code>Phase 1 — Orient（读目录、读索引）
+Phase 2 — Gather recent signal（找新信号，有优先级排序）
+Phase 3 — Consolidate（合并进已有文件、转换日期格式、删被推翻的事实）
+Phase 4 — Prune and index（维护 MEMORY.md 在 200 行以内、解决矛盾）
+</code></pre></div>
+
+<p>每个 phase 都有多个子规则。这是一个高度复杂的多步指令跟随任务。能力差异体现在：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>Claude 的表现</th>
+<th>其他模型的风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"把'昨天'转成绝对日期"</td>
+<td>精确执行</td>
+<td>可能忘记转换某些实例</td>
+</tr>
+<tr>
+<td>"如果今天的调研否定了某条记忆，修改源头"</td>
+<td>主动修改旧文件</td>
+<td>可能只追加新条目而不改旧的</td>
+</tr>
+<tr>
+<td>"MEMORY.md 保持 &lt;200 行"</td>
+<td>严格遵守上限</td>
+<td>可能超出（觉得"多几行也没关系"）</td>
+</tr>
+<tr>
+<td>"两文件冲突就修错的那个"</td>
+<td>做出正确判断</td>
+<td>可能选错或两个都改</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2e">2e. "目录已存在"的行为校正</h3>
+<p>一个很具体的例子。Claude Code 有这样一条 prompt（<code>memdir.ts:113-115</code>）：</p>
+<blockquote>
+<p>This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).</p>
+</blockquote>
+<p>代码注释说明了为什么：</p>
+<blockquote>
+<p>Shipped because Claude was burning turns on <code>ls</code>/<code>mkdir -p</code> before writing.</p>
+</blockquote>
+<p>这条指令是<strong>专门针对 Claude 的行为缺陷</strong>加的——Claude 在早期版本倾向于在写文件前先检查目录是否存在。Anthropic 通过代码保证目录存在 + prompt 告诉模型不要检查，消除了这个问题。</p>
+<p>换模型后，这条指令可能：
+- 对该模型无意义（因为它本来就不会 ls/mkdir）
+- 或者不够——该模型可能有别的"浪费回合"的习惯需要不同的指令来修正</p>
+<p><strong>每一条这样的微调都是在 Claude 上观察到问题、然后针对 Claude 写的修正。</strong></p>
+<hr />
+<h2 id="_5">第三层：代码和模型之间的暗协议</h2>
+<p>这是最硬的一层——不是"效果下降"而是"直接不能用"。</p>
+<h3 id="3a-tool_use">3a. tool_use 调用格式</h3>
+<p>Claude API 的工具调用返回格式：</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tool_use&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;toolu_01A09q90qw90lq917835lq9&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BashTool&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;git status&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>代码中的 <code>StreamingToolExecutor</code> 按这个格式解析流式响应。每个模型的 tool calling 协议不同：
+- OpenAI 的 function calling 用 <code>function_call</code> / <code>tool_calls</code> 字段
+- Gemini 的 function calling 格式又不一样</p>
+<p>换模型需要重写整个工具调用的解析和路由层。</p>
+<h3 id="3b-stop_reason">3b. stop_reason 语义</h3>
+<p><code>query.ts</code> 的主循环核心逻辑：</p>
+<div class="highlight"><pre><span></span><code>while (true) {
+  response = await queryModel(messages)
+
+  if (response.stop_reason === &#39;end_turn&#39;) → 退出
+  if (response.stop_reason === &#39;tool_use&#39;) → 执行工具，继续循环
+}
+</code></pre></div>
+
+<p>这依赖 Claude API 的 <code>stop_reason</code> 枚举值。其他 API 的停止原因编码不同（OpenAI 用 <code>finish_reason: 'stop'</code> / <code>'tool_calls'</code>）。</p>
+<h3 id="3c-extended-thinking">3c. Extended Thinking</h3>
+<p>从 <code>docs/cot-thinking-design.md</code> 的分析，Claude Code 有三层 thinking 控制：</p>
+<div class="highlight"><pre><span></span><code>adaptive thinking（4.6+ 模型自主决定推理深度）
+effort 参数（low/medium/high）
+ultrathink（effort 的语法糖，映射到 high）
+</code></pre></div>
+
+<p>这是 Claude 4.x 独有的特性。<code>budget_tokens</code> 参数直接控制模型的推理 token 分配——这在其他模型 API 上<strong>没有对应物</strong>。</p>
+<p>去掉 thinking，Claude Code 在复杂任务上的表现会显著下降——因为它失去了"先想再做"的能力。</p>
+<h3 id="3d-prompt-cache">3d. Prompt cache 的字节级精确</h3>
+<p>Fork pattern 的核心（<code>forkedAgent.ts</code>）：</p>
+<div class="highlight"><pre><span></span><code>cache_key = hash(system_prompt + tools + model + messages_prefix + thinking_config)
+</code></pre></div>
+
+<p>这依赖 <strong>Anthropic API 的 prompt cache 机制</strong>——请求前缀字节相同就命中缓存，缓存 token 价格是原价的 10%。</p>
+<p>这个机制让 fork 子 agent（extractMemories, autoDream）几乎"免费"。没有它：
+- 每次 extractMemories 都是全价调用
+- 每次 autoDream 都是全价调用
+- 25 个小镇 agent 不能共享 world prompt</p>
+<p>OpenAI 有类似的 prefix caching，但行为细节不同（自动触发 vs 显式控制、缓存粒度、缓存时效）。Gemini 的 context caching 是又一套完全不同的机制。代码中精心维护的 <code>CacheSafeParams</code> 和 <code>promptCacheBreakDetection</code> 都需要重写。</p>
+<h3 id="3e">3e. 流式输出格式</h3>
+<p>Claude API 的 Server-Sent Events 格式：</p>
+<div class="highlight"><pre><span></span><code>event: content_block_start
+event: content_block_delta
+event: content_block_stop
+event: message_delta（含 stop_reason）
+</code></pre></div>
+
+<p>代码中的 <code>StreamingToolExecutor</code> 在收到 <code>content_block_start</code> 且 type 是 <code>tool_use</code> 时就<strong>提前开始解析工具参数</strong>——不等模型输出完就执行（streaming tool execution）。</p>
+<p>这个优化强依赖 Claude API 的流式事件格式。换模型需要适配完全不同的流式协议。</p>
+<hr />
+<h2 id="_6">换模型到底要改什么</h2>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>要改的东西</th>
+<th>工作量</th>
+<th>能自动化吗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>第三层</strong></td>
+<td>tool calling 解析、stop_reason、streaming 协议、thinking API、cache API</td>
+<td>重写 API 适配层</td>
+<td>部分可以（adapter pattern）</td>
+</tr>
+<tr>
+<td><strong>第二层</strong></td>
+<td>验证记忆协议在新模型上是否成立（frontmatter 解析、分类遵守、检索质量、dream 质量）</td>
+<td>跑 eval 逐条验证</td>
+<td>不能——需要人判断</td>
+</tr>
+<tr>
+<td><strong>第一层</strong></td>
+<td>60 个硬约束 + 28 个软约束的措辞调整、few-shot 示例调整、命令式 vs 解释式的比例调整</td>
+<td>重跑 eval 重调 prompt</td>
+<td>不能——需要逐条迭代</td>
+</tr>
+</tbody>
+</table>
+<p><strong>最乐观的估计</strong>：第三层可以通过写 adapter 解决（社区已有 openai-compatible 的适配方案）。但第一层和第二层需要<strong>针对新模型重跑整套 eval</strong>——这就是为什么"换个 API key 就能用"在实践中效果远不如原版。</p>
+<hr />
+<h2 id="_7">对斯坦福小镇升级的启示</h2>
+<p>如果要按 <code>docs/generative-agents-upgrade-proposal.md</code> 的方案升级斯坦福小镇，这三层绑定带来的教训是：</p>
+<h3 id="1-prompt">1. 不要假设 prompt 可以跨模型复用</h3>
+<p>Claude Code 的 prompt 措辞是在 Claude 上 eval 出来的。升级小镇时，如果用 GPT-4o 或 Gemini：</p>
+<ul>
+<li><strong>相同的设计思路可以复用</strong>（比如"用类型化文件而非 append-only 流"）</li>
+<li><strong>具体的 prompt 措辞不能直接抄</strong>（比如 NEVER 的效果在不同模型上不同）</li>
+<li><strong>必须建自己的 eval 集</strong>——在目标模型上验证每条关键 prompt</li>
+</ul>
+<h3 id="2">2. 记忆协议要针对目标模型验证</h3>
+<p>搬过来的记忆系统（类型化文件 + LLM 检索 + dream 整合）设计是通用的，但需要验证：</p>
+<table>
+<thead>
+<tr>
+<th>要验证的点</th>
+<th>怎么验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标模型能精确解析 frontmatter 吗？</td>
+<td>10 条样例 → 检查解析正确率</td>
+</tr>
+<tr>
+<td>目标模型在 200 条 description 清单里能精确选择吗？</td>
+<td>构造已知正确答案的检索测试集</td>
+</tr>
+<tr>
+<td>目标模型能执行 dream 的 4 phase 吗？</td>
+<td>给一堆碎片记忆 → 检查整合结果</td>
+</tr>
+<tr>
+<td>目标模型会遵守"不存可推导的事实"吗？</td>
+<td>模拟用户说"把 PR 列表存下来" → 看是否拒绝</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3">3. 把"模型特定"和"设计通用"分开</h3>
+<p>Claude Code 给我们的最大教训是<strong>设计和实现要分层</strong>：</p>
+<div class="highlight"><pre><span></span><code>通用层（可跨模型复用）：
+  - 类型化文件存储 + frontmatter schema
+  - 双注入路径（索引常驻 + 内容按需）
+  - 定时整合（dream/reflection）
+  - 选择性写入 gate
+  - Agent Loop 主循环模式
+
+模型特定层（必须针对性调整）：
+  - prompt 措辞和强度（NEVER 的效果因模型而异）
+  - 检索 prompt 的具体写法
+  - dream prompt 的 phase 描述方式
+  - tool calling 和 streaming 协议
+  - cache 共享机制
+</code></pre></div>
+
+<p>升级小镇时，先把通用层搭好，然后针对选定的模型逐条 eval 调整模型特定层。<strong>不要试图写"模型无关的 prompt"——那是幻觉</strong>。好的 prompt 都是针对特定模型调的。</p>
+<hr />
+<h2 id="_8">结语</h2>
+<p>回到最初的问题：<strong>为什么 Claude Code 换别的模型效果就没这么好？</strong></p>
+<p>不是因为"Claude 能识别自己存的记忆格式"这一个原因。而是三层绑定：</p>
+<ol>
+<li><strong>Prompt 校准</strong>：22k token 的 prompt 里每个 NEVER/MUST 的措辞都是在 Claude 上 eval 出来的</li>
+<li><strong>记忆协议</strong>：整个记忆系统（写入 gate、frontmatter 解析、LLM 检索、dream 整合）都假设了 Claude 的特定能力</li>
+<li><strong>代码协议</strong>：tool_use 格式、stop_reason、thinking API、prompt cache 都是 Claude API 特有的</li>
+</ol>
+<p>这三层构成了一个<strong>围绕 Claude 模型共同进化出来的系统</strong>。拆掉任何一层，其他两层都会出问题。这不是锁定（lock-in）——这是<strong>协同设计（co-design）的必然结果</strong>。任何足够深度优化的系统都会和它的核心组件深度耦合。</p>
+<p>斯坦福小镇升级时的正确做法：<strong>学设计，不抄 prompt</strong>。</p>
+</div>
+</body>
+</html>

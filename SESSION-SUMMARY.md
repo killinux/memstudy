@@ -31,6 +31,8 @@ memstudy/
 │   ├── prompt-analysis.md                 # Prompt 提取与分析
 │   ├── codebase-insights.md               # 注释挖掘 + 复杂度
 │   ├── ast-analysis-report.md             # AST 静态分析
+│   ├── sub-agent-fork.md                  # 子 Agent / Fork 机制深度解析
+│   ├── memory-system.md                   # 记忆管理系统深度解析
 │   ├── code-analysis-methods.md           # 10 种分析方法目录
 │   └── madge-guide.md                     # Madge 工具使用指南
 │
@@ -48,11 +50,25 @@ memstudy/
 │   │   ├── README.md
 │   │   ├── agent-loop-overview.svg        # 数据流图（10 步编号）
 │   │   └── layers-query/                  # query.ts 分层（269 文件）
-│   └── tools/                             # Tool 系统（核心抽象，最大）
+│   ├── tools/                             # Tool 系统（核心抽象，最大）
+│   │   ├── README.md
+│   │   ├── tool-system-overview.svg       # 4 层架构图（接口/注册/分类/执行）
+│   │   ├── tool-categories.svg            # 42 工具按 13 类分组
+│   │   └── layers-tool/                   # Tool.ts 分层（533 文件，3 层）
+│   ├── agent-fork/                        # 子 Agent / Fork 机制
+│   │   ├── README.md
+│   │   ├── agent-fork-overview.svg        # 5 路径架构（fork/named/coord/teammate/iso）
+│   │   ├── layers-AgentTool/              # AgentTool.tsx 分层（300 文件）
+│   │   ├── layers-forkedAgent/            # forkedAgent.ts 分层（292 文件）
+│   │   └── layers-forkSubagent/           # forkSubagent.ts 分层（93 文件，最瘦）
+│   └── memory/                            # 记忆管理系统
 │       ├── README.md
-│       ├── tool-system-overview.svg       # 4 层架构图（接口/注册/分类/执行）
-│       ├── tool-categories.svg            # 42 工具按 13 类分组
-│       └── layers-tool/                   # Tool.ts 分层（533 文件，3 层）
+│       ├── memory-overview.svg            # 五子系统 + 双注入路径手绘图
+│       ├── memory-dataflow.svg            # 数据流视角
+│       ├── layers-memdir/                 # memdir.ts 分层（208 文件）
+│       ├── layers-findRelevantMemories/   # findRelevantMemories.ts 分层（37 文件，最瘦）
+│       ├── layers-extractMemories/        # extractMemories.ts 分层（142 文件）
+│       └── layers-autoDream/              # autoDream.ts 分层（131 文件）
 │
 ├── tools/                                 # 可复用工具脚本
 │   ├── layered-deps.py                    # BFS 分层依赖图生成器
@@ -109,6 +125,12 @@ memstudy/
 | **codebase-insights.md** | 注释挖掘 + 复杂度 | ~3500 | 项目"心脏"和"红线" |
 | **ast-analysis-report.md** | AST 量化分析 | ~3500 | 42 工具 + 73 命令 + 573 组件 |
 | **agent-loop-implementation.md** | （上面已列） | | |
+
+### 1 篇对比分析文档
+
+| 文档 | 核心内容 | 字数 | 关键发现 |
+|---|---|---|---|
+| **stanford-generative-agents-vs-claude-code.md** | 斯坦福小镇 vs Claude Code 记忆架构对比 | ~6000 | 同源三环节（写入/整合/检索）+ 模型代际差异驱动实现分歧 |
 
 ### 2 篇方法论文档
 
@@ -322,24 +344,38 @@ memstudy/
 - `graphs/bootstrap/startup-flow.svg` — cli → setup → main → REPL → queryLoop
 - `graphs/bootstrap/layers-state/` — bootstrap/state.ts 分层
 
-#### 3. 子 Agent / Fork 机制（tools/AgentTool/ + coordinator/）
+#### 0. 记忆管理系统（memdir/ + services/extractMemories/ + services/autoDream/ + services/teamMemorySync/）✅ 已完成
 
-**为什么值得**：
-- Claude Code 最有创意的设计之一（OpenAI Codex 没有这个）
-- 涉及并发、缓存共享、上下文隔离等多个有意思的工程问题
-- 之前在 cot 文档里提到了 fork 继承 thinking config，但没单独深入
+**产出**：
+- `docs/memory-system.md` — 15 节深度文档（四类分类法 / 双注入路径 / Sonnet 相关性召回 / fork pattern 写入 / REM 风格 consolidation / team sync / 权限 carve-out / 15 条设计决策）
+- `graphs/memory/` — 2 张手绘架构图 + 4 套分层依赖（memdir 208 / findRelevantMemories 37 / extractMemories 142 / autoDream 131）
 
-**关键文件**：
-- `tools/AgentTool/AgentTool.tsx`
-- `tools/AgentTool/runAgent.ts`
-- `utils/forkedAgent.ts`
-- `coordinator/coordinatorMode.ts`
-- `coordinator/workerAgent.ts`
+**核心发现**：
+- **封闭 4 类**（user/feedback/project/reference），拒绝"可从代码推导的事实"
+- **两条独立注入路径**：MEMORY.md 索引常驻系统提示；相关主题文件按需异步预取为 attachment
+- **相关性召回是 Sonnet sidequery**（不是 keyword 也不是 embedding），只基于 frontmatter description
+- **写入是 fork pattern**：extractMemories 和 autoDream 都通过 runForkedAgent 共享父 prompt cache
+- **背景抽取的 skip 机制**：`hasMemoryWritesSince` 检测主 agent 已写就跳过（避免重复）
+- **autoDream 三重 gate（cheapest-first）**：时间 (24h) → session (5 个) → lock；锁 mtime = lastConsolidatedAt
+- **权限 carve-out 只给记忆目录**，且 projectSettings 被排除（防恶意 repo 指定 ~/.ssh）
+- **staleness 从 2 天开始警告**（激进 threshold）—— `file:line` 引用过时反而让模型更相信
+- **canUseTool 而非裁剪工具列表**——裁工具会破坏 fork 的 cache key
+- **两个 TYPES_SECTION 故意重复不 DRY**——"prompt 文案频繁微调，抽象化妨碍调整"
 
-**应该产出**：
-- `docs/sub-agent-fork.md`
-- `graphs/agent-fork/agent-fork-mechanism.svg` — fork vs spawn 对比
-- `graphs/agent-fork/coordinator-overview.svg` — 多 worker 协调
+#### 3. 子 Agent / Fork 机制（tools/AgentTool/ + coordinator/）✅ 已完成
+
+**产出**：
+- `docs/sub-agent-fork.md` — 12 节深度文档（4 形态对比、cache-identical prefix、CacheSafeParams、coordinator 模式、isolation、内置 agent、10 个设计权衡）
+- `graphs/agent-fork/` — 手工架构图 + 3 套分层依赖（AgentTool 300 文件 / forkedAgent 292 / forkSubagent 93）
+
+**核心发现**：
+- Fork 的本质是构造**字节相同的 API 请求前缀**让父子共享 Anthropic prompt cache
+- 5 个缓存键全部要相同：systemPrompt + tools + model + messages_prefix + thinking_config
+- System prompt 不重算而是从父亲**线程化字节**（避免 GrowthBook cold→warm 漂移）
+- `FORK_PLACEHOLDER_RESULT` 必须所有 fork 子字节相同，仅 directive 不同
+- `maxOutputTokens` 是隐式陷阱：会通过 clamp budget_tokens 改变 thinking config 破坏缓存
+- AbortController 故意不绑父亲：用户 ESC 不杀后台 worker
+- Fork 与 coordinator 模式互斥（两者都是编排角色但模型不同）
 
 #### 4. BashTool 内部实现
 
@@ -373,7 +409,7 @@ memstudy/
 |---|---|
 | 12 | 全景架构总结文档（把所有零散发现织成一张网） |
 | 13 | 与 Aider/Cursor/Codex CLI 的横向对比 |
-| 14 | Memory 系统（memdir）|
+| 14 | ~~Memory 系统（memdir）~~ ✅ 已完成 |
 | 15 | 流式 UI 渲染（Ink + components/）|
 | 16 | Session 存储（utils/sessionStorage.ts，IMPORTANT 注释最多）|
 
@@ -383,12 +419,13 @@ memstudy/
 graphs/
 ├── context/         ✅ 已完成
 ├── cot/             ✅ 已完成
-├── tools/           ✅ 已完成（最新）
+├── tools/           ✅ 已完成
 ├── agent-loop/      ✅ 已完成
+├── agent-fork/      ✅ 已完成（子 Agent / Fork 机制）
+├── memory/          ✅ 已完成（最新 - 记忆管理系统）
 │
 ├── permissions/     ⬜ 待补 (P0 - 安全核心)
 ├── bootstrap/       ⬜ 待补 (P0 - 启动骨架)
-├── agent-fork/      ⬜ 待补 (P1 - 最有创意的设计)
 │
 ├── compact/         ⬜ 待补 (P2 - 独立子系统)
 └── commands/        ⬜ 待补 (P2 - 73 个命令)

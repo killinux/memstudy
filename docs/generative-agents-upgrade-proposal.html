@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用 Claude Code 架构升级斯坦福小镇 — 设计方案</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="claude-code">用 Claude Code 架构升级斯坦福小镇 — 设计方案</h1>
+<blockquote>
+<p>基于本仓库对 Claude Code (free-code45) 的深度逆向分析，提出将斯坦福 Generative Agents 从 2023 年的 GPT-3.5 + embedding 架构升级到 2025 年 Claude/GPT-4o 级别模型架构的具体方案。</p>
+<p>前置阅读：
+- <code>docs/stanford-generative-agents-vs-claude-code.md</code>（两者对比）
+- <code>docs/memory-system.md</code>（Claude Code 记忆系统）
+- <code>docs/sub-agent-fork.md</code>（子 Agent / Fork 机制）
+- <code>docs/agent-loop-implementation.md</code>（Agent Loop 实现）</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#升级总览">升级总览</a></li>
+<li><a href="#升级-1用-llm-sidequery-替代-embedding-检索">升级 1：用 LLM sidequery 替代 embedding 检索</a></li>
+<li><a href="#升级-2记忆从-append-only-流改为类型化文件">升级 2：记忆从 append-only 流改为类型化文件</a></li>
+<li><a href="#升级-3reflection-改为-autodream-式就地整合">升级 3：Reflection 改为 autoDream 式就地整合</a></li>
+<li><a href="#升级-4引入-fork-pattern-降低多-agent-成本">升级 4：引入 Fork pattern 降低多 agent 成本</a></li>
+<li><a href="#升级-5加入双注入路径管理上下文窗口">升级 5：加入双注入路径管理上下文窗口</a></li>
+<li><a href="#升级-6记忆写入从全记改为选记">升级 6：记忆写入从全记改为选记</a></li>
+<li><a href="#升级-7显式-staleness-替代隐式衰减">升级 7：显式 staleness 替代隐式衰减</a></li>
+<li><a href="#升级-8引入-agent-间记忆共享">升级 8：引入 agent 间记忆共享</a></li>
+<li><a href="#升级-9agent-loop-化改造主循环">升级 9：Agent Loop 化改造主循环</a></li>
+<li><a href="#升级-10权限与安全模型">升级 10：权限与安全模型</a></li>
+<li><a href="#实现优先级与依赖关系">实现优先级与依赖关系</a></li>
+<li><a href="#预期效果">预期效果</a></li>
+<li><a href="#风险与取舍">风险与取舍</a></li>
+</ol>
+<hr />
+<h2 id="_2">升级总览</h2>
+<h3 id="2023">当前架构（2023 论文）</h3>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────────────┐
+│              25 个 Agent 各自独立                  │
+│                                                   │
+│  感知 → Memory Stream (append-only)               │
+│           ↓                                       │
+│  检索 ← embedding cosine + recency + importance   │
+│           ↓                                       │
+│  Reflection (importance 累积触发，追加新条目)       │
+│           ↓                                       │
+│  Planning (每日生成 + 细化)                        │
+│           ↓                                       │
+│  Action (单步输出)                                 │
+│                                                   │
+│  模型: GPT-3.5-turbo / GPT-4                      │
+│  存储: Python list (内存)                          │
+│  检索: embedding + 三维加权公式                     │
+└──────────────────────────────────────────────────┘
+</code></pre></div>
+
+<h3 id="_3">目标架构（升级后）</h3>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────────────────────────┐
+│              25 个 Agent，共享记忆层                           │
+│                                                               │
+│  感知 → 选择性写入 (LLM gate: &quot;琐碎的不存&quot;)                    │
+│           ↓                                                   │
+│  类型化文件存储 (social/self/world/plan 四类)                   │
+│  ├── MEMORY.md 索引 (常驻 system prompt)                      │
+│  └── topic files (按需注入)                                    │
+│           ↓                                                   │
+│  检索 ← LLM sidequery (读 description 清单, 不用 embedding)   │
+│           ↓                                                   │
+│  autoDream 式整合 (时间触发，就地修改，不追加层级)               │
+│           ↓                                                   │
+│  Agent Loop (循环执行，工具调用，自我纠错)                      │
+│           ↓                                                   │
+│  Fork pattern (agent 间对话/reflection 共享 cache)             │
+│                                                               │
+│  模型: Claude Sonnet / GPT-4o                                 │
+│  存储: 文件系统 (持久化 + 跨 session)                          │
+│  检索: LLM sidequery (零 embedding 依赖)                      │
+└──────────────────────────────────────────────────────────────┘
+</code></pre></div>
+
+<h3 id="_4">十项升级一览</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>升级项</th>
+<th>来源</th>
+<th>核心变化</th>
+<th>难度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>LLM 检索替代 embedding</td>
+<td><code>findRelevantMemories.ts</code></td>
+<td>删掉 embedding 管线</td>
+<td>★★☆</td>
+</tr>
+<tr>
+<td>2</td>
+<td>类型化文件替代 append-only 流</td>
+<td><code>memdir/memoryTypes.ts</code></td>
+<td>重写存储层</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>3</td>
+<td>就地整合替代追加 reflection</td>
+<td><code>autoDream/</code></td>
+<td>重写 reflection</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Fork pattern 降成本</td>
+<td><code>forkedAgent.ts</code></td>
+<td>新增 cache 共享机制</td>
+<td>★★★★</td>
+</tr>
+<tr>
+<td>5</td>
+<td>双注入路径</td>
+<td><code>memdir.ts</code> + <code>attachments.ts</code></td>
+<td>新增索引 + 按需附件</td>
+<td>★★☆</td>
+</tr>
+<tr>
+<td>6</td>
+<td>选择性写入</td>
+<td><code>extractMemories/</code></td>
+<td>新增写入 gate</td>
+<td>★★☆</td>
+</tr>
+<tr>
+<td>7</td>
+<td>显式 staleness</td>
+<td><code>memoryAge.ts</code></td>
+<td>替换 recency 衰减</td>
+<td>★☆☆</td>
+</tr>
+<tr>
+<td>8</td>
+<td>agent 间记忆共享</td>
+<td><code>teamMemorySync/</code></td>
+<td>新增共享层</td>
+<td>★★★</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Agent Loop 主循环</td>
+<td><code>query.ts</code></td>
+<td>重写行动循环</td>
+<td>★★★★</td>
+</tr>
+<tr>
+<td>10</td>
+<td>权限安全</td>
+<td><code>permissions/</code></td>
+<td>新增安全层</td>
+<td>★★☆</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-llm-sidequery-embedding">升级 1：用 LLM sidequery 替代 embedding 检索</h2>
+<h3 id="_5">当前问题</h3>
+<p>斯坦福小镇用 <code>embedding + 三维加权</code> 检索记忆：</p>
+<div class="highlight"><pre><span></span><code><span class="n">score</span> <span class="o">=</span> <span class="n">α</span> <span class="o">*</span> <span class="n">recency</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="n">β</span> <span class="o">*</span> <span class="n">importance</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="n">γ</span> <span class="o">*</span> <span class="n">cosine_sim</span><span class="p">(</span><span class="n">embed</span><span class="p">(</span><span class="n">query</span><span class="p">),</span> <span class="n">embed</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+</code></pre></div>
+
+<p>问题：
+- <strong>embedding 是语义浅匹配</strong>——"Klaus 在图书馆看论文" 和 "Klaus 对城市规划感兴趣" 的 embedding 距离可能很远，但语义高度相关
+- <strong>三个超参数 α, β, γ 需要手调</strong>——论文里用了固定值，不同场景需要不同权重
+- <strong>importance 打分不稳定</strong>——GPT-3.5 对 1-10 的校准很差</p>
+<h3 id="claude-code_1">Claude Code 的方案</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 伪代码：把 Claude Code 的 findRelevantMemories 移植到小镇</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">retrieve_memories</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">recent_actions</span><span class="p">):</span>
+    <span class="c1"># 1. 构建 manifest（只有 description，不含 body）</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">memory_files</span><span class="p">:</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">date</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 2. LLM sidequery（用便宜模型）</span>
+    <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Select memories useful for this agent&#39;s next action.</span>
+
+<span class="s2">Agent: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">traits</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">Current situation: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span>
+<span class="s2">Recent actions: </span><span class="si">{</span><span class="n">recent_actions</span><span class="si">}</span>
+
+<span class="s2">Available memories:</span>
+<span class="si">{</span><span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">Return filenames of clearly relevant memories (max 5). </span>
+<span class="s2">If unsure, don&#39;t include. Be selective.&quot;&quot;&quot;</span>
+
+    <span class="n">selected</span> <span class="o">=</span> <span class="n">cheap_model</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+
+    <span class="c1"># 3. 读取完整内容</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">agent</span><span class="o">.</span><span class="n">read_memory</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">]</span>
+</code></pre></div>
+
+<h3 id="_6">为什么对小镇更好</h3>
+<ul>
+<li><strong>25 个 agent × 每步都检索</strong> → embedding API 调用量大；LLM sidequery 用 Haiku/GPT-4o-mini 级别，比 embedding + cosine 更便宜</li>
+<li><strong>模型理解语义关联</strong> → "看论文" 和 "对城市规划感兴趣" 的关联，LLM 能识别，embedding 不一定能</li>
+<li><strong>上下文感知</strong> → Claude Code 的 tool-aware 过滤可以改成 <strong>action-aware 过滤</strong>：如果 agent 正在吃饭，不检索工作相关记忆的 API 文档类条目，但检索"Klaus 不吃辣"这种偏好类条目</li>
+</ul>
+<h3 id="_7">小镇特殊适配</h3>
+<p>小镇和 Claude Code 的区别：小镇记忆量更大（数千条 vs 数十条）。当记忆超过 200 条时，manifest 放不进一次 sidequery。</p>
+<p><strong>解法：两阶段检索</strong></p>
+<div class="highlight"><pre><span></span><code>阶段 1: 按 type + recency 预过滤到 ≤200 条（便宜，纯规则）
+阶段 2: LLM sidequery 精选 ≤5 条（贵，但只跑一次）
+</code></pre></div>
+
+<p>保留 recency 作为<strong>预过滤器</strong>而非评分因子。importance score 可以完全去掉。</p>
+<hr />
+<h2 id="2-append-only">升级 2：记忆从 append-only 流改为类型化文件</h2>
+<h3 id="_8">当前问题</h3>
+<p>Memory stream 是一个巨大的 append-only list，所有东西（观察、反思、计划）混在一起：</p>
+<div class="highlight"><pre><span></span><code>[09:14] Klaus sees Maria painting (observation)
+[09:15] Klaus walks to the cafe (observation)
+[09:15] Klaus is passionate about urban research (reflection)
+[10:00] Klaus plans to visit the library (plan)
+</code></pre></div>
+
+<p>问题：
+- <strong>线性增长</strong>——模拟几天就有数千条
+- <strong>没有结构</strong>——检索时无法按语义分区
+- <strong>reflection 和 observation 混在一起</strong>——高价值和低价值记忆无区分</p>
+<h3 id="_9">升级方案：四类封闭分类法</h3>
+<p>借鉴 Claude Code 的 <code>MEMORY_TYPES</code>，为小镇设计四类：</p>
+<div class="highlight"><pre><span></span><code><span class="n">MEMORY_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;social&#39;</span><span class="p">,</span>      <span class="c1"># 关于其他人的认知（≈ Claude Code 的 user）</span>
+    <span class="s1">&#39;self&#39;</span><span class="p">,</span>        <span class="c1"># 关于自己的偏好/目标/身份（≈ feedback）</span>
+    <span class="s1">&#39;world&#39;</span><span class="p">,</span>       <span class="c1"># 关于环境/事件/地点的知识（≈ project）</span>
+    <span class="s1">&#39;plan&#39;</span><span class="p">,</span>        <span class="c1"># 当前和未来的计划（≈ reference）</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<h3 id="_10">存储结构</h3>
+<div class="highlight"><pre><span></span><code>agents/
+├── klaus_mueller/
+│   ├── MEMORY.md                          # 索引（≤100 行）
+│   ├── social_maria_lopez.md              # 对 Maria 的认知
+│   ├── social_john_lin.md                 # 对 John 的认知
+│   ├── self_research_interests.md         # 自己的研究兴趣
+│   ├── self_daily_habits.md               # 日常习惯偏好
+│   ├── world_library_resources.md         # 图书馆相关知识
+│   ├── world_valentines_party.md          # 情人节派对事件
+│   └── plan_current.md                    # 当前计划
+├── maria_lopez/
+│   ├── MEMORY.md
+│   └── ...
+</code></pre></div>
+
+<p>每个文件有 frontmatter：</p>
+<div class="highlight"><pre><span></span><code>---
+name: Maria Lopez - friendship and art discussions
+description: Klaus&#39;s understanding of Maria&#39;s personality, art interests, and their friendship dynamics
+type: social
+<span class="gu">last_interaction: 2023-02-13T09:15:00</span>
+<span class="gu">---</span>
+
+Maria is an artist living next door. She&#39;s been working on a series about urban landscapes.
+Klaus and Maria often discuss the intersection of art and urban planning.
+She mentioned she&#39;s preparing for a gallery showing in March.
+</code></pre></div>
+
+<h3 id="_11">核心好处</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>append-only 流</th>
+<th>类型化文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查找"Klaus 对 Maria 的印象"</td>
+<td>全流扫描</td>
+<td>直接读 <code>social_maria_lopez.md</code></td>
+</tr>
+<tr>
+<td>总记忆量</td>
+<td>O(时间步) 无限增长</td>
+<td>O(实体数) 有上限</td>
+</tr>
+<tr>
+<td>更新认知</td>
+<td>追加新条目（旧的还在）</td>
+<td>修改原文件（旧的被覆盖）</td>
+</tr>
+<tr>
+<td>检索效率</td>
+<td>需要 embedding 全量排序</td>
+<td>manifest 只有文件名 + description</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3reflection-autodream">升级 3：Reflection 改为 autoDream 式就地整合</h2>
+<h3 id="_12">当前问题</h3>
+<p>斯坦福小镇的 Reflection 是<strong>追加式</strong>的：</p>
+<div class="highlight"><pre><span></span><code>观察 → 观察 → 观察 → [触发 Reflection] → 追加一条高阶 insight → 继续观察 → ...
+</code></pre></div>
+
+<p>问题：
+- <strong>层数无限增长</strong>（observation → reflection → reflection-of-reflection）
+- <strong>不删不改</strong>——被推翻的旧认知永远留着
+- <strong>reflection 频率靠 importance 累积</strong>——重要事件少的日子可能一整天不 reflect</p>
+<h3 id="autodream">升级方案：autoDream 式定时就地整合</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DreamEngine</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;模拟 Claude Code 的 autoDream 机制&quot;&quot;&quot;</span>
+
+    <span class="n">MIN_HOURS</span> <span class="o">=</span> <span class="mi">6</span>          <span class="c1"># 小镇时间 6 小时触发一次（≈ Claude Code 的 24h）</span>
+    <span class="n">MIN_INTERACTIONS</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># 至少 10 次有意义交互</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">maybe_dream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">current_time</span><span class="p">):</span>
+        <span class="c1"># Gate 1: 时间（最便宜的检查）</span>
+        <span class="n">hours_since</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">agent</span><span class="o">.</span><span class="n">last_dream_time</span><span class="p">)</span><span class="o">.</span><span class="n">hours</span>
+        <span class="k">if</span> <span class="n">hours_since</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_HOURS</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Gate 2: 交互量</span>
+        <span class="n">interactions</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">count_interactions_since</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">last_dream_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">interactions</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_INTERACTIONS</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Gate 3: 锁（防并发 dream）</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">try_acquire_dream_lock</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_dream</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">current_time</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">release_dream_lock</span><span class="p">(</span><span class="n">current_time</span><span class="p">)</span>  <span class="c1"># mtime = now</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_dream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">current_time</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;四阶段整合，直接移植 Claude Code 的 consolidationPrompt&quot;&quot;&quot;</span>
+
+        <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Dream: Memory Consolidation for </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span>
+
+<span class="s2">You are performing a dream — a reflective pass over </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;s memory files.</span>
+<span class="s2">Synthesize recent experiences into durable, well-organized memories.</span>
+
+<span class="s2">## Phase 1 — Orient</span>
+<span class="s2">- Read MEMORY.md index</span>
+<span class="s2">- Scan existing topic files</span>
+
+<span class="s2">## Phase 2 — Gather recent signal</span>
+<span class="s2">Priority:</span>
+<span class="s2">1. New social interactions (met someone, learned something about someone)</span>
+<span class="s2">2. Significant events (party, argument, discovery)</span>
+<span class="s2">3. Changes in plans or goals</span>
+
+<span class="s2">## Phase 3 — Consolidate</span>
+<span class="s2">- Merge new observations into existing topic files</span>
+<span class="s2">- Convert &quot;earlier today&quot; → absolute timestamps</span>
+<span class="s2">- If today&#39;s experience contradicts a memory, UPDATE the source file</span>
+<span class="s2">- Do NOT create near-duplicate files</span>
+
+<span class="s2">## Phase 4 — Prune and index</span>
+<span class="s2">- Keep MEMORY.md under 100 lines</span>
+<span class="s2">- Remove stale pointers</span>
+<span class="s2">- Add important new entries</span>
+<span class="s2">- Resolve contradictions between files</span>
+
+<span class="s2">## Current memories:</span>
+<span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">memory_manifest</span><span class="p">()</span><span class="si">}</span>
+
+<span class="s2">## Recent unprocessed observations:</span>
+<span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">unprocessed_observations</span><span class="p">()</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">FileReadTool</span><span class="p">,</span> <span class="n">FileWriteTool</span><span class="p">,</span> <span class="n">FileEditTool</span>
+        <span class="p">])</span>
+
+        <span class="c1"># 清空已处理的观察缓冲区</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">clear_observation_buffer</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="_13">关键差异：追加 → 就地修改</h3>
+<div class="highlight"><pre><span></span><code>旧方案（Reflection）:
+  &quot;Klaus saw Maria painting&quot; (observation, day 1)
+  &quot;Klaus values his friendship with Maria&quot; (reflection, day 1)
+  &quot;Klaus and Maria discussed urban art&quot; (observation, day 2)
+  &quot;Klaus considers Maria a kindred spirit&quot; (reflection, day 2)  ← 越来越多
+
+新方案（Dream）:
+  social_maria_lopez.md (持续更新):
+  ---
+  最新：Klaus 和 Maria 讨论了城市艺术，两人是志趣相投的朋友。
+  Maria 正在准备三月的画展。
+  ---
+  ← 一个文件，所有关于 Maria 的认知都在这里，会被 dream 持续更新
+</code></pre></div>
+
+<h3 id="_14">小镇特殊适配：观察缓冲区</h3>
+<p>Claude Code 的 extractMemories 在每个 query 结束后运行。小镇需要一个<strong>观察缓冲区</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Agent</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_buffer</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># 未被 dream 处理的观察</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">memory_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;agents/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;每个时间步调用——只写缓冲区，不动文件&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">current_time</span><span class="p">,</span>
+            <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">event</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unprocessed_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;给 dream prompt 用&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> 
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_buffer</span>
+        <span class="p">)</span>
+</code></pre></div>
+
+<p><strong>观察先进缓冲区，dream 时批量整合进文件</strong>。这比原版的"每步都写 memory stream"更高效——减少了 90% 的 LLM 写入调用。</p>
+<hr />
+<h2 id="4-fork-pattern-agent">升级 4：引入 Fork pattern 降低多 agent 成本</h2>
+<h3 id="_15">当前问题</h3>
+<p>25 个 agent，每个每步都要调 API。如果每个都带完整 system prompt + 记忆 + 历史，<strong>token 成本爆炸</strong>。</p>
+<h3 id="claude-code-fork">Claude Code 的 Fork 精髓</h3>
+<p>来自 <code>docs/sub-agent-fork.md</code> 的核心发现：</p>
+<blockquote>
+<p>Fork 的本质是构造<strong>字节相同的 API 请求前缀</strong>让父子共享 Anthropic prompt cache。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>cache_key = hash(system_prompt + tools + model + messages_prefix + thinking_config)
+</code></pre></div>
+
+<h3 id="agent">移植方案：世界模拟器作为"父 agent"</h3>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────────────┐
+│  World Simulator（父 agent）                      │
+│  - 共享的世界描述 system prompt                    │
+│  - 共享的工具定义（move, talk, observe, ...）      │
+│  - 共享的世界状态消息前缀                          │
+└─────────────────────┬────────────────────────────┘
+                      │ fork（字节相同的前缀）
+        ┌─────────────┼─────────────────┐
+        ▼             ▼                 ▼
+    Klaus fork    Maria fork       John fork
+    (+ Klaus 记忆  (+ Maria 记忆    (+ John 记忆
+     + Klaus 性格)  + Maria 性格)    + John 性格)
+</code></pre></div>
+
+<p><strong>具体做法</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">WorldSimulator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># 所有 agent 共享的前缀</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_system_prompt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;You are simulating a character in a small town.</span>
+
+<span class="s2">World state:</span>
+<span class="s2">- Location map: ...</span>
+<span class="s2">- Current time: ...</span>
+<span class="s2">- Weather: ...</span>
+
+<span class="s2">Available actions:</span>
+<span class="s2">- move(destination): Walk to a location</span>
+<span class="s2">- talk(agent, message): Start a conversation</span>
+<span class="s2">- observe(): Look around</span>
+<span class="s2">- reflect(): Think about recent events</span>
+<span class="s2">- sleep(): End the day</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">MoveTool</span><span class="p">,</span> <span class="n">TalkTool</span><span class="p">,</span> <span class="n">ObserveTool</span><span class="p">,</span> <span class="n">ReflectTool</span><span class="p">,</span> <span class="n">SleepTool</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;每个 agent 的每一步&quot;&quot;&quot;</span>
+
+        <span class="c1"># 构造 cache-safe 请求</span>
+        <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="c1"># 共享前缀（所有 agent 字节相同 → 命中 cache）</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_world_state_messages</span><span class="p">(),</span>
+
+            <span class="c1"># agent 特有部分（只有这部分是新 token）</span>
+            <span class="n">user_message</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">personality</span><span class="si">}</span>
+
+<span class="s2">Your current memories:</span>
+<span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">relevant_memories</span><span class="p">(</span><span class="n">context</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">Your current location: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="si">}</span>
+<span class="s2">What do you do next?&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">api</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_system_prompt</span><span class="p">,</span>  <span class="c1"># ← cache hit</span>
+            <span class="n">tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_tools</span><span class="p">,</span>           <span class="c1"># ← cache hit</span>
+            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>                 <span class="c1"># ← 前缀 cache hit</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">response</span>
+</code></pre></div>
+
+<h3 id="_16">成本估算</h3>
+<p>假设 shared prefix = 5000 tokens, agent-specific = 2000 tokens：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>每步每 agent 的 input tokens</th>
+<th>25 agent × 100 步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原版（无 cache）</td>
+<td>7000</td>
+<td>17,500,000</td>
+</tr>
+<tr>
+<td>Fork pattern（90% cache hit）</td>
+<td>700 + 2000 = 2700</td>
+<td>6,750,000</td>
+</tr>
+<tr>
+<td><strong>节省</strong></td>
+<td></td>
+<td><strong>61%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>实际节省可能更高，因为 Anthropic API 的 cache hit token 价格是原价的 10%。</p>
+<hr />
+<h2 id="5">升级 5：加入双注入路径管理上下文窗口</h2>
+<h3 id="_17">当前问题</h3>
+<p>原版把所有检索到的记忆直接拼进 prompt。当记忆多了，prompt 膨胀，成本上升。</p>
+<h3 id="claude-code_2">Claude Code 的双路径</h3>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>内容</th>
+<th>常驻？</th>
+<th>成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MEMORY.md 索引</td>
+<td>一行/文件，知道"有什么"</td>
+<td>✅ 每次都带</td>
+<td>低（≤100 行）</td>
+</tr>
+<tr>
+<td>相关文件附件</td>
+<td>完整内容，知道"具体是什么"</td>
+<td>❌ 按需注入</td>
+<td>中（≤5 文件）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_18">小镇移植</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AgentMemoryInjector</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_system_prompt_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;路径 1：常驻索引（每步都带）&quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">read_memory_index</span><span class="p">()</span>  <span class="c1"># MEMORY.md 内容</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2"># Your Memory Index</span>
+<span class="s2">The following is a summary of everything you remember. </span>
+<span class="s2">Use this to decide if you need to recall specific memories.</span>
+
+<span class="si">{</span><span class="n">index</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_relevant_attachments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">situation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;路径 2：按需注入（LLM sidequery 选择）&quot;&quot;&quot;</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">retrieve_memories</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">situation</span><span class="p">)</span>  <span class="c1"># 升级 1 的检索</span>
+        <span class="n">attachments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mem</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">read_memory_file</span><span class="p">(</span><span class="n">mem</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">age_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">mem</span><span class="o">.</span><span class="n">mtime</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[Memory: </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">]&quot;</span>
+            <span class="k">if</span> <span class="n">age_days</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">header</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (⚠️ </span><span class="si">{</span><span class="n">age_days</span><span class="si">}</span><span class="s2"> days old — verify before relying on)&quot;</span>
+            <span class="n">attachments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attachments</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>效果</strong>：每步只带 ~100 行索引（常驻），只在需要时注入 ≤5 个完整文件。比原版"检索 10 条记忆全文拼进去"省 token。</p>
+<hr />
+<h2 id="6">升级 6：记忆写入从全记改为选记</h2>
+<h3 id="_19">当前问题</h3>
+<p>原版每步都写 memory stream："Klaus walks to the cafe" "Klaus sits down" "Klaus orders coffee"——大量琐碎观察。</p>
+<h3 id="gate">升级方案：写入 gate</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ObservationFilter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;借鉴 Claude Code 的 &quot;What NOT to save&quot; gate&quot;&quot;&quot;</span>
+
+    <span class="n">TRIVIAL_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;walks to&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sits down&quot;</span><span class="p">,</span> 
+        <span class="s2">&quot;stands up&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;looks around&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;enters the&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;exits the&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;快速过滤 + LLM 判断&quot;&quot;&quot;</span>
+
+        <span class="c1"># Gate 1: 模式过滤（免费）</span>
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRIVIAL_PATTERNS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">observation</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Gate 2: 与已有记忆重复检测（便宜）</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_redundant</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Gate 3: LLM 判断是否值得记（贵，但只对通过前两关的调用）</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">llm_importance_check</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">llm_importance_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Would this observation change </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;s understanding </span>
+<span class="s2">of someone, something, or themselves? </span>
+
+<span class="s2">Observation: </span><span class="si">{</span><span class="n">observation</span><span class="si">}</span>
+<span class="s2">Answer YES or NO only.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">cheap_model</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;YES&quot;</span>
+</code></pre></div>
+
+<p><strong>预期效果</strong>：写入量减少 70-80%。"Klaus 走到咖啡馆"不记，"Klaus 发现 Maria 在为画展焦虑"记。</p>
+<hr />
+<h2 id="7-staleness">升级 7：显式 staleness 替代隐式衰减</h2>
+<h3 id="_20">当前问题</h3>
+<p>原版的 recency decay 是隐式的——旧记忆分数自然下降但永远不删。几天后 memory stream 里充满了过时信息。</p>
+<h3 id="_21">升级方案</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">memory_freshness_warning</span><span class="p">(</span><span class="n">memory_file</span><span class="p">,</span> <span class="n">current_sim_time</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;移植 Claude Code 的 memoryAge.ts&quot;&quot;&quot;</span>
+    <span class="n">age_hours</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_sim_time</span> <span class="o">-</span> <span class="n">memory_file</span><span class="o">.</span><span class="n">last_modified</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span>
+
+    <span class="c1"># 小镇时间流速不同，用小时而非天</span>
+    <span class="k">if</span> <span class="n">age_hours</span> <span class="o">&lt;=</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># 6 小时内的记忆是新鲜的</span>
+    <span class="k">elif</span> <span class="n">age_hours</span> <span class="o">&lt;=</span> <span class="mi">24</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(This memory is </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">age_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> hours old. The situation may have changed.)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(⚠️ This memory is </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">age_hours</span><span class="o">/</span><span class="mi">24</span><span class="p">)</span><span class="si">}</span><span class="s2"> days old. Verify before acting on it.)&quot;</span>
+</code></pre></div>
+
+<p>配合 autoDream（升级 3），过时记忆会在 dream 期间被<strong>主动修改或删除</strong>，而不是无限堆积。</p>
+<hr />
+<h2 id="8-agent">升级 8：引入 agent 间记忆共享</h2>
+<h3 id="_22">当前问题</h3>
+<p>原版 25 个 agent 各自独立。如果 Klaus 告诉 Maria 一件事，Maria 只通过"对话记忆"知道，但这个信息不会在其他 agent 间传播（除非他们也对话）。</p>
+<h3 id="teammemorysync">升级方案：借鉴 teamMemorySync 的共享层</h3>
+<div class="highlight"><pre><span></span><code>agents/
+├── _shared/                    # 共享层（≈ Claude Code 的 team memory）
+│   ├── MEMORY.md               # 共享索引
+│   ├── world_valentines_party.md   # 公共事件
+│   └── world_weather.md        # 天气等公共信息
+│
+├── klaus_mueller/              # 私有层
+│   ├── MEMORY.md
+│   ├── social_maria_lopez.md   # Klaus 视角的 Maria
+│   └── self_research.md
+│
+├── maria_lopez/
+│   ├── MEMORY.md
+│   ├── social_klaus_mueller.md # Maria 视角的 Klaus
+│   └── self_art_projects.md
+</code></pre></div>
+
+<p><strong>规则</strong>：
+- 公共事件（派对、天气、店铺开关门）写入 <code>_shared/</code>
+- 个人观察和社交印象写入私有层
+- 每个 agent 的检索同时查两个目录
+- 共享记忆的 staleness 阈值更长（公共事实变化慢）</p>
+<p><strong>与斯坦福小镇的"传话"机制互补</strong>：原版靠 agent 对话传播信息，共享层让<strong>公共事件自动可见</strong>（现实中人通过布告栏/新闻/环境感知获取公共信息，不全靠口口相传）。</p>
+<hr />
+<h2 id="9agent-loop">升级 9：Agent Loop 化改造主循环</h2>
+<h3 id="_23">当前问题</h3>
+<p>原版每步只输出一个动作。agent 不能"尝试 → 失败 → 调整"。</p>
+<h3 id="queryts-agent-loop">升级方案：借鉴 query.ts 的 Agent Loop</h3>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">agent_step</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">max_turns</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;一个时间步内，agent 可以多次尝试&quot;&quot;&quot;</span>
+
+    <span class="n">messages</span> <span class="o">=</span> <span class="n">build_initial_messages</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">world</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_turns</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">system_prompt</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="n">AGENT_TOOLS</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># 纯文本回复 = agent 在&quot;想&quot;或&quot;说&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+            <span class="c1"># 对外表达（其他 agent 可感知）</span>
+            <span class="n">world</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="c1"># 有工具调用 = agent 在&quot;做&quot;</span>
+        <span class="k">for</span> <span class="n">tool_call</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">execute_tool</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">tool_call</span><span class="p">)</span>
+
+            <span class="c1"># 关键：错误作为 tool_result 返回（不抛异常）</span>
+            <span class="c1"># 让模型自己纠错</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result_message</span><span class="p">(</span><span class="n">tool_call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span>
+
+        <span class="c1"># 继续循环，模型看到结果后可能调整策略</span>
+
+    <span class="k">return</span> <span class="n">messages</span>
+
+<span class="c1"># 工具定义</span>
+<span class="n">AGENT_TOOLS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;move&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Walk to a location. Returns what you see there.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;destination&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;talk&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Say something to someone nearby. Returns their response.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;observe&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Look around carefully. Returns detailed description.&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;use_object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Interact with an object (open door, read book, etc.)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;object&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;wait&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Wait and do nothing for a while.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;duration_minutes&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<h3 id="tool_result">关键设计：错误作为 tool_result</h3>
+<p>来自 <code>docs/agent-loop-implementation.md</code> 的核心发现：</p>
+<blockquote>
+<p>错误作为 tool_result 让模型自己纠错，不抛异常。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">execute_tool</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">tool_call</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;move&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">is_path_blocked</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]):</span>
+                <span class="c1"># 不抛异常，返回失败描述 → 模型会尝试其他路线</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;The path to </span><span class="si">{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;destination&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> is blocked. You could try going through the park instead.&quot;</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">world</span><span class="o">.</span><span class="n">describe_location</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;talk&quot;</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">find_agent</span><span class="p">(</span><span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not here. You see: </span><span class="si">{</span><span class="n">world</span><span class="o">.</span><span class="n">agents_at</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="c1"># 触发目标 agent 的响应</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">target</span><span class="o">.</span><span class="n">respond_to</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="c1"># ...</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># 始终返回，不抛出</span>
+</code></pre></div>
+
+<p><strong>效果</strong>：agent 可以在一个时间步内尝试多个动作，遇到障碍自己调整。比原版的"单步输出"更自然——现实中人不会"走到门口 → 发现锁了 → 等下一个时间步才想到敲门"。</p>
+<hr />
+<h2 id="10">升级 10：权限与安全模型</h2>
+<h3 id="_24">为什么需要</h3>
+<p>如果小镇 agent 有工具（move, talk, use_object），就需要约束：
+- agent 不能瞬移（必须经过路径）
+- agent 不能读取他人私有记忆
+- agent 不能同时在两个地方</p>
+<h3 id="claude-code-canusetool">借鉴 Claude Code 的 canUseTool 模式</h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">can_use_tool</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">tool_call</span><span class="p">,</span> <span class="n">world</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;运行时权限检查（不是裁剪工具列表）&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;move&quot;</span><span class="p">:</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">world</span><span class="o">.</span><span class="n">is_adjacent</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;You can&#39;t reach </span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2"> in one step&quot;</span>
+        <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">is_locked</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2"> is locked&quot;</span>
+
+    <span class="k">elif</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;talk&quot;</span><span class="p">:</span>
+        <span class="n">target_name</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;target&quot;</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">find_agent</span><span class="p">(</span><span class="n">target_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">target</span><span class="o">.</span><span class="n">location</span> <span class="o">!=</span> <span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_name</span><span class="si">}</span><span class="s2"> is not in </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">elif</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;use_object&quot;</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">world</span><span class="o">.</span><span class="n">objects_at</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">location</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;There is no </span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s2"> here&quot;</span>
+
+    <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
+</code></pre></div>
+
+<p><strong>关键</strong>：像 Claude Code 一样，<strong>不裁剪工具列表，而是在调用时检查</strong>。原因相同——如果不同 agent 的工具列表不同，就无法共享 prompt cache（升级 4 的 Fork pattern 失效）。</p>
+<hr />
+<h2 id="_25">实现优先级与依赖关系</h2>
+<div class="highlight"><pre><span></span><code>                          ┌─────────────┐
+                          │ 升级 2       │
+                     ┌───&gt;│ 类型化文件   │&lt;───┐
+                     │    └──────┬──────┘    │
+                     │           │           │
+              ┌──────┴───┐ ┌────▼─────┐ ┌───┴──────┐
+              │ 升级 1    │ │ 升级 3   │ │ 升级 5   │
+              │ LLM 检索  │ │ autoDream│ │ 双注入   │
+              └──────┬───┘ └────┬─────┘ └───┬──────┘
+                     │          │           │
+                     └────┬─────┘           │
+                          │                 │
+                     ┌────▼─────┐    ┌──────▼──────┐
+                     │ 升级 6   │    │ 升级 7      │
+                     │ 选择写入  │    │ staleness   │
+                     └──────────┘    └─────────────┘
+
+        ─── 独立可并行 ───
+
+  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+  │ 升级 4   │  │ 升级 8   │  │ 升级 9   │  │ 升级 10  │
+  │ Fork     │  │ 共享记忆  │  │ AgentLoop│  │ 权限     │
+  │ pattern  │  │          │  │          │  │          │
+  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+</code></pre></div>
+
+<h3 id="_26">推荐实施顺序</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>升级项</th>
+<th>理由</th>
+<th>预计工作量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Phase 0</strong></td>
+<td><strong>升级 2</strong>（类型化文件）</td>
+<td>存储层是其他一切的基础</td>
+<td>2-3 天</td>
+</tr>
+<tr>
+<td><strong>Phase 1a</strong></td>
+<td><strong>升级 1</strong>（LLM 检索）</td>
+<td>有了类型化文件才能做 manifest</td>
+<td>1-2 天</td>
+</tr>
+<tr>
+<td><strong>Phase 1b</strong></td>
+<td><strong>升级 5</strong>（双注入）</td>
+<td>和检索同时做，相互依赖</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td><strong>Phase 1c</strong></td>
+<td><strong>升级 7</strong>（staleness）</td>
+<td>最简单，几十行代码</td>
+<td>半天</td>
+</tr>
+<tr>
+<td><strong>Phase 2</strong></td>
+<td><strong>升级 3</strong>（autoDream）</td>
+<td>依赖类型化文件</td>
+<td>2-3 天</td>
+</tr>
+<tr>
+<td><strong>Phase 2</strong></td>
+<td><strong>升级 6</strong>（选择写入）</td>
+<td>和 dream 配合</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td><strong>Phase 3</strong></td>
+<td><strong>升级 9</strong>（Agent Loop）</td>
+<td>独立，改主循环</td>
+<td>2-3 天</td>
+</tr>
+<tr>
+<td><strong>Phase 3</strong></td>
+<td><strong>升级 10</strong>（权限）</td>
+<td>和 Agent Loop 配合</td>
+<td>1 天</td>
+</tr>
+<tr>
+<td><strong>Phase 4</strong></td>
+<td><strong>升级 4</strong>（Fork pattern）</td>
+<td>优化项，最后做</td>
+<td>2-3 天</td>
+</tr>
+<tr>
+<td><strong>Phase 4</strong></td>
+<td><strong>升级 8</strong>（共享记忆）</td>
+<td>扩展项，最后做</td>
+<td>1-2 天</td>
+</tr>
+</tbody>
+</table>
+<p><strong>总计：约 2-3 周</strong>（一个人全职）。</p>
+<hr />
+<h2 id="_27">预期效果</h2>
+<h3 id="_28">定性提升</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>原版</th>
+<th>升级后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>记忆质量</strong></td>
+<td>大量琐碎观察淹没重要记忆</td>
+<td>只存有意义的，定期整理</td>
+</tr>
+<tr>
+<td><strong>行为自然度</strong></td>
+<td>单步输出，不能自我纠错</td>
+<td>多步尝试，遇到障碍自动调整</td>
+</tr>
+<tr>
+<td><strong>长期一致性</strong></td>
+<td>旧认知永远留着，可能矛盾</td>
+<td>dream 主动修正矛盾</td>
+</tr>
+<tr>
+<td><strong>社交深度</strong></td>
+<td>只记对话内容</td>
+<td>维护结构化人物档案</td>
+</tr>
+<tr>
+<td><strong>公共认知</strong></td>
+<td>只靠口口相传</td>
+<td>共享层自动广播公共事件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_29">定量估算</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>原版</th>
+<th>升级后</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>每步 input token</td>
+<td>~7000</td>
+<td>~2700</td>
+<td>Fork pattern cache hit</td>
+</tr>
+<tr>
+<td>记忆写入频率</td>
+<td>每步一条</td>
+<td>每 5-10 步一条</td>
+<td>选择性写入 gate</td>
+</tr>
+<tr>
+<td>记忆总量增速</td>
+<td>O(时间步)</td>
+<td>O(实体/事件数)</td>
+<td>类型化文件 + dream 合并</td>
+</tr>
+<tr>
+<td>检索准确率</td>
+<td>embedding cosine ~60%</td>
+<td>LLM sidequery ~85%</td>
+<td>经验估计</td>
+</tr>
+<tr>
+<td>API 总成本</td>
+<td>基准</td>
+<td><strong>-50% ~ -65%</strong></td>
+<td>Fork + 双注入 + 选记</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_30">风险与取舍</h2>
+<h3 id="1">1. 失去的东西</h3>
+<table>
+<thead>
+<tr>
+<th>原版优势</th>
+<th>升级后的代价</th>
+<th>缓解方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>完整记录</strong>（每步都有）</td>
+<td>选记会丢失细节</td>
+<td>观察缓冲区保留原始流，dream 前可回溯</td>
+</tr>
+<tr>
+<td><strong>importance score</strong></td>
+<td>没有显式重要性评分</td>
+<td>LLM 检索隐式做了这件事</td>
+</tr>
+<tr>
+<td><strong>多层 reflection</strong></td>
+<td>只有单层 dream</td>
+<td>如果需要深度反思，可在 dream prompt 里加 "generate higher-level insights"</td>
+</tr>
+<tr>
+<td><strong>简单可复现</strong></td>
+<td>LLM sidequery 有随机性</td>
+<td>固定 temperature=0 + seed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2">2. 新增的风险</h3>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>严重程度</th>
+<th>缓解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>dream 写错文件</strong>（合并时丢信息）</td>
+<td>中</td>
+<td>dream 前 git snapshot，出错可回滚</td>
+</tr>
+<tr>
+<td><strong>LLM 检索遗漏</strong>（sidequery 没选到关键记忆）</td>
+<td>中</td>
+<td>保留 recency 预过滤作为 fallback</td>
+</tr>
+<tr>
+<td><strong>fork cache miss</strong>（system prompt 漂移）</td>
+<td>低</td>
+<td>字节冻结 shared prefix，不动态生成</td>
+</tr>
+<tr>
+<td><strong>共享记忆冲突</strong>（两个 agent 同时改 _shared/）</td>
+<td>低</td>
+<td>文件级锁 + last-write-wins</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3">3. 适用性判断</h3>
+<p>这套升级方案<strong>最适合</strong>：
+- 模拟时间长（数天以上）——记忆整合价值高
+- agent 数量多（&gt;10）——Fork cache 节省明显
+- 需要长期一致人格——类型化记忆保障连续性
+- 预算有限——token 节省 50-65%</p>
+<p><strong>不太适合</strong>：
+- 短时间模拟（&lt;几小时）——dream 来不及触发
+- 强调完整回放——选记会丢细节
+- 需要严格可复现——LLM sidequery 有随机性</p>
+<hr />
+<h2 id="_31">结语</h2>
+<p>这十项升级的核心思路只有一个：</p>
+<blockquote>
+<p><strong>把 2023 年用算法做的事，交给 2025 年的模型自己做。</strong></p>
+</blockquote>
+<p>embedding → LLM sidequery。importance score → LLM 写入 gate。recency decay → LLM dream 主动清理。三维加权公式 → 让模型读个清单自己判断。</p>
+<p>斯坦福小镇论文的伟大在于<strong>定义了问题</strong>（agent 需要记忆-反思-规划三环节）。Claude Code 的贡献在于<strong>证明了一条工程路线</strong>（让模型自己承担一切判断，代码只提供工具和约束）。</p>
+<p>把两者结合：<strong>保留小镇的问题定义和社会模拟框架，替换为 Claude Code 验证过的工程实现</strong>——这就是升级的本质。</p>
+</div>
+</body>
+</html>

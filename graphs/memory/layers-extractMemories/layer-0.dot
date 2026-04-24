@@ -1,0 +1,57 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "Tool.ts" [fillcolor="#ffcc99"];
+  "bootstrap/state.ts" [fillcolor="#ffcc99"];
+  "hooks/useCanUseTool.tsx" [fillcolor="#ffcc99"];
+  "memdir/memdir.ts" [fillcolor="#ffcc99"];
+  "memdir/memoryScan.ts" [fillcolor="#ffcc99"];
+  "memdir/paths.ts" [fillcolor="#ffcc99"];
+  "memdir/teamMemPaths.ts" [fillcolor="#ffcc99"];
+  "services/analytics/growthbook.ts" [fillcolor="#ffcc99"];
+  "services/analytics/index.ts" [fillcolor="#ffcc99"];
+  "services/analytics/metadata.ts" [fillcolor="#ffcc99"];
+  "services/extractMemories/extractMemories.ts" [fillcolor="#ff9999"];
+  "services/extractMemories/prompts.ts" [fillcolor="#ffcc99"];
+  "tools/BashTool/toolName.ts" [fillcolor="#ffcc99"];
+  "tools/FileEditTool/constants.ts" [fillcolor="#ffcc99"];
+  "tools/FileReadTool/prompt.ts" [fillcolor="#ffcc99"];
+  "tools/FileWriteTool/prompt.ts" [fillcolor="#ffcc99"];
+  "tools/GlobTool/prompt.ts" [fillcolor="#ffcc99"];
+  "tools/GrepTool/prompt.ts" [fillcolor="#ffcc99"];
+  "tools/REPLTool/constants.ts" [fillcolor="#ffcc99"];
+  "utils/abortController.ts" [fillcolor="#ffcc99"];
+  "utils/array.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/forkedAgent.ts" [fillcolor="#ffcc99"];
+  "utils/hooks/postSamplingHooks.ts" [fillcolor="#ffcc99"];
+  "utils/messages.ts" [fillcolor="#ffcc99"];
+
+  "services/extractMemories/extractMemories.ts" -> "Tool.ts";
+  "services/extractMemories/extractMemories.ts" -> "bootstrap/state.ts";
+  "services/extractMemories/extractMemories.ts" -> "hooks/useCanUseTool.tsx";
+  "services/extractMemories/extractMemories.ts" -> "memdir/memdir.ts";
+  "services/extractMemories/extractMemories.ts" -> "memdir/memoryScan.ts";
+  "services/extractMemories/extractMemories.ts" -> "memdir/paths.ts";
+  "services/extractMemories/extractMemories.ts" -> "memdir/teamMemPaths.ts";
+  "services/extractMemories/extractMemories.ts" -> "services/analytics/growthbook.ts";
+  "services/extractMemories/extractMemories.ts" -> "services/analytics/index.ts";
+  "services/extractMemories/extractMemories.ts" -> "services/analytics/metadata.ts";
+  "services/extractMemories/extractMemories.ts" -> "services/extractMemories/prompts.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/BashTool/toolName.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/FileEditTool/constants.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/FileReadTool/prompt.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/FileWriteTool/prompt.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/GlobTool/prompt.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/GrepTool/prompt.ts";
+  "services/extractMemories/extractMemories.ts" -> "tools/REPLTool/constants.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/abortController.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/array.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/debug.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/forkedAgent.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/hooks/postSamplingHooks.ts";
+  "services/extractMemories/extractMemories.ts" -> "utils/messages.ts";
+}

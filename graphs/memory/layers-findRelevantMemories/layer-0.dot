@@ -1,0 +1,21 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "memdir/findRelevantMemories.ts" [fillcolor="#ff9999"];
+  "memdir/memoryScan.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/errors.ts" [fillcolor="#ffcc99"];
+  "utils/model/model.ts" [fillcolor="#ffcc99"];
+  "utils/sideQuery.ts" [fillcolor="#ffcc99"];
+  "utils/slowOperations.ts" [fillcolor="#ffcc99"];
+
+  "memdir/findRelevantMemories.ts" -> "memdir/memoryScan.ts";
+  "memdir/findRelevantMemories.ts" -> "utils/debug.ts";
+  "memdir/findRelevantMemories.ts" -> "utils/errors.ts";
+  "memdir/findRelevantMemories.ts" -> "utils/model/model.ts";
+  "memdir/findRelevantMemories.ts" -> "utils/sideQuery.ts";
+  "memdir/findRelevantMemories.ts" -> "utils/slowOperations.ts";
+}

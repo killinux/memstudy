@@ -1,0 +1,129 @@
+digraph agent_fork {
+  rankdir=TB;
+  node [shape=box, style=filled, fontsize=9, fontname="Helvetica"];
+  label="Sub-Agent / Fork Mechanism (free-code45)";
+  labelloc=t; fontsize=14;
+  compound=true;
+
+  // ═══ Entry: AgentTool.call() ═══
+  subgraph cluster_entry {
+    label="AgentTool.call() — entry";
+    style=filled; color="#d0d0d0"; fillcolor="#f0f0f0";
+
+    "AgentTool::call" [fillcolor="#ff9999", label="AgentTool.call()\n[AgentTool.tsx:196+]\nargs: prompt, subagent_type?,\nmodel?, run_in_background?,\nname?, mode?, isolation?"];
+    "AgentTool::route" [fillcolor="#ffb3b3", label="Route\n[AgentTool.tsx:483-557]\nFork? Coordinator?\nNamed? Teammate?"];
+  }
+
+  "AgentTool::call" -> "AgentTool::route";
+
+  // ═══ FORK PATH ═══
+  subgraph cluster_fork {
+    label="FORK path (subagent_type omitted, gate FORK_SUBAGENT)";
+    style=filled; color="#d0e0d0"; fillcolor="#e8fae8";
+
+    "fork::isEnabled" [fillcolor="#99ff99", label="isForkSubagentEnabled()\n[forkSubagent.ts:32]\n- gate FORK_SUBAGENT\n- !coordinator\n- !nonInteractive"];
+    "fork::FORK_AGENT" [fillcolor="#b3ffb3", label="FORK_AGENT def\n[forkSubagent.ts:60]\ntools: ['*']\npermissionMode: 'bubble'\nmodel: 'inherit'\ngetSystemPrompt: () => ''"];
+    "fork::buildMsgs" [fillcolor="#b3ffb3", label="buildForkedMessages()\n[forkSubagent.ts:107]\n[...history,\n  parent_assistant(all_tool_uses),\n  user(placeholders × N, directive)]"];
+    "fork::placeholder" [fillcolor="#ccffcc", label="FORK_PLACEHOLDER_RESULT\n[forkSubagent.ts:93]\n'Fork started — processing\nin background'\n⚠ MUST be byte-identical\nacross all fork children"];
+    "fork::renderedSP" [fillcolor="#b3ffb3", label="renderedSystemPrompt\n[AgentTool.tsx:496]\nthreaded from parent\n(no recompute → no\nGrowthBook drift)"];
+    "fork::recurseGuard" [fillcolor="#ccffcc", label="isInForkChild()\n[forkSubagent.ts:78]\nscan messages for\nFORK_BOILERPLATE_TAG"];
+  }
+
+  "AgentTool::route" -> "fork::isEnabled" [label="no subagent_type"];
+  "fork::isEnabled" -> "fork::buildMsgs";
+  "fork::buildMsgs" -> "fork::placeholder" [style=dashed, label="uses"];
+  "fork::isEnabled" -> "fork::renderedSP";
+  "fork::isEnabled" -> "fork::recurseGuard" [style=dashed, label="reject if true"];
+
+  // ═══ NAMED SUBAGENT PATH ═══
+  subgraph cluster_named {
+    label="Named subagent path";
+    style=filled; color="#e0d0e0"; fillcolor="#fae8fa";
+
+    "named::resolve" [fillcolor="#cc99ff", label="agentDefinitions\n[loadAgentsDir.ts]\nbuilt-in + .claude/agents/\n+ MCP-loaded"];
+    "named::buildSP" [fillcolor="#dfb3ff", label="getSystemPrompt({ctx})\n[AgentTool.tsx:518]\nfresh per agent type\n+ enhanceWithEnvDetails"];
+    "named::tools" [fillcolor="#dfb3ff", label="assembleToolPool()\n[tools.ts]\nfilter by agent.tools\n+ permissionMode override"];
+    "named::userMsg" [fillcolor="#dfb3ff", label="createUserMessage(prompt)\n[AgentTool.tsx:538]\n(no history)"];
+  }
+
+  "AgentTool::route" -> "named::resolve" [label="subagent_type given"];
+  "named::resolve" -> "named::buildSP";
+  "named::resolve" -> "named::tools";
+  "named::resolve" -> "named::userMsg";
+
+  // ═══ runAgent (shared by both) ═══
+  subgraph cluster_runagent {
+    label="runAgent.ts (shared)";
+    style=filled; color="#d0d0e0"; fillcolor="#e8e8fa";
+
+    "runAgent::main" [fillcolor="#99ccff", label="runAgent()\n[runAgent.ts:1+]\nthe big setup function"];
+    "runAgent::permMode" [fillcolor="#b3d9ff", label="permission resolve\n[runAgent.ts:415-434]\n- agent's mode\n- BUT not if parent is\n  bypass/accept/auto"];
+    "runAgent::cliRules" [fillcolor="#b3d9ff", label="preserve cliArg rules\n[runAgent.ts:466-478]\nSDK --allowedTools\nNEVER cleared"];
+    "runAgent::thinkCfg" [fillcolor="#b3d9ff", label="thinkingConfig\n[runAgent.ts:679-684]\nuseExactTools? inherit\n           : disabled"];
+    "runAgent::ctx" [fillcolor="#b3d9ff", label="createSubagentContext()\n[runAgent.ts:700]\nshared callbacks if !async\nunlinked AbortController"];
+    "runAgent::query" [fillcolor="#99ccff", label="query.queryLoop()\nstandard agent loop\nwith subagent context"];
+  }
+
+  "fork::buildMsgs" -> "runAgent::main";
+  "named::userMsg" -> "runAgent::main";
+  "runAgent::main" -> "runAgent::permMode";
+  "runAgent::main" -> "runAgent::cliRules";
+  "runAgent::main" -> "runAgent::thinkCfg";
+  "runAgent::main" -> "runAgent::ctx";
+  "runAgent::ctx" -> "runAgent::query";
+
+  // ═══ COORDINATOR / WORKER PATH ═══
+  subgraph cluster_coord {
+    label="Coordinator mode (CLAUDE_CODE_COORDINATOR_MODE=1)";
+    style=filled; color="#e0e0d0"; fillcolor="#fafae8";
+
+    "coord::isMode" [fillcolor="#ffff99", label="isCoordinatorMode()\n[coordinatorMode.ts:36]\nenv check"];
+    "coord::workers" [fillcolor="#ffffb3", label="getCoordinatorAgents()\n[workerAgent.ts]\nworker definitions\nASYNC_AGENT_ALLOWED_TOOLS"];
+    "coord::sendmsg" [fillcolor="#ffffb3", label="SendMessage tool\ncontinue worker via\nagentId (vs spawn fresh)"];
+    "coord::scratch" [fillcolor="#ffffcc", label="Scratchpad dir\n[coordinatorMode.ts:104]\ngate tengu_scratch\nshared cross-worker"];
+  }
+
+  "AgentTool::route" -> "coord::isMode" [label="if coordinator"];
+  "coord::isMode" -> "coord::workers";
+  "coord::workers" -> "runAgent::main" [style=dashed];
+
+  // ═══ ASYNC vs SYNC OUTPUT ═══
+  subgraph cluster_output {
+    label="Result delivery";
+    style=filled; color="#e0d0d0"; fillcolor="#fae8e8";
+
+    "out::async" [fillcolor="#ff9999", label="Async path\n[AgentTool.tsx:557-567]\nforced if: fork gate / coord /\nKAIROS / proactive / bg flag\n→ {status:'async_launched',\n   agentId, outputFile}"];
+    "out::sync" [fillcolor="#ffb3b3", label="Sync path\n→ {status:'completed',\n   result, prompt}"];
+    "out::notif" [fillcolor="#ffcccc", label="<task-notification>\nuser-role message\ninserted into parent\nconversation later turn"];
+  }
+
+  "runAgent::query" -> "out::async";
+  "runAgent::query" -> "out::sync";
+  "out::async" -> "out::notif" [label="on completion"];
+
+  // ═══ ISOLATION ═══
+  subgraph cluster_isolation {
+    label="Optional isolation";
+    style=filled; color="#d0e0e0"; fillcolor="#e8fafa";
+
+    "iso::worktree" [fillcolor="#99cccc", label="createAgentWorktree()\n[AgentTool.tsx:590]\nslug agent-{id8}\nisolated git worktree"];
+    "iso::remote" [fillcolor="#b3d9d9", label="teleportToRemote()\n[AgentTool.tsx:442]\nremote CCR session\n(ant only)"];
+    "iso::notice" [fillcolor="#b3d9d9", label="buildWorktreeNotice()\n[forkSubagent.ts:205]\ntell child:\n- translate paths\n- re-read files"];
+  }
+
+  "AgentTool::route" -> "iso::worktree" [label="isolation:'worktree'"];
+  "AgentTool::route" -> "iso::remote" [label="isolation:'remote'"];
+  "iso::worktree" -> "iso::notice" [style=dashed, label="if fork"];
+
+  // ═══ Cache Safety ═══
+  subgraph cluster_cache {
+    label="Cache safety (forkedAgent.ts)";
+    style=filled; color="#d0d0e0"; fillcolor="#e8e8ee";
+
+    "cache::params" [fillcolor="#9999ff", label="CacheSafeParams\n[forkedAgent.ts:57]\n• systemPrompt\n• userContext\n• systemContext\n• toolUseContext\n• forkContextMessages"];
+    "cache::trap" [fillcolor="#b3b3ff", label="⚠ maxOutputTokens trap\n[forkedAgent.ts:51-55]\nclamps budget_tokens →\nthinking config diverges →\ncache busted"];
+  }
+
+  "fork::buildMsgs" -> "cache::params" [style=dotted, label="must satisfy"];
+  "cache::params" -> "cache::trap" [style=dashed];
+}

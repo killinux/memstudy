@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>子 Agent / Fork 机制深度解析</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --code-bg: #f4f4f8;
+    --border: #e0e0e6;
+    --accent: #4a6fa5;
+    --link: #4a6fa5;
+    --table-stripe: #f8f8fc;
+    --heading: #16213e;
+    --blockquote-border: #4a6fa5;
+    --blockquote-bg: #f0f4fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a2e;
+      --fg: #e0e0e6;
+      --code-bg: #16213e;
+      --border: #2a2a4a;
+      --accent: #7ba0d4;
+      --link: #7ba0d4;
+      --table-stripe: #16213e;
+      --heading: #e0e0e6;
+      --blockquote-border: #7ba0d4;
+      --blockquote-bg: #16213e;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.8;
+    padding: 2rem 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 2rem; color: var(--heading); margin: 2.5rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+  h2 { font-size: 1.5rem; color: var(--heading); margin: 2rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25rem; color: var(--heading); margin: 1.5rem 0 0.6rem; }
+  h4 { font-size: 1.1rem; color: var(--heading); margin: 1.2rem 0 0.5rem; }
+  p { margin: 0.8rem 0; }
+  a { color: var(--link); text-decoration: none; border-bottom: 1px dotted var(--link); }
+  a:hover { border-bottom-style: solid; }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.88em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+  th {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) { background: var(--table-stripe); }
+  blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    background: var(--blockquote-bg);
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+  ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; }
+  li { margin: 0.3rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  img { max-width: 100%; height: auto; border-radius: 8px; }
+  .container { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1 id="agent-fork">子 Agent / Fork 机制深度解析</h1>
+<blockquote>
+<p>分析对象：free-code45 (Claude Code v2.1.87)
+关键源码：<code>src/tools/AgentTool/</code>、<code>src/utils/forkedAgent.ts</code>、<code>src/coordinator/coordinatorMode.ts</code>
+关键文件总规模：约 4400 行</p>
+</blockquote>
+<hr />
+<h2 id="0">0. 一句话总结</h2>
+<p>Claude Code 的"子 Agent"不是一种东西而是<strong>四种</strong>：fork 子 agent（继承上下文复用 prompt cache）、命名子 agent（独立循环 + 独立 system prompt）、coordinator worker（异步协调模式下的并发 worker）、teammate（多 agent 间用 SendMessage 互相通信）。<strong>fork</strong> 是其中最有创意的设计——它通过构造<strong>字节相同的 API 请求前缀</strong>让父子共享 prompt cache，使子 agent 几乎"免费"。</p>
+<hr />
+<h2 id="1">1. 四种形态对比</h2>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>触发方式</th>
+<th>上下文继承</th>
+<th>System Prompt</th>
+<th>Thinking</th>
+<th>工具池</th>
+<th>异步</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fork</strong></td>
+<td><code>Agent({prompt, ...})</code> 不传 <code>subagent_type</code>（gate <code>FORK_SUBAGENT</code> 开启时）</td>
+<td>完整 message history</td>
+<td>继承父亲已渲染的字节</td>
+<td>继承父亲 config</td>
+<td>继承父亲完整工具</td>
+<td>强制 async</td>
+<td>研究 / 分解任务 / 实施</td>
+</tr>
+<tr>
+<td><strong>命名子 agent</strong></td>
+<td><code>Agent({subagent_type: 'explore', ...})</code></td>
+<td>仅初始 prompt</td>
+<td>重新构建</td>
+<td>强制 disabled（控成本）</td>
+<td><code>assembleToolPool</code> 重算</td>
+<td>可选</td>
+<td>专用 agent (Explore/Plan)</td>
+</tr>
+<tr>
+<td><strong>Coordinator worker</strong></td>
+<td>coordinator 模式下 <code>Agent(...)</code> 自动走 worker 路径</td>
+<td>独立</td>
+<td>独立</td>
+<td>独立</td>
+<td><code>ASYNC_AGENT_ALLOWED_TOOLS</code></td>
+<td>总是 async</td>
+<td>协调器编排并发任务</td>
+</tr>
+<tr>
+<td><strong>Teammate</strong></td>
+<td><code>spawnTeammate</code>（多 agent swarm gate）</td>
+<td>独立但可双向通信</td>
+<td>独立</td>
+<td>独立</td>
+<td>独立</td>
+<td>长存</td>
+<td>多 agent 协作（tmux pane）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>互斥关系</strong>：fork 与 coordinator 模式互斥（<code>forkSubagent.ts:34</code> 显式拒绝），因为 coordinator 已经拥有自己的编排模型。</p>
+<hr />
+<h2 id="2-fork-cache-identical-api-prefix">2. Fork 的核心：cache-identical API prefix</h2>
+<p>Fork 之所以"便宜"，本质是<strong>让父子的 API 请求前缀字节相同</strong>，命中 Anthropic prompt cache。Anthropic API 的缓存键由 5 部分组成：</p>
+<div class="highlight"><pre><span></span><code>cache_key = hash(system_prompt + tools + model + messages_prefix + thinking_config)
+</code></pre></div>
+
+<p><code>CacheSafeParams</code> 类型(<code>forkedAgent.ts:57</code>)就是这五个东西的载体：</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="nx">CacheSafeParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">systemPrompt</span><span class="o">:</span><span class="w"> </span><span class="kt">SystemPrompt</span><span class="w">          </span><span class="c1">// 必须字节相同</span>
+<span class="w">  </span><span class="nx">userContext</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="nx">k</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// 拼到 messages 前</span>
+<span class="w">  </span><span class="nx">systemContext</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="nx">k</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// 拼到 system 后</span>
+<span class="w">  </span><span class="nx">toolUseContext</span><span class="o">:</span><span class="w"> </span><span class="kt">ToolUseContext</span><span class="w">       </span><span class="c1">// 包含 tools, model</span>
+<span class="w">  </span><span class="nx">forkContextMessages</span><span class="o">:</span><span class="w"> </span><span class="kt">Message</span><span class="p">[]</span><span class="w">       </span><span class="c1">// 父亲的消息历史</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="21-system-prompt">2.1 System Prompt 复用：为什么不能"重新算一遍"</h3>
+<p>Fork 子 agent <strong>不重新调用 <code>getSystemPrompt()</code></strong>，而是直接复用父亲已经渲染好的字节。原因写在 <code>forkSubagent.ts:54-58</code>：</p>
+<blockquote>
+<p>"Reconstructing by re-calling getSystemPrompt() can diverge (GrowthBook cold→warm) and bust the prompt cache; threading the rendered bytes is byte-exact."</p>
+</blockquote>
+<p>System prompt 内部可能引用 GrowthBook gate（feature flag），父亲启动时是 cold cache，子 agent 启动时可能已经 warm 了，两边的 system prompt 会有细微 byte 差异，缓存就废了。所以 fork 路径在 <code>AgentTool.tsx:496</code> 直接拿 <code>toolUseContext.renderedSystemPrompt</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">toolUseContext</span><span class="p">.</span><span class="nx">renderedSystemPrompt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">forkParentSystemPrompt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">toolUseContext</span><span class="p">.</span><span class="nx">renderedSystemPrompt</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Fallback: recompute. May diverge from parent&#39;s cached bytes...</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="22-tools-useexacttools">2.2 Tools 复用：useExactTools</h3>
+<p>普通子 agent 通过 <code>assembleToolPool(workerPermissionContext, ...)</code> 重新组装工具，但 <code>workerPermissionContext.mode = selectedAgent.permissionMode ?? 'acceptEdits'</code>，跟父亲的 mode 不同 → 工具序列化会有差异 → 缓存的第一个不同的工具就把后面全部 invalidate 了。</p>
+<p>Fork 路径走 <code>useExactTools: true</code>(<code>AgentTool.tsx:632</code>)，直接传父亲的 <code>toolUseContext.options.tools</code> 引用，工具池字节相同。</p>
+<h3 id="23-thinking-config">2.3 Thinking config 继承陷阱</h3>
+<p><code>runAgent.ts:679-684</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">thinkingConfig</span><span class="o">:</span><span class="w"> </span><span class="kt">useExactTools</span>
+<span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="nx">toolUseContext</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">thinkingConfig</span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;disabled&#39;</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="p">},</span>
+</code></pre></div>
+
+<p>只有 fork 路径继承 thinking config，其他子 agent <strong>强制禁用 thinking</strong> 控成本。</p>
+<p>陷阱（<code>forkedAgent.ts:51-55</code>）：如果 fork 调用方设置了 <code>maxOutputTokens</code>，会在 <code>claude.ts</code> 里 clamp <code>budget_tokens</code>，从而改变 thinking config 的有效值，破坏缓存相同性。文档明说：<strong>只有不打算复用缓存时才设 maxOutputTokens</strong>（如 compact summary）。</p>
+<h3 id="24-messages">2.4 Messages 前缀：占位符大法</h3>
+<p><code>buildForkedMessages()</code> (<code>forkSubagent.ts:107-169</code>) 是整个机制的精妙之处。它构造的消息序列：</p>
+<div class="highlight"><pre><span></span><code>[
+  ...parent_history,                                    // 父亲完整历史
+  assistant(全部 thinking + text + tool_use blocks),    // 父亲最后那条 assistant 消息（克隆）
+  user(
+    tool_result(placeholder) × N,    // 每个 tool_use 配一个占位符 result
+    text(directive)                  // 唯一不同的 per-child 指令
+  )
+]
+</code></pre></div>
+
+<p><strong>关键约束</strong> (<code>forkSubagent.ts:91-93</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">FORK_PLACEHOLDER_RESULT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Fork started — processing in background&#39;</span>
+<span class="c1">// Must be identical across all fork children for prompt cache sharing.</span>
+</code></pre></div>
+
+<p>也就是说：<strong>所有 fork 子的消息前缀字节相同</strong>，只有最后一个 text block（directive）不同。如果父亲在同一轮里 spawn 5 个 fork，5 个 fork 共享前面所有的缓存，每个只为自己的 directive 付钱。</p>
+<p>为什么要塞这些 placeholder 而不是直接拼一条 user 消息？因为父亲的最后一条 assistant 消息里有 <code>tool_use</code> blocks，按 Anthropic API 协议<strong>必须</strong>配对应的 <code>tool_result</code>，否则 API 会 400。这些占位符就是用来"凑数"的——等真实的子 agent 执行完，结果会回到父亲的对话历史里替换占位符。</p>
+<h3 id="25-fork">2.5 防止递归 fork</h3>
+<p>Fork 子 agent 的工具池里<strong>仍然包含 Agent tool</strong>（因为要保持工具列表字节相同），所以理论上 fork 能再 fork。运行时通过两个机制阻止：</p>
+<ol>
+<li><code>isInForkChild(messages)</code>(<code>forkSubagent.ts:78</code>)：扫描消息历史里有没有 <code>&lt;${FORK_BOILERPLATE_TAG}&gt;</code> 标记</li>
+<li><code>options.querySource === 'agent:builtin:fork'</code> 检查（<code>runAgent.ts:688-694</code> 注释里说明）：survives autocompact，因为 autocompact 会重写 messages 但不动 context.options</li>
+</ol>
+<p>两个机制并存：第一个在普通流程下足够，第二个是 autocompact 后的 fallback。</p>
+<hr />
+<h2 id="3-agent">3. 子 agent 启动时继承了什么</h2>
+<p><strong>完整继承表</strong>（fork vs 命名子 agent 的对比）：</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>Fork</th>
+<th>命名子 agent</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Messages history</td>
+<td>✅ 完整</td>
+<td>❌ 仅 prompt</td>
+<td><code>AgentTool.tsx:512, 538</code></td>
+</tr>
+<tr>
+<td>System prompt</td>
+<td>✅ 父亲渲染好的字节</td>
+<td>❌ <code>selectedAgent.getSystemPrompt()</code> 重算</td>
+<td><code>:496-541</code></td>
+</tr>
+<tr>
+<td>Thinking config</td>
+<td>✅</td>
+<td>❌ disabled</td>
+<td><code>runAgent.ts:682-684</code></td>
+</tr>
+<tr>
+<td>工具池</td>
+<td>✅ exact 引用</td>
+<td>❌ <code>assembleToolPool</code> 重算</td>
+<td><code>AgentTool.tsx:577, 627</code></td>
+</tr>
+<tr>
+<td>Model</td>
+<td>✅ inherit</td>
+<td>🟡 可被 model 参数覆盖</td>
+<td><code>forkSubagent.ts:66</code></td>
+</tr>
+<tr>
+<td>Permission mode</td>
+<td>✅ <code>bubble</code>（冒泡到父终端）</td>
+<td>🟡 <code>selectedAgent.permissionMode</code></td>
+<td><code>runAgent.ts:420-434</code></td>
+</tr>
+<tr>
+<td>CWD</td>
+<td>🟡 worktree 隔离</td>
+<td>🟡 同上 / cwd 参数</td>
+<td><code>AgentTool.tsx:590-593, 640</code></td>
+</tr>
+<tr>
+<td>MCP servers</td>
+<td>✅ 父亲的 + agent 自己的合并</td>
+<td>✅ 同</td>
+<td><code>runAgent.ts:649-664</code></td>
+</tr>
+<tr>
+<td>Memory base</td>
+<td>-</td>
+<td>🟡 <code>selectedAgent.memory</code> 决定 scope</td>
+<td><code>AgentTool.tsx:523-531</code></td>
+</tr>
+<tr>
+<td>isNonInteractiveSession</td>
+<td>✅ 继承</td>
+<td>🟡 async → true</td>
+<td><code>runAgent.ts:668-672</code></td>
+</tr>
+<tr>
+<td>AbortController</td>
+<td>❌ unlinked（独立）</td>
+<td>❌ unlinked</td>
+<td><code>AgentTool.tsx:694-696</code> 注释</td>
+</tr>
+</tbody>
+</table>
+<h3 id="31-abortcontroller">3.1 AbortController 不继承的设计</h3>
+<p><code>AgentTool.tsx:694</code> 附近的注释：</p>
+<blockquote>
+<p>"Don't link to parent's abort controller — background agents should survive when the user presses ESC to cancel the main thread."</p>
+</blockquote>
+<p>后台子 agent 有独立生命周期。用户 ESC 取消主线程不应该杀掉后台 worker——要杀必须用 TaskStop tool 显式 kill。</p>
+<hr />
+<h2 id="4-agent">4. 子 agent 怎么把结果返回</h2>
+<h3 id="41-vs">4.1 同步 vs 异步两条路</h3>
+<p><code>AgentTool.tsx:141-156</code> 定义的 output schema 是个 union：</p>
+<div class="highlight"><pre><span></span><code><span class="nx">syncOutputSchema</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;completed&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">prompt</span><span class="w"> </span><span class="p">}</span>
+<span class="nx">asyncOutputSchema</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;async_launched&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">outputFile</span><span class="p">,</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<p><strong>同步路径</strong>：父 agent 等子 agent 跑完，直接拿到 result string。</p>
+<p><strong>异步路径</strong>：返回 <code>{ status: 'async_launched', agentId, outputFile }</code>。子 agent 跑完后，结果以 <strong>user-role <code>&lt;task-notification&gt;</code> 消息</strong>的形式插入到父 agent 的对话历史里：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;task-notification&gt;</span>
+<span class="nt">&lt;task-id&gt;</span>agent-a1b<span class="nt">&lt;/task-id&gt;</span>
+<span class="nt">&lt;status&gt;</span>completed|failed|killed<span class="nt">&lt;/status&gt;</span>
+<span class="nt">&lt;summary&gt;</span>...<span class="nt">&lt;/summary&gt;</span>
+<span class="nt">&lt;result&gt;</span>...<span class="nt">&lt;/result&gt;</span>
+<span class="nt">&lt;usage&gt;&lt;total_tokens&gt;</span>N<span class="nt">&lt;/total_tokens&gt;</span>...<span class="nt">&lt;/usage&gt;</span>
+<span class="nt">&lt;/task-notification&gt;</span>
+</code></pre></div>
+
+<p>来源：<code>coordinatorMode.ts:148-160</code> 里有完整的 prompt 描述，让模型知道这是"看起来像 user message 但其实是系统通知"。</p>
+<h3 id="42-async">4.2 何时强制 async</h3>
+<p><code>AgentTool.tsx:557-567</code> 列出 5 个强制 async 的条件（任一即可）：</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">forceAsync</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">isForkSubagentEnabled</span><span class="p">();</span><span class="w">          </span><span class="c1">// fork gate 开了 → 全部 async</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">assistantForceAsync</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">appState</span><span class="p">.</span><span class="nx">kairosEnabled</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">shouldRunAsync</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="nx">run_in_background</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="o">||</span>
+<span class="w">  </span><span class="nx">selectedAgent</span><span class="p">.</span><span class="nx">background</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="o">||</span>
+<span class="w">  </span><span class="nx">isCoordinator</span><span class="w"> </span><span class="o">||</span>
+<span class="w">  </span><span class="nx">forceAsync</span><span class="w"> </span><span class="o">||</span>
+<span class="w">  </span><span class="nx">assistantForceAsync</span><span class="w"> </span><span class="o">||</span>
+<span class="w">  </span><span class="nx">proactiveModule</span><span class="o">?</span><span class="p">.</span><span class="nx">isProactiveActive</span><span class="p">()</span>
+<span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">isBackgroundTasksDisabled</span><span class="p">;</span>
+</code></pre></div>
+
+<p>注释解释了为什么 KAIROS 模式要 force async（<code>AgentTool.tsx:559-565</code>）：</p>
+<blockquote>
+<p>"Synchronous subagents hold the main loop's turn open until they complete — the daemon's inputQueue backs up, and the first overdue cron catch-up on spawn becomes N serial subagent turns blocking all user input."</p>
+</blockquote>
+<hr />
+<h2 id="5-coordinator-mode">5. 并发模型：Coordinator Mode</h2>
+<p><code>CLAUDE_CODE_COORDINATOR_MODE=1</code> 环境变量激活（<code>coordinatorMode.ts:36-41</code>）。在这个模式下：</p>
+<ul>
+<li>主 agent 变成 <strong>coordinator</strong>（编排者），自己不写代码、不读文件</li>
+<li>所有任务都通过 <code>Agent</code> tool spawn 给 <strong>worker</strong>（subagent_type: 'worker'）</li>
+<li>worker 在后台并发跑，结果以 <code>&lt;task-notification&gt;</code> 反馈</li>
+<li>coordinator 用 <code>SendMessage</code> 工具<strong>继续</strong>已完成的 worker（"continue vs spawn fresh"）</li>
+</ul>
+<h3 id="51-coordinator">5.1 Coordinator 的两个工具</h3>
+<div class="highlight"><pre><span></span><code>Agent       → 启动新 worker
+SendMessage → 给已存在的 worker 发后续指令（复用其 context）
+TaskStop    → 杀掉跑偏的 worker
+</code></pre></div>
+
+<h3 id="52-continue-vs-spawn-fresh">5.2 Continue vs Spawn fresh</h3>
+<p><code>coordinatorMode.ts:284-293</code> 给出明确决策表：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>选择</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>研究阶段探索的恰好就是要改的文件</td>
+<td><strong>Continue</strong></td>
+<td>worker 已有文件 + 现在拿到清晰 plan</td>
+</tr>
+<tr>
+<td>研究广泛但实施只动几个文件</td>
+<td><strong>Spawn fresh</strong></td>
+<td>避免拖着探索噪音</td>
+</tr>
+<tr>
+<td>修正失败 / 延续刚做的工作</td>
+<td><strong>Continue</strong></td>
+<td>worker 有错误上下文</td>
+</tr>
+<tr>
+<td>验证另一个 worker 写的代码</td>
+<td><strong>Spawn fresh</strong></td>
+<td>验证者要 fresh eyes</td>
+</tr>
+<tr>
+<td>第一次实施方向完全错了</td>
+<td><strong>Spawn fresh</strong></td>
+<td>错误上下文污染重试</td>
+</tr>
+</tbody>
+</table>
+<p>这个表是 prompt 写给模型看的，但反映了一个核心设计观点：<strong>子 agent 的 context 既是资产也是负债</strong>，要根据 overlap 决定。</p>
+<h3 id="53-worker-scratchpad">5.3 跨 worker 共享：Scratchpad</h3>
+<p><code>coordinatorMode.ts:104-106</code>：</p>
+<div class="highlight"><pre><span></span><code>Scratchpad directory: ${scratchpadDir}
+Workers can read and write here without permission prompts.
+Use this for durable cross-worker knowledge.
+</code></pre></div>
+
+<p>Worker 之间没有直接通信渠道，只能通过 coordinator 中介。Scratchpad 是个例外——一个共享目录，多个 worker 可以 read/write 而不弹权限。门控：<code>tengu_scratch</code> GrowthBook gate。</p>
+<hr />
+<h2 id="6">6. 隔离机制</h2>
+<h3 id="61-worktree">6.1 Worktree 隔离</h3>
+<p><code>AgentTool.tsx:590-593</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">effectiveIsolation</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;worktree&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`agent-</span><span class="si">${</span><span class="nx">earlyAgentId</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">8</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">worktreeInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">createAgentWorktree</span><span class="p">(</span><span class="nx">slug</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>为子 agent 创建一个独立 git worktree，子 agent 的所有文件操作都在这个隔离副本里跑，不影响父亲的 working copy。</p>
+<p>Fork + worktree 组合时（<code>AgentTool.tsx:598-602</code>），会注入 <code>buildWorktreeNotice()</code>：</p>
+<blockquote>
+<p>"You've inherited the conversation context above from a parent agent working in {parentCwd}. You are operating in an isolated git worktree at {worktreeCwd}... Paths in the inherited context refer to the parent's working directory; translate them to your worktree root. Re-read files before editing if the parent may have modified them..."</p>
+</blockquote>
+<p>这是个有意思的细节：fork 子 agent 看到的"上下文里的文件路径"指向父亲的目录，但它实际工作在 worktree 里，需要自己翻译路径并重新读取（防止陈旧）。</p>
+<h3 id="62-remote">6.2 Remote 隔离</h3>
+<p><code>isolation: 'remote'</code>（仅 ant 内部）→ <code>teleportToRemote()</code> 把 agent 启动到远程 CCR 环境。总是异步。</p>
+<h3 id="63-3">6.3 权限继承的 3 条规则</h3>
+<p><code>runAgent.ts:415-479</code> 的核心逻辑：</p>
+<ol>
+<li><strong>Agent 定义可以指定 permission mode</strong>，但<strong>父亲是 bypassPermissions/acceptEdits/auto 时不被覆盖</strong>（父亲已经"放开了"，子 agent 不能比父亲更严或更松，否则混淆）</li>
+<li><strong>Bubble mode</strong>：子 agent 触发权限提示时，不在子 agent 自己的上下文里弹，而是冒泡到父亲的终端让父亲批准。这是 fork 子 agent 的默认 mode。</li>
+<li><strong>CLI rules 永不清除</strong>（<code>runAgent.ts:466-468</code>）：<blockquote>
+<p>"Preserve cliArg rules (from SDK's --allowedTools) since those are explicit permissions from the SDK consumer that should apply to all agents."</p>
+</blockquote>
+</li>
+</ol>
+<p>也就是 SDK 启动时 <code>--allowedTools</code> 给的权限对所有子 agent 强制有效。session-level rules 会被清掉防止泄露，但 CLI rules 不行。</p>
+<hr />
+<h2 id="7-agent">7. 内置 Agent 清单</h2>
+<p><code>builtInAgents.ts:22-72</code> 列出的内置 agent（按 gate 条件）：</p>
+<table>
+<thead>
+<tr>
+<th>Agent</th>
+<th>工具</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>general-purpose</strong></td>
+<td><code>['*']</code> 所有工具</td>
+<td>通用 agent，任何研究/搜索/多步任务</td>
+</tr>
+<tr>
+<td><strong>statusline-setup</strong></td>
+<td>Read, Edit</td>
+<td>配置 Claude Code 的状态行</td>
+</tr>
+<tr>
+<td><strong>Explore</strong> <em>(gate <code>tengu_amber_stoat</code>)</em></td>
+<td>除 Edit/Write/Agent/PlanMode 外全部</td>
+<td>快速代码搜索专家。Ant 用户继承主模型；外部用户<strong>强制 haiku</strong>（速度优先）</td>
+</tr>
+<tr>
+<td><strong>Plan</strong> <em>(同 gate)</em></td>
+<td>同 Explore</td>
+<td>规划任务专家</td>
+</tr>
+<tr>
+<td><strong>claude-code-guide</strong></td>
+<td>Glob, Grep, Read, WebFetch, WebSearch</td>
+<td>Claude Code 使用指南。<strong>只在非 SDK 入口点</strong>注册</td>
+</tr>
+<tr>
+<td><strong>Verification</strong> <em>(gate <code>tengu_hive_evidence</code>)</em></td>
+<td>自定义</td>
+<td>验证 agent。<strong>禁用 Agent tool 防止递归</strong></td>
+</tr>
+<tr>
+<td><strong>Coordinator workers</strong></td>
+<td><code>ASYNC_AGENT_ALLOWED_TOOLS</code></td>
+<td>仅 coordinator 模式下，由 <code>getCoordinatorAgents()</code> 动态返回</td>
+</tr>
+</tbody>
+</table>
+<p><strong>SDK 用户特殊处理</strong>：<code>CLAUDE_AGENT_SDK_DISABLE_BUILTIN_AGENTS=1</code> + 非交互模式 → 返回空数组（白板）。</p>
+<hr />
+<h2 id="8-agent-memory">8. Agent Memory 系统</h2>
+<p>子 agent 有自己独立的 memory 系统（不同于主 session memory）。</p>
+<p><code>agentMemory.ts:12-65</code> 定义了三种作用域：</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>路径</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>user</strong></td>
+<td><code>~/.claude/agent-memory/&lt;agentType&gt;/</code></td>
+<td>跨所有项目持久化</td>
+</tr>
+<tr>
+<td><strong>project</strong></td>
+<td><code>.claude/agent-memory/&lt;agentType&gt;/</code></td>
+<td>项目级，<strong>入版本控制</strong></td>
+</tr>
+<tr>
+<td><strong>local</strong></td>
+<td><code>.claude/agent-memory-local/&lt;agentType&gt;/</code> 或 <code>$CLAUDE_CODE_REMOTE_MEMORY_DIR/projects/{hash}/...</code></td>
+<td>不入版本</td>
+</tr>
+</tbody>
+</table>
+<p>每个 agent 类型有独立的 memory 目录，互不干扰。Fork 不单独持久化（它本来就是父亲的延伸）。</p>
+<hr />
+<h2 id="9">9. 关键设计权衡（注释挖掘）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>决策</th>
+<th>文件</th>
+<th>权衡</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Fork 占位符必须字节相同</td>
+<td><code>forkSubagent.ts:91-93</code></td>
+<td>牺牲完整性换缓存共享</td>
+</tr>
+<tr>
+<td>2</td>
+<td>System prompt 字节线程化（不重算）</td>
+<td><code>forkSubagent.ts:54-58</code></td>
+<td>避免 GrowthBook cold→warm 破坏缓存，代价是父亲必须提前渲染并暴露</td>
+</tr>
+<tr>
+<td>3</td>
+<td>后台 agent 不绑定父 abort controller</td>
+<td><code>AgentTool.tsx:694-696</code></td>
+<td>用户 ESC 不杀后台 worker；要杀必须显式 TaskStop</td>
+</tr>
+<tr>
+<td>4</td>
+<td>CLI rules 永不清除</td>
+<td><code>runAgent.ts:466-468</code></td>
+<td>SDK 消费者权限对所有 agent 强制，防止 agent 自治绕过</td>
+</tr>
+<tr>
+<td>5</td>
+<td>thinking config 与缓存耦合</td>
+<td><code>forkedAgent.ts:51-55</code></td>
+<td>maxOutputTokens 会通过 clamp budget_tokens 破坏缓存（隐式陷阱）</td>
+</tr>
+<tr>
+<td>6</td>
+<td>工具池独立组装（非 fork 路径）</td>
+<td><code>AgentTool.tsx:568-577</code> 注释</td>
+<td>子 agent 不受父亲工具限制影响；代价是不能复用父亲的工具序列化缓存</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Agent list 走 attachment 不走 tool description</td>
+<td><code>prompt.ts:48-58</code></td>
+<td>"动态 agent 列表 ~10.2% 的 fleet cache_creation tokens"——MCP 异步连接、reload-plugins、permission mode 改变都会变 list → tool schema cache 全废</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Fork 与 coordinator 模式互斥</td>
+<td><code>forkSubagent.ts:34</code></td>
+<td>"coordinator 已经拥有编排角色和自己的委派模型"</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Agent permission mode 不覆盖 parent 的 bypass/accept</td>
+<td><code>runAgent.ts:421-434</code></td>
+<td>父亲已经放开的权限不被 agent 收紧（也不被进一步放开）</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Subagent_type 不继承 leader 权限</td>
+<td><code>runAgent.ts:573-577</code></td>
+<td><code>assembleToolPool(workerPermissionContext, ...)</code> 用 agent 自己的 mode，不是父亲的</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. 数据流图</h2>
+<div class="highlight"><pre><span></span><code>                  父 agent 调用 Agent tool
+                         │
+               ┌─────────┴─────────┐
+               │ subagent_type 缺? │
+               └─────────┬─────────┘
+                         │
+            ┌────────────┴───────────┐
+            │ FORK_SUBAGENT gate?    │
+            └────────────┬───────────┘
+                         │
+        ┌────────────────┼─────────────────┐
+        │                │                 │
+       是                │                 否
+        │                │                 │
+        ▼                │                 ▼
+┌───────────────┐        │      ┌──────────────────┐
+│   FORK 路径    │       │      │  命名子 agent 路径  │
+├───────────────┤        │      ├──────────────────┤
+│ • renderedSP  │        │      │ • getSystemPrompt│
+│ • 父 messages  │       │      │ • createUserMsg  │
+│ • exactTools  │        │      │ • assembleTools  │
+│ • thinkConfig │        │      │ • thinking off   │
+│ • bubble perm │        │      │ • own perm mode  │
+│ • forced async│        │      │ • async optional │
+└───────┬───────┘        │      └─────────┬────────┘
+        │                │                │
+        │       ┌────────┴────────┐       │
+        │       │ coordinator mode?│      │
+        │       └────────┬────────┘       │
+        │                │                │
+        │       ┌────────┴────────┐       │
+        │       ▼                 ▼       │
+        │   ┌────────┐     ┌────────┐    │
+        │   │worker  │     │normal  │    │
+        │   │(forced │     │subagent│    │
+        │   │ async) │     └────┬───┘    │
+        │   └───┬────┘          │        │
+        │       │               │        │
+        └───────┴───────┬───────┴────────┘
+                        │
+                        ▼
+              ┌──────────────────┐
+              │   runAgent()     │
+              │   queryLoop      │ ← buildAgentSystemPrompt / mergedMcpClients
+              └────────┬─────────┘
+                       │
+              ┌────────┴─────────┐
+              │  isAsync?        │
+              └────────┬─────────┘
+                       │
+            ┌──────────┼──────────┐
+            ▼                     ▼
+   ┌─────────────────┐   ┌──────────────────┐
+   │ 同步: 等结果     │   │ 异步: 注册 task   │
+   │ → 直接返回       │   │ → outputFile      │
+   │   {completed,    │   │ → 后台 queryLoop  │
+   │    result}       │   │ → 完成时           │
+   └─────────────────┘   │   &lt;task-notif&gt;    │
+                         │   插入父对话        │
+                         └──────────────────┘
+</code></pre></div>
+
+<hr />
+<h2 id="11-agent">11. 与其他 agent 框架的对比启示</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Claude Code</th>
+<th>OpenAI Codex CLI</th>
+<th>Cursor / Continue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sub-agent 抽象</td>
+<td>✅ Agent tool + 4 形态</td>
+<td>❌ 单循环</td>
+<td>🟡 有但简单</td>
+</tr>
+<tr>
+<td>Fork (cache 复用)</td>
+<td>✅ buildForkedMessages</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>并发 worker</td>
+<td>✅ Coordinator mode</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>异步通知模型</td>
+<td>✅ <code>&lt;task-notification&gt;</code></td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>工作目录隔离</td>
+<td>✅ git worktree</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>权限冒泡</td>
+<td>✅ bubble mode</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Code 在子 agent 这块的工程化深度明显领先。Fork 这种细节（system prompt 字节线程化 / 占位符 placeholder 一致 / thinking config 耦合警告）几乎是 Anthropic 对 prompt cache 机制内部理解的直接产物。</p>
+<hr />
+<h2 id="12">12. 阅读顺序建议</h2>
+<p>首次读这个子系统：</p>
+<ol>
+<li><code>forkSubagent.ts</code> 全部（210 行）— 看 fork 是什么</li>
+<li><code>AgentTool.tsx:483-636</code> — 看 fork vs normal 的分支</li>
+<li><code>runAgent.ts:410-720</code> — 看子 agent 怎么真正启动</li>
+<li><code>forkedAgent.ts:46-113</code> — 看 CacheSafeParams 和 maxOutputTokens 陷阱</li>
+<li><code>coordinatorMode.ts</code> 全部 — 看协调模式 prompt 长什么样</li>
+<li><code>prompt.ts:80-155</code> — 看模型看到的 fork 使用说明</li>
+<li><code>builtInAgents.ts</code> — 看内置清单</li>
+</ol>
+</div>
+</body>
+</html>

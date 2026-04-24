@@ -1,0 +1,58 @@
+digraph memory_lifecycle {
+  rankdir=TB;
+  node [shape=box, style="filled,rounded", fontsize=10, fontname="Helvetica", margin="0.15,0.08"];
+  edge [fontsize=9, fontname="Helvetica"];
+  label="Memory lifecycle — one user turn (free-code45)";
+  labelloc=t; fontsize=13;
+  nodesep=0.4; ranksep=0.5;
+
+  // ─── Turn start ───
+  "q" [shape=ellipse, fillcolor="#ffe680", label="user query"];
+
+  // Parallel: system prompt (cached) + async prefetch
+  "sys" [fillcolor="#99ccff", label="① system prompt\n(resident, cached)\n- 4-type rules\n- MEMORY.md index"];
+  "prefetch" [fillcolor="#cc99ff", label="② startRelevantMemory\nPrefetch (async)\n   ↓\nscanMemoryFiles → manifest\n   ↓\nSonnet sidequery → ≤5 paths\n   ↓\nread + memoryFreshnessNote"];
+
+  "q" -> "sys" [style=dotted, label="already built"];
+  "q" -> "prefetch";
+
+  // API
+  "api" [shape=ellipse, fillcolor="#ffaaaa", label="API request\n(sys + attachments + query)"];
+  "sys" -> "api";
+  "prefetch" -> "api" [label="attachment"];
+
+  // Main loop
+  "loop" [fillcolor="#ff9966", label="query loop\n(tool uses, writes, ...)"];
+  "api" -> "loop";
+
+  // Maybe main agent writes memory
+  "wrote?" [shape=diamond, fillcolor="#ffe0a0", label="main agent\nwrote to\nmemory/?"];
+  "loop" -> "wrote?" [label="turn ends"];
+
+  // Extract branch
+  "extract" [fillcolor="#ffcc66", label="extractMemories\n(forked agent, cache-shared)\nTurn 1: parallel reads\nTurn 2: parallel writes"];
+  "wrote?" -> "extract" [label="no → backup"];
+  "wrote?" -> "done1" [label="yes → skip"];
+  "done1" [shape=point, width=0.01];
+
+  // Dream gate
+  "dreamgate" [shape=diamond, fillcolor="#ffd0d0", label="autoDream\ngate open?\n(24h + 5 sessions\n+ lock)"];
+  "loop" -> "dreamgate" [label="turn ends"];
+
+  "dream" [fillcolor="#ff9966", label="autoDream\n(forked agent)\nPhase 1-4: orient /\ngather / consolidate / prune"];
+  "dreamgate" -> "dream" [label="yes"];
+
+  // Storage
+  "store" [shape=cylinder, fillcolor="#ffe0a0", label="memory/"];
+
+  "loop" -> "store" [label="inline write\n(carve-out)", color="#009900", style=bold];
+  "extract" -> "store" [label="gated\nwrite", color="#cc6600", style=bold];
+  "dream" -> "store" [label="merge /\nprune", color="#cc3300", style=bold];
+
+  // Feed back into next turn
+  "store" -> "sys" [label="next turn", style=dashed, color="#0066cc", constraint=false];
+  "store" -> "prefetch" [label="next turn", style=dashed, color="#8800cc", constraint=false];
+
+  { rank=same; "sys"; "prefetch"; }
+  { rank=same; "extract"; "dreamgate"; }
+}

@@ -1,0 +1,45 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "Task.ts" [fillcolor="#ffcc99"];
+  "Tool.ts" [fillcolor="#ffcc99"];
+  "bootstrap/state.ts" [fillcolor="#ffcc99"];
+  "memdir/paths.ts" [fillcolor="#ffcc99"];
+  "services/analytics/growthbook.ts" [fillcolor="#ffcc99"];
+  "services/analytics/index.ts" [fillcolor="#ffcc99"];
+  "services/autoDream/autoDream.ts" [fillcolor="#ff9999"];
+  "services/autoDream/config.ts" [fillcolor="#ffcc99"];
+  "services/autoDream/consolidationLock.ts" [fillcolor="#ffcc99"];
+  "services/autoDream/consolidationPrompt.ts" [fillcolor="#ffcc99"];
+  "services/extractMemories/extractMemories.ts" [fillcolor="#ffcc99"];
+  "tasks/DreamTask/DreamTask.ts" [fillcolor="#ffcc99"];
+  "tools/FileEditTool/constants.ts" [fillcolor="#ffcc99"];
+  "tools/FileWriteTool/prompt.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/forkedAgent.ts" [fillcolor="#ffcc99"];
+  "utils/hooks/postSamplingHooks.ts" [fillcolor="#ffcc99"];
+  "utils/messages.ts" [fillcolor="#ffcc99"];
+  "utils/sessionStorage.ts" [fillcolor="#ffcc99"];
+
+  "services/autoDream/autoDream.ts" -> "Task.ts";
+  "services/autoDream/autoDream.ts" -> "Tool.ts";
+  "services/autoDream/autoDream.ts" -> "bootstrap/state.ts";
+  "services/autoDream/autoDream.ts" -> "memdir/paths.ts";
+  "services/autoDream/autoDream.ts" -> "services/analytics/growthbook.ts";
+  "services/autoDream/autoDream.ts" -> "services/analytics/index.ts";
+  "services/autoDream/autoDream.ts" -> "services/autoDream/config.ts";
+  "services/autoDream/autoDream.ts" -> "services/autoDream/consolidationLock.ts";
+  "services/autoDream/autoDream.ts" -> "services/autoDream/consolidationPrompt.ts";
+  "services/autoDream/autoDream.ts" -> "services/extractMemories/extractMemories.ts";
+  "services/autoDream/autoDream.ts" -> "tasks/DreamTask/DreamTask.ts";
+  "services/autoDream/autoDream.ts" -> "tools/FileEditTool/constants.ts";
+  "services/autoDream/autoDream.ts" -> "tools/FileWriteTool/prompt.ts";
+  "services/autoDream/autoDream.ts" -> "utils/debug.ts";
+  "services/autoDream/autoDream.ts" -> "utils/forkedAgent.ts";
+  "services/autoDream/autoDream.ts" -> "utils/hooks/postSamplingHooks.ts";
+  "services/autoDream/autoDream.ts" -> "utils/messages.ts";
+  "services/autoDream/autoDream.ts" -> "utils/sessionStorage.ts";
+}

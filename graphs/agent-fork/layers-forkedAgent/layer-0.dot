@@ -1,0 +1,49 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "Tool.ts" [fillcolor="#ffcc99"];
+  "commands.ts" [fillcolor="#ffcc99"];
+  "hooks/useCanUseTool.tsx" [fillcolor="#ffcc99"];
+  "query.ts" [fillcolor="#ffcc99"];
+  "services/analytics/index.ts" [fillcolor="#ffcc99"];
+  "services/api/claude.ts" [fillcolor="#ffcc99"];
+  "services/api/logging.ts" [fillcolor="#ffcc99"];
+  "tools/AgentTool/loadAgentsDir.ts" [fillcolor="#ffcc99"];
+  "types/ids.ts" [fillcolor="#ffcc99"];
+  "utils/abortController.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/fileStateCache.ts" [fillcolor="#ffcc99"];
+  "utils/forkedAgent.ts" [fillcolor="#ff9999"];
+  "utils/hooks/postSamplingHooks.ts" [fillcolor="#ffcc99"];
+  "utils/messages.ts" [fillcolor="#ffcc99"];
+  "utils/permissions/denialTracking.ts" [fillcolor="#ffcc99"];
+  "utils/permissions/permissionSetup.ts" [fillcolor="#ffcc99"];
+  "utils/sessionStorage.ts" [fillcolor="#ffcc99"];
+  "utils/systemPromptType.ts" [fillcolor="#ffcc99"];
+  "utils/toolResultStorage.ts" [fillcolor="#ffcc99"];
+  "utils/uuid.ts" [fillcolor="#ffcc99"];
+
+  "utils/forkedAgent.ts" -> "Tool.ts";
+  "utils/forkedAgent.ts" -> "commands.ts";
+  "utils/forkedAgent.ts" -> "hooks/useCanUseTool.tsx";
+  "utils/forkedAgent.ts" -> "query.ts";
+  "utils/forkedAgent.ts" -> "services/analytics/index.ts";
+  "utils/forkedAgent.ts" -> "services/api/claude.ts";
+  "utils/forkedAgent.ts" -> "services/api/logging.ts";
+  "utils/forkedAgent.ts" -> "tools/AgentTool/loadAgentsDir.ts";
+  "utils/forkedAgent.ts" -> "types/ids.ts";
+  "utils/forkedAgent.ts" -> "utils/abortController.ts";
+  "utils/forkedAgent.ts" -> "utils/debug.ts";
+  "utils/forkedAgent.ts" -> "utils/fileStateCache.ts";
+  "utils/forkedAgent.ts" -> "utils/hooks/postSamplingHooks.ts";
+  "utils/forkedAgent.ts" -> "utils/messages.ts";
+  "utils/forkedAgent.ts" -> "utils/permissions/denialTracking.ts";
+  "utils/forkedAgent.ts" -> "utils/permissions/permissionSetup.ts";
+  "utils/forkedAgent.ts" -> "utils/sessionStorage.ts";
+  "utils/forkedAgent.ts" -> "utils/systemPromptType.ts";
+  "utils/forkedAgent.ts" -> "utils/toolResultStorage.ts";
+  "utils/forkedAgent.ts" -> "utils/uuid.ts";
+}

@@ -1,0 +1,59 @@
+digraph memory_core {
+  rankdir=LR;
+  node [shape=box, style="filled,rounded", fontsize=11, fontname="Helvetica", margin="0.2,0.1"];
+  edge [fontsize=9, fontname="Helvetica"];
+  label="Memory System — core structure (free-code45)\nTwo read paths × two write paths around a file-based store";
+  labelloc=t; fontsize=13;
+  nodesep=0.5; ranksep=0.9;
+
+  // ═══ Center: storage ═══
+  "store" [
+    shape=cylinder, fillcolor="#ffe0a0", fontsize=12,
+    label="memory/\nMEMORY.md (index)\n+ user/feedback/\nproject/reference .md"
+  ];
+
+  // ═══ READ paths (left) ═══
+  subgraph cluster_read {
+    label="READ — two injection paths into the API request";
+    style="filled,rounded"; color="#d0e0f0"; fillcolor="#eaf2ff";
+
+    "R1" [fillcolor="#99ccff", label="Path 1 — RESIDENT\nloadMemoryPrompt()\n(system prompt, cached)"];
+    "R1_content" [fillcolor="#cce0ff", shape=note, label="type rules +\nMEMORY.md index\n(≤200 lines / 25KB)"];
+
+    "R2" [fillcolor="#cc99ff", label="Path 2 — ON-DEMAND\nfindRelevantMemories()\n(attachment, per query)"];
+    "R2_content" [fillcolor="#e0b3ff", shape=note, label="Sonnet side-query\npicks ≤5 files\n+ freshness warning"];
+
+    "R1" -> "R1_content" [style=dashed, arrowhead=none];
+    "R2" -> "R2_content" [style=dashed, arrowhead=none];
+  }
+
+  // ═══ WRITE paths (right) ═══
+  subgraph cluster_write {
+    label="WRITE — two write paths (fork cache-shared)";
+    style="filled,rounded"; color="#d0f0d0"; fillcolor="#eaffea";
+
+    "W1" [fillcolor="#99ff99", label="Path A — INLINE\nmain agent Write\n(during query loop)"];
+    "W2" [fillcolor="#ffcc66", label="Path B — FORKED\nextractMemories\n(turn-end, if Path A didn't fire)"];
+    "W3" [fillcolor="#ff9966", label="Path C — CONSOLIDATE\nautoDream\n(24h + 5 sessions)"];
+
+    "W2" -> "W1" [label="skip if\nmain wrote", style=dotted, dir=back, constraint=false];
+  }
+
+  // Read paths feed API
+  "api" [shape=ellipse, fillcolor="#ffd0d0", label="Anthropic API\nrequest"];
+  "R1" -> "api" [color="#0066cc", penwidth=2];
+  "R2" -> "api" [color="#8800cc", penwidth=2];
+
+  // Storage feeds reads
+  "store" -> "R1" [label="read\n(cached)", color="#0066cc"];
+  "store" -> "R2" [label="scan\n+ read", color="#8800cc"];
+
+  // Writes feed storage
+  "W1" -> "store" [color="#009900", penwidth=2];
+  "W2" -> "store" [color="#cc6600", penwidth=2, label="canUseTool\ngates writes"];
+  "W3" -> "store" [color="#cc3300", penwidth=2, label="merge /\nprune"];
+
+  // Layout hints
+  { rank=same; "R1"; "store"; "W1"; }
+  { rank=same; "R2"; "W2"; }
+}

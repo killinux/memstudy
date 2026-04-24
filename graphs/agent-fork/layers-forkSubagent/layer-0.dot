@@ -1,0 +1,21 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "bootstrap/state.ts" [fillcolor="#ffcc99"];
+  "constants/xml.ts" [fillcolor="#ffcc99"];
+  "coordinator/coordinatorMode.ts" [fillcolor="#ffcc99"];
+  "tools/AgentTool/forkSubagent.ts" [fillcolor="#ff9999"];
+  "tools/AgentTool/loadAgentsDir.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/messages.ts" [fillcolor="#ffcc99"];
+
+  "tools/AgentTool/forkSubagent.ts" -> "bootstrap/state.ts";
+  "tools/AgentTool/forkSubagent.ts" -> "constants/xml.ts";
+  "tools/AgentTool/forkSubagent.ts" -> "coordinator/coordinatorMode.ts";
+  "tools/AgentTool/forkSubagent.ts" -> "tools/AgentTool/loadAgentsDir.ts";
+  "tools/AgentTool/forkSubagent.ts" -> "utils/debug.ts";
+  "tools/AgentTool/forkSubagent.ts" -> "utils/messages.ts";
+}

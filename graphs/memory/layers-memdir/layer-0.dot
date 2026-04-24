@@ -1,0 +1,41 @@
+digraph {
+  rankdir=LR;
+  node [shape=box, style=filled, fontsize=9];
+  label="Layer 0: 1 files";
+  labelloc=t; fontsize=14;
+
+  "bootstrap/state.ts" [fillcolor="#ffcc99"];
+  "memdir/memdir.ts" [fillcolor="#ff9999"];
+  "memdir/memoryTypes.ts" [fillcolor="#ffcc99"];
+  "memdir/paths.ts" [fillcolor="#ffcc99"];
+  "memdir/teamMemPaths.ts" [fillcolor="#ffcc99"];
+  "memdir/teamMemPrompts.ts" [fillcolor="#ffcc99"];
+  "services/analytics/growthbook.ts" [fillcolor="#ffcc99"];
+  "services/analytics/index.ts" [fillcolor="#ffcc99"];
+  "tools/GrepTool/prompt.ts" [fillcolor="#ffcc99"];
+  "tools/REPLTool/constants.ts" [fillcolor="#ffcc99"];
+  "utils/debug.ts" [fillcolor="#ffcc99"];
+  "utils/embeddedTools.ts" [fillcolor="#ffcc99"];
+  "utils/envUtils.ts" [fillcolor="#ffcc99"];
+  "utils/format.ts" [fillcolor="#ffcc99"];
+  "utils/fsOperations.ts" [fillcolor="#ffcc99"];
+  "utils/sessionStorage.ts" [fillcolor="#ffcc99"];
+  "utils/settings/settings.ts" [fillcolor="#ffcc99"];
+
+  "memdir/memdir.ts" -> "bootstrap/state.ts";
+  "memdir/memdir.ts" -> "memdir/memoryTypes.ts";
+  "memdir/memdir.ts" -> "memdir/paths.ts";
+  "memdir/memdir.ts" -> "memdir/teamMemPaths.ts";
+  "memdir/memdir.ts" -> "memdir/teamMemPrompts.ts";
+  "memdir/memdir.ts" -> "services/analytics/growthbook.ts";
+  "memdir/memdir.ts" -> "services/analytics/index.ts";
+  "memdir/memdir.ts" -> "tools/GrepTool/prompt.ts";
+  "memdir/memdir.ts" -> "tools/REPLTool/constants.ts";
+  "memdir/memdir.ts" -> "utils/debug.ts";
+  "memdir/memdir.ts" -> "utils/embeddedTools.ts";
+  "memdir/memdir.ts" -> "utils/envUtils.ts";
+  "memdir/memdir.ts" -> "utils/format.ts";
+  "memdir/memdir.ts" -> "utils/fsOperations.ts";
+  "memdir/memdir.ts" -> "utils/sessionStorage.ts";
+  "memdir/memdir.ts" -> "utils/settings/settings.ts";
+}
